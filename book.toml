@@ -1,0 +1,6 @@
+[book]
+authors = ["wub"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Build a Lua Interpreter in Rust"
