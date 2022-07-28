@@ -10,10 +10,12 @@ pub enum Token {
 }
 // ANCHOR_END: token
 
+// ANCHOR: lex
 #[derive(Debug)]
 pub struct Lex {
     input: File,
 }
+// ANCHOR_END: lex
 
 impl Lex {
     pub fn new(input: File) -> Self {
