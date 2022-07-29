@@ -20,16 +20,41 @@ pub fn load(input: File) -> ParseProto {
     loop {
         match lex.next() {
             Token::Name(name) => { // `Name LiteralString` as function call
+                // function, global variable only
                 constants.push(Value::String(name));
                 byte_codes.push(ByteCode::GetGlobal(0, (constants.len()-1) as u8));
 
-                if let Token::String(s) = lex.next() {
-                    constants.push(Value::String(s));
-                    byte_codes.push(ByteCode::LoadConst(1, (constants.len()-1) as u8));
-                    byte_codes.push(ByteCode::Call(0, 1));
-                } else {
-                    panic!("expected string");
+                // argument, (var) or "string"
+                match lex.next() {
+                    Token::ParL => { // '('
+                        let code = match lex.next() {
+                            Token::Nil => ByteCode::LoadNil(1),
+                            Token::True => ByteCode::LoadBool(1, true),
+                            Token::False => ByteCode::LoadBool(1, false),
+                            Token::Integer(i) =>
+                                if let Ok(ii) = i16::try_from(i) {
+                                    ByteCode::LoadInt(1, ii)
+                                } else {
+                                    load_const(&mut constants, 1, Value::Integer(i))
+                                }
+                            Token::Float(f) => load_const(&mut constants, 1, Value::Float(f)),
+                            Token::String(s) => load_const(&mut constants, 1, Value::String(s)),
+                            _ => panic!("invalid argument"),
+                        };
+                        byte_codes.push(code);
+
+                        if lex.next() != Token::ParR { // ')'
+                            panic!("expected `)`");
+                        }
+                    }
+                    Token::String(s) => {
+                        let code = load_const(&mut constants, 1, Value::String(s));
+                        byte_codes.push(code);
+                    }
+                    _ => panic!("expected string"),
                 }
+
+                byte_codes.push(ByteCode::Call(0, 1));
             }
             Token::Eos => break,
             t => panic!("unexpected token: {t:?}"),
@@ -37,7 +62,15 @@ pub fn load(input: File) -> ParseProto {
     }
 
     dbg!(&constants);
-    dbg!(&byte_codes);
+    println!("byte_codes:");
+    for c in byte_codes.iter() {
+        println!("  {:?}", c);
+    }
     ParseProto { constants, byte_codes }
 }
 // ANCHOR_END: load
+
+fn load_const(constants: &mut Vec<Value>, dst: usize, v: Value) -> ByteCode {
+    constants.push(v);
+    ByteCode::LoadConst(dst as u8, (constants.len()-1) as u8)
+}
