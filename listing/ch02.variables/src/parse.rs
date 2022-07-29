@@ -21,8 +21,8 @@ pub fn load(input: File) -> ParseProto {
         match lex.next() {
             Token::Name(name) => { // `Name LiteralString` as function call
                 // function, global variable only
-                constants.push(Value::String(name));
-                byte_codes.push(ByteCode::GetGlobal(0, (constants.len()-1) as u8));
+                let ic = add_const(&mut constants, Value::String(name));
+                byte_codes.push(ByteCode::GetGlobal(0, ic as u8));
 
                 // argument, (var) or "string"
                 match lex.next() {
@@ -70,7 +70,14 @@ pub fn load(input: File) -> ParseProto {
 }
 // ANCHOR_END: load
 
-fn load_const(constants: &mut Vec<Value>, dst: usize, v: Value) -> ByteCode {
-    constants.push(v);
-    ByteCode::LoadConst(dst as u8, (constants.len()-1) as u8)
+fn add_const(constants: &mut Vec<Value>, c: Value) -> usize {
+    constants.iter().rposition(|v| v == &c)
+        .unwrap_or_else(|| {
+            constants.push(c);
+            constants.len() - 1
+        })
+}
+
+fn load_const(constants: &mut Vec<Value>, dst: usize, c: Value) -> ByteCode {
+    ByteCode::LoadConst(dst as u8, add_const(constants, c) as u8)
 }
