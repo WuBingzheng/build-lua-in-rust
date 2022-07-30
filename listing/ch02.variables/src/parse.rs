@@ -71,7 +71,7 @@ pub fn load(input: File) -> ParseProto {
 // ANCHOR_END: load
 
 fn add_const(constants: &mut Vec<Value>, c: Value) -> usize {
-    constants.iter().rposition(|v| v == &c)
+    constants.iter().position(|v| v == &c)
         .unwrap_or_else(|| {
             constants.push(c);
             constants.len() - 1

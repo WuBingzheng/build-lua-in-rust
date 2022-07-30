@@ -1,6 +1,7 @@
 use std::fmt;
 use crate::vm::ExeState;
 
+// ANCHOR: value
 #[derive(Clone)]
 pub enum Value {
     Nil,
@@ -17,13 +18,15 @@ impl fmt::Debug for Value {
             Value::Nil => write!(f, "nil"),
             Value::Boolean(b) => write!(f, "{b}"),
             Value::Integer(i) => write!(f, "{i}"),
-            Value::Float(n) => write!(f, "{:?}", n),
+            Value::Float(n) => write!(f, "{n:?}"),
             Value::String(s) => write!(f, "{s}"),
             Value::Function(_) => write!(f, "function"),
         }
     }
 }
+// ANCHOR_END: value
 
+// ANCHOR: peq
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         // TODO compare Integer vs Float
@@ -38,3 +41,4 @@ impl PartialEq for Value {
         }
     }
 }
+// ANCHOR_END: peq
