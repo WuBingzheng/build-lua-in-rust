@@ -8,7 +8,7 @@ use crate::parse::ParseProto;
 // "print" function in Lua's std-lib.
 // It supports only 1 argument and assumes the argument is at index:1 on stack.
 fn lib_print(state: &mut ExeState) -> i32 {
-    println!("{:?}", state.stack[1]);
+    println!("{:?}", state.stack[state.func_index + 1]);
     0
 }
 // ANCHOR_END: print
@@ -17,6 +17,7 @@ fn lib_print(state: &mut ExeState) -> i32 {
 pub struct ExeState {
     globals: HashMap<String, Value>,
     stack: Vec::<Value>,
+    func_index: usize,
 }
 // ANCHOR_END: state
 
@@ -29,6 +30,7 @@ impl ExeState {
         ExeState {
             globals,
             stack: Vec::new(),
+            func_index: 0,
         }
     }
 // ANCHOR_END: new
@@ -59,8 +61,13 @@ impl ExeState {
                 ByteCode::LoadInt(dst, i) => {
                     self.set_stack(dst, Value::Integer(i as i64));
                 }
+                ByteCode::Move(dst, src) => {
+                    let v = self.stack[src as usize].clone();
+                    self.set_stack(dst, v);
+                }
                 ByteCode::Call(func, _) => {
-                    let func = &self.stack[func as usize];
+                    self.func_index = func as usize;
+                    let func = &self.stack[self.func_index];
                     if let Value::Function(f) = func {
                         f(self);
                     } else {
