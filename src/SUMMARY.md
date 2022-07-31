@@ -6,3 +6,7 @@
   - [字节码](./ch01-02.byte_codes.md)
   - [值和类型](./ch01-03.value_and_type.md)
   - [动手实现](./ch01-04.lets_do_it.md)
+
+- [变量和赋值](./ch02-00.variables.md)
+  - [更多类型](./ch02-01.more_types.md)
+  - [局部变量](./ch02-02.local.md)
