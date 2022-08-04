@@ -1,3 +1,4 @@
+use std::mem;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -35,26 +36,37 @@ pub enum Token {
 // ANCHOR_END: token
 
 #[derive(Debug)]
+// ANCHOR: lex
 pub struct Lex {
     input: File,
-    ahead: Option<Token>,
+    ahead: Token,
 }
+// ANCHOR_END: lex
 
 impl Lex {
     pub fn new(input: File) -> Self {
         Lex {
             input,
-            ahead: None
+            ahead: Token::Eos,
         }
     }
 
+// ANCHOR: peek_next
     pub fn next(&mut self) -> Token {
-        self.ahead.take().unwrap_or_else(|| self.do_next())
+        if self.ahead == Token::Eos {
+            self.do_next()
+        } else {
+            mem::replace(&mut self.ahead, Token::Eos)
+        }
     }
 
-    pub fn put_back(&mut self, t: Token) {
-        self.ahead = Some(t);
+    pub fn peek(&mut self) -> &Token {
+        if self.ahead == Token::Eos {
+            self.ahead = self.do_next();
+        }
+        &self.ahead
     }
+// ANCHOR_END: peek_next
 
     fn do_next(&mut self) -> Token {
         let ch = self.read_char();
