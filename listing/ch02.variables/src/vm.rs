@@ -48,6 +48,38 @@ impl ExeState {
                         panic!("invalid global key: {name:?}");
                     }
                 }
+                ByteCode::SetGlobal(name, src) => {
+                    let name = proto.constants[name as usize].clone();
+                    if let Value::String(key) = name {
+                        let value = self.stack[src as usize].clone();
+                        self.globals.insert(key, value);
+                    } else {
+                        panic!("invalid global key: {name:?}");
+                    }
+                }
+                ByteCode::SetGlobalConst(name, src) => {
+                    let name = proto.constants[name as usize].clone();
+                    if let Value::String(key) = name {
+                        let value = proto.constants[src as usize].clone();
+                        self.globals.insert(key, value);
+                    } else {
+                        panic!("invalid global key: {name:?}");
+                    }
+                }
+                ByteCode::SetGlobalGlobal(name, src) => {
+                    let name = proto.constants[name as usize].clone();
+                    if let Value::String(key) = name {
+                        let src = &proto.constants[src as usize];
+                        if let Value::String(src) = src {
+                            let value = self.globals.get(src).unwrap_or(&Value::Nil).clone();
+                            self.globals.insert(key, value);
+                        } else {
+                            panic!("invalid global key: {src:?}");
+                        }
+                    } else {
+                        panic!("invalid global key: {name:?}");
+                    }
+                }
                 ByteCode::LoadConst(dst, c) => {
                     let v = proto.constants[c as usize].clone();
                     self.set_stack(dst, v);
