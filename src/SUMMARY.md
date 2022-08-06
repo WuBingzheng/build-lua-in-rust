@@ -10,3 +10,7 @@
 - [变量和赋值](./ch02-00.variables.md)
   - [更多类型](./ch02-01.more_types.md)
   - [局部变量](./ch02-02.local.md)
+  - [变量赋值](./ch02-03.assignment.md)
+
+- [字符串优化](./ch03-00.optimize_string.md)
+  - [字符串定义](./ch03-01.string_type.md)
