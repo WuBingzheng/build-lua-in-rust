@@ -38,11 +38,9 @@ impl ParseProto {
         loop {
             match self.lex.next() {
                 Token::Name(name) => {
-                    let ahead = self.lex.next();
-                    if ahead == Token::Assign {
+                    if self.lex.peek() == &Token::Assign {
                         self.assignment(name);
                     } else {
-                        self.lex.put_back(ahead);
                         self.function_call(name);
                     }
                 }
@@ -73,7 +71,7 @@ impl ParseProto {
                 }
             }
             Token::String(s) => {
-                let code = self.load_const(iarg, Value::String(s));
+                let code = self.load_const(iarg, s);
                 self.byte_codes.push(code);
             }
             _ => panic!("expected string"),
@@ -101,21 +99,23 @@ impl ParseProto {
     }
 
     fn assignment(&mut self, var: String) {
+        self.lex.next(); // `=`
+
         if let Some(i) = self.get_local(&var) {
             // local variable
             self.load_exp(i);
         } else {
             // global variable
-            let dst = self.add_const(Value::String(var)) as u8;
+            let dst = self.add_const(var) as u8;
 
             let code = match self.lex.next() {
                 // from const values
-                Token::Nil => ByteCode::SetGlobalConst(dst, self.add_const(Value::Nil) as u8),
-                Token::True => ByteCode::SetGlobalConst(dst, self.add_const(Value::Boolean(true)) as u8),
-                Token::False => ByteCode::SetGlobalConst(dst, self.add_const(Value::Boolean(false)) as u8),
-                Token::Integer(i) => ByteCode::SetGlobalConst(dst, self.add_const(Value::Integer(i)) as u8),
-                Token::Float(f) => ByteCode::SetGlobalConst(dst, self.add_const(Value::Float(f)) as u8),
-                Token::String(s) => ByteCode::SetGlobalConst(dst, self.add_const(Value::String(s)) as u8),
+                Token::Nil => ByteCode::SetGlobalConst(dst, self.add_const(()) as u8),
+                Token::True => ByteCode::SetGlobalConst(dst, self.add_const(true) as u8),
+                Token::False => ByteCode::SetGlobalConst(dst, self.add_const(false) as u8),
+                Token::Integer(i) => ByteCode::SetGlobalConst(dst, self.add_const(i) as u8),
+                Token::Float(f) => ByteCode::SetGlobalConst(dst, self.add_const(f) as u8),
+                Token::String(s) => ByteCode::SetGlobalConst(dst, self.add_const(s) as u8),
 
                 // from variable
                 Token::Name(var) =>
@@ -124,7 +124,7 @@ impl ParseProto {
                         ByteCode::SetGlobal(dst, i as u8)
                     } else {
                         // global variable
-                        ByteCode::SetGlobalGlobal(dst, self.add_const(Value::String(var)) as u8)
+                        ByteCode::SetGlobalGlobal(dst, self.add_const(var) as u8)
                     }
 
                 _ => panic!("invalid argument"),
@@ -133,7 +133,8 @@ impl ParseProto {
         }
     }
 
-    fn add_const(&mut self, c: Value) -> usize {
+    fn add_const(&mut self, c: impl Into<Value>) -> usize {
+        let c = c.into();
         let constants = &mut self.constants;
         constants.iter().position(|v| v == &c)
             .unwrap_or_else(|| {
@@ -142,7 +143,7 @@ impl ParseProto {
             })
     }
 
-    fn load_const(&mut self, dst: usize, c: Value) -> ByteCode {
+    fn load_const(&mut self, dst: usize, c: impl Into<Value>) -> ByteCode {
         ByteCode::LoadConst(dst as u8, self.add_const(c) as u8)
     }
 
@@ -152,7 +153,7 @@ impl ParseProto {
             ByteCode::Move(dst as u8, i as u8)
         } else {
             // global variable
-            let ic = self.add_const(Value::String(name));
+            let ic = self.add_const(name);
             ByteCode::GetGlobal(dst as u8, ic as u8)
         }
     }
@@ -170,10 +171,10 @@ impl ParseProto {
                 if let Ok(ii) = i16::try_from(i) {
                     ByteCode::LoadInt(dst as u8, ii)
                 } else {
-                    self.load_const(dst, Value::Integer(i))
+                    self.load_const(dst, i)
                 }
-            Token::Float(f) => self.load_const(dst, Value::Float(f)),
-            Token::String(s) => self.load_const(dst, Value::String(s)),
+            Token::Float(f) => self.load_const(dst, f),
+            Token::String(s) => self.load_const(dst, s),
             Token::Name(var) => self.load_var(dst, var),
             _ => panic!("invalid argument"),
         };
