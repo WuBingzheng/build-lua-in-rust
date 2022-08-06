@@ -144,7 +144,7 @@ impl ParseProto {
     }
 
     fn load_const(&mut self, dst: usize, c: impl Into<Value>) -> ByteCode {
-        ByteCode::LoadConst(dst as u8, self.add_const(c) as u8)
+        ByteCode::LoadConst(dst as u8, self.add_const(c) as u16)
     }
 
     fn load_var(&mut self, dst: usize, name: String) -> ByteCode {
