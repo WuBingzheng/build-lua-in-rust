@@ -1,14 +1,21 @@
 use std::fmt;
+use std::mem;
+use std::rc::Rc;
+use std::hash::{Hash, Hasher};
 use crate::vm::ExeState;
 
-// ANCHOR: value
+const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
+const MID_STR_MAX: usize = 48 - 1;
+
 #[derive(Clone)]
 pub enum Value {
     Nil,
     Boolean(bool),
     Integer(i64),
     Float(f64),
-    String(String),
+    ShortStr(u8, [u8; SHORT_STR_MAX]),
+    MidStr(Rc<(u8, [u8; MID_STR_MAX])>),
+    LongStr(Rc<String>),
     Function(fn (&mut ExeState) -> i32),
 }
 
@@ -19,12 +26,13 @@ impl fmt::Debug for Value {
             Value::Boolean(b) => write!(f, "{b}"),
             Value::Integer(i) => write!(f, "{i}"),
             Value::Float(n) => write!(f, "{n:?}"),
-            Value::String(s) => write!(f, "{s}"),
+            Value::ShortStr(len, buf) => write!(f, "{}", String::from_utf8_lossy(&buf[..*len as usize])),
+            Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
+            Value::LongStr(s) => write!(f, "{s}"),
             Value::Function(_) => write!(f, "function"),
         }
     }
 }
-// ANCHOR_END: value
 
 // ANCHOR: peq
 impl PartialEq for Value {
@@ -35,10 +43,103 @@ impl PartialEq for Value {
             (Value::Boolean(b1), Value::Boolean(b2)) => *b1 == *b2,
             (Value::Integer(i1), Value::Integer(i2)) => *i1 == *i2,
             (Value::Float(f1), Value::Float(f2)) => *f1 == *f2,
-            (Value::String(s1), Value::String(s2)) => *s1 == *s2,
+            (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) => s1[..*len1 as usize] == s2[..*len2 as usize],
+            (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
+            (Value::LongStr(s1), Value::LongStr(s2)) => *s1 == *s2,
             (Value::Function(f1), Value::Function(f2)) => std::ptr::eq(f1, f2),
             (_, _) => false,
         }
     }
 }
 // ANCHOR_END: peq
+
+impl Eq for Value {}
+
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Value::Nil => (),
+            Value::Boolean(b) => b.hash(state),
+            Value::Integer(i) => i.hash(state),
+            Value::Float(f) => // TODO try to convert to integer
+                unsafe {
+                    mem::transmute::<f64, i64>(*f).hash(state)
+                }
+            Value::ShortStr(len, buf) => buf[..*len as usize].hash(state),
+            Value::MidStr(s) => s.1[..s.0 as usize].hash(state),
+            Value::LongStr(s) => s.hash(state),
+            Value::Function(f) => (*f as *const usize).hash(state),
+        }
+    }
+}
+
+impl From<()> for Value {
+    fn from(_: ()) -> Self {
+        Value::Nil
+    }
+}
+
+impl From<bool> for Value {
+    fn from(b: bool) -> Self {
+        Value::Boolean(b)
+    }
+}
+
+impl From<f64> for Value {
+    fn from(n: f64) -> Self {
+        Value::Float(n)
+    }
+}
+
+impl From<i64> for Value {
+    fn from(n: i64) -> Self {
+        Value::Integer(n)
+    }
+}
+
+impl From<String> for Value {
+    fn from(s: String) -> Self {
+        let len = s.len();
+        if len <= SHORT_STR_MAX {
+            let mut buf = [0; SHORT_STR_MAX];
+            buf[..len].copy_from_slice(s.as_bytes());
+            Value::ShortStr(len as u8, buf)
+
+        } else if len <= MID_STR_MAX {
+            let mut buf = [0; MID_STR_MAX];
+            buf[..len].copy_from_slice(s.as_bytes());
+            Value::MidStr(Rc::new((len as u8, buf)))
+
+        } else {
+            Value::LongStr(Rc::new(s))
+        }
+    }
+}
+
+impl From<&str> for Value {
+    fn from(s: &str) -> Self {
+        s.to_string().into()
+    }
+}
+
+impl<'a> From<&'a Value> for &'a str {
+    fn from(v: &'a Value) -> Self {
+        match v {
+            Value::ShortStr(len, buf) => std::str::from_utf8(&buf[..*len as usize]).unwrap(),
+            Value::MidStr(s) => std::str::from_utf8(&s.1[..s.0 as usize]).unwrap(),
+            Value::LongStr(s) => s,
+            _ => panic!("invalid string Value"),
+        }
+    }
+}
+
+impl From<&Value> for String {
+    fn from(v: &Value) -> Self {
+        match v {
+            Value::ShortStr(len, buf) => String::from_utf8_lossy(&buf[..*len as usize]).to_string(),
+            Value::MidStr(s) => String::from_utf8_lossy(&s.1[..s.0 as usize]).to_string(),
+            Value::LongStr(s) => s.as_ref().clone(),
+            _ => panic!("invalid string Value"),
+        }
+    }
+}
