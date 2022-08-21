@@ -1,6 +1,6 @@
 use std::mem;
-use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Bytes};
+use std::iter::Peekable;
 
 // ANCHOR: token
 #[derive(Debug, PartialEq)]
@@ -37,16 +37,16 @@ pub enum Token {
 
 #[derive(Debug)]
 // ANCHOR: lex
-pub struct Lex {
-    input: File,
+pub struct Lex<R: Read> {
+    input: Peekable::<Bytes::<R>>,
     ahead: Token,
 }
 // ANCHOR_END: lex
 
-impl Lex {
-    pub fn new(input: File) -> Self {
+impl<R: Read> Lex<R> {
+    pub fn new(input: R) -> Self {
         Lex {
-            input,
+            input: input.bytes().peekable(),
             ahead: Token::Eos,
         }
     }
@@ -94,30 +94,29 @@ impl Lex {
             '<' => self.check_ahead2('=', Token::LesEq, '<', Token::ShiftL, Token::Less),
             '>' => self.check_ahead2('=', Token::GreEq, '>', Token::ShiftR, Token::Greater),
             '\'' | '"' => self.read_string(ch),
-            '.' => match self.read_char() {
+            '.' => match self.peek_char() {
                 '.' => {
-                    if self.read_char() == '.' {
+                    self.read_char();
+                    if self.peek_char() == '.' {
+                        self.read_char();
                         Token::Dots
                     } else {
-                        self.putback_char();
                         Token::Concat
                     }
                 },
                 '0'..='9' => {
-                    self.putback_char();
                     self.read_number_fraction(0)
                 },
                 _ => {
-                    self.putback_char();
                     Token::Dot
                 },
             },
             '-' => {
-                if self.read_char() == '-' {
+                if self.peek_char() == '-' {
+                    self.read_char();
                     self.read_comment();
                     self.do_next()
                 } else {
-                    self.putback_char();
                     Token::Sub
                 }
             },
@@ -128,32 +127,38 @@ impl Lex {
         }
     }
 
-    #[allow(clippy::unused_io_amount)]
-    fn read_char(&mut self) -> char {
-        let mut buf: [u8; 1] = [0];
-        self.input.read(&mut buf).unwrap();
-        buf[0] as char
+    fn peek_char(&mut self) -> char {
+        match self.input.peek() {
+            Some(Ok(ch)) => *ch as char,
+            Some(_) => panic!("lex peek error"),
+            None => '\0',
+        }
     }
-    fn putback_char(&mut self) {
-        self.input.seek(SeekFrom::Current(-1)).unwrap();
+    fn read_char(&mut self) -> char {
+        match self.input.next() {
+            Some(Ok(ch)) => ch as char,
+            Some(_) => panic!("lex read error"),
+            None => '\0',
+        }
     }
 
     fn check_ahead(&mut self, ahead: char, long: Token, short: Token) -> Token {
-        if self.read_char() == ahead {
+        if self.peek_char() == ahead {
+            self.read_char();
             long
         } else {
-            self.putback_char();
             short
         }
     }
     fn check_ahead2(&mut self, ahead1: char, long1: Token, ahead2: char, long2: Token, short: Token) -> Token {
-        let ch = self.read_char();
+        let ch = self.peek_char();
         if ch == ahead1 {
+            self.read_char();
             long1
         } else if ch == ahead2 {
+            self.read_char();
             long2
         } else {
-            self.putback_char();
             short
         }
     }
@@ -161,58 +166,59 @@ impl Lex {
     fn read_number(&mut self, first: char) -> Token {
         // heximal
         if first == '0' {
-            let second = self.read_char();
+            let second = self.peek_char();
             if second == 'x' || second == 'X' {
                 return self.read_heximal();
             }
-            self.putback_char();
         }
 
         // decimal
         let mut n = char::to_digit(first, 10).unwrap() as i64;
         loop {
-            let ch = self.read_char();
+            let ch = self.peek_char();
             if let Some(d) = char::to_digit(ch, 10) {
+                self.read_char();
                 n = n * 10 + d as i64;
             } else if ch == '.' {
                 return self.read_number_fraction(n);
             } else if ch == 'e' || ch == 'E' {
                 return self.read_number_exp(n as f64);
             } else {
-                self.putback_char();
                 break;
             }
         }
 
         // check following
-        let fch = self.read_char();
+        let fch = self.peek_char();
         if fch.is_alphabetic() || fch == '.' {
             panic!("malformat number");
-        } else {
-            self.putback_char();
         }
 
         Token::Integer(n)
     }
     fn read_number_fraction(&mut self, i: i64) -> Token {
+        self.read_char(); // skip '.'
+
         let mut n: i64 = 0;
         let mut x: f64 = 1.0;
         loop {
-            let ch = self.read_char();
+            let ch = self.peek_char();
             if let Some(d) = char::to_digit(ch, 10) {
+                self.read_char();
                 n = n * 10 + d as i64;
                 x *= 10.0;
             } else {
-                self.putback_char();
                 break;
             }
         }
         Token::Float(i as f64 + n as f64 / x)
     }
     fn read_number_exp(&mut self, _: f64) -> Token {
+        self.read_char(); // skip 'e'
         todo!("lex number exp")
     }
     fn read_heximal(&mut self) -> Token {
+        self.read_char(); // skip 'x'
         todo!("lex heximal")
     }
 
@@ -233,11 +239,11 @@ impl Lex {
         let mut s = first.to_string();
 
         loop {
-            let ch = self.read_char();
+            let ch = self.peek_char();
             if ch.is_alphanumeric() || ch == '_' {
+                self.read_char();
                 s.push(ch);
             } else {
-                self.putback_char();
                 break;
             }
         }

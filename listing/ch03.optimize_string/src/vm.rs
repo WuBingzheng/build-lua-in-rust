@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
@@ -36,9 +37,10 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute(&mut self, proto: &ParseProto) {
+    pub fn execute<R: Read>(&mut self, proto: &ParseProto<R>) {
         for code in proto.byte_codes.iter() {
             match *code {
+// ANCHOR: vm_global
                 ByteCode::GetGlobal(dst, name) => {
                     let name: &str = (&proto.constants[name as usize]).into();
                     let v = self.globals.get(name).unwrap_or(&Value::Nil).clone();
@@ -49,6 +51,7 @@ impl ExeState {
                     let value = self.stack[src as usize].clone();
                     self.globals.insert(name.into(), value);
                 }
+// ANCHOR_END: vm_global
                 ByteCode::SetGlobalConst(name, src) => {
                     let name = &proto.constants[name as usize];
                     let value = proto.constants[src as usize].clone();

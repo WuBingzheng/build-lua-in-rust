@@ -1,21 +1,21 @@
-use std::fs::File;
+use std::io::Read;
 use crate::lex::{Lex, Token};
 use crate::bytecode::ByteCode;
 use crate::value::Value;
 
 // ANCHOR: proto
 #[derive(Debug)]
-pub struct ParseProto {
+pub struct ParseProto<R: Read> {
     pub constants: Vec::<Value>,
     pub byte_codes: Vec::<ByteCode>,
 
     locals: Vec::<String>,
-    lex: Lex,
+    lex: Lex<R>,
 }
 // ANCHOR_END: proto
 
-impl ParseProto {
-    pub fn load(input: File) -> ParseProto {
+impl<R: Read> ParseProto<R> {
+    pub fn load(input: R) -> Self {
         let mut proto = ParseProto {
             constants: Vec::new(),
             byte_codes: Vec::new(),
@@ -133,8 +133,10 @@ impl ParseProto {
         }
     }
 
+// ANCHOR: add_const
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
+// ANCHOR_END: add_const
         let constants = &mut self.constants;
         constants.iter().position(|v| v == &c)
             .unwrap_or_else(|| {

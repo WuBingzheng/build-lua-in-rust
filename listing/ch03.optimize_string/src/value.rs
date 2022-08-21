@@ -85,6 +85,7 @@ impl From<bool> for Value {
     }
 }
 
+// ANCHOR: from_num
 impl From<f64> for Value {
     fn from(n: f64) -> Self {
         Value::Float(n)
@@ -96,7 +97,9 @@ impl From<i64> for Value {
         Value::Integer(n)
     }
 }
+// ANCHOR_END: from_num
 
+// ANCHOR: from_string
 impl From<String> for Value {
     fn from(s: String) -> Self {
         let len = s.len();
@@ -115,6 +118,7 @@ impl From<String> for Value {
         }
     }
 }
+// ANCHOR_END: from_string
 
 impl From<&str> for Value {
     fn from(s: &str) -> Self {
@@ -122,6 +126,7 @@ impl From<&str> for Value {
     }
 }
 
+// ANCHOR: to_string
 impl<'a> From<&'a Value> for &'a str {
     fn from(v: &'a Value) -> Self {
         match v {
@@ -143,3 +148,4 @@ impl From<&Value> for String {
         }
     }
 }
+// ANCHOR_END: to_string
