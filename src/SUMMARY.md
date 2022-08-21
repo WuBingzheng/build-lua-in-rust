@@ -15,3 +15,4 @@
 - [字符串优化](./ch03-00.optimize_string.md)
   - [字符串定义](./ch03-01.string_type.md)
   - [类型转换](./ch03-02.from_trait.md)
+  - [输入类型](./ch03-03.read_input.md)
