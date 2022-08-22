@@ -15,7 +15,7 @@ pub enum Value {
     Float(f64),
     ShortStr(u8, [u8; SHORT_STR_MAX]),
     MidStr(Rc<(u8, [u8; MID_STR_MAX])>),
-    LongStr(Rc<String>),
+    LongStr(Rc<Vec<u8>>),
     Function(fn (&mut ExeState) -> i32),
 }
 
@@ -28,7 +28,7 @@ impl fmt::Debug for Value {
             Value::Float(n) => write!(f, "{n:?}"),
             Value::ShortStr(len, buf) => write!(f, "{}", String::from_utf8_lossy(&buf[..*len as usize])),
             Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
-            Value::LongStr(s) => write!(f, "{s}"),
+            Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(&s)),
             Value::Function(_) => write!(f, "function"),
         }
     }
@@ -45,7 +45,7 @@ impl PartialEq for Value {
             (Value::Float(f1), Value::Float(f2)) => *f1 == *f2,
             (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) => s1[..*len1 as usize] == s2[..*len2 as usize],
             (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
-            (Value::LongStr(s1), Value::LongStr(s2)) => *s1 == *s2,
+            (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
             (Value::Function(f1), Value::Function(f2)) => std::ptr::eq(f1, f2),
             (_, _) => false,
         }
@@ -114,7 +114,7 @@ impl From<String> for Value {
             Value::MidStr(Rc::new((len as u8, buf)))
 
         } else {
-            Value::LongStr(Rc::new(s))
+            Value::LongStr(Rc::new(s.into_bytes()))
         }
     }
 }
@@ -126,26 +126,46 @@ impl From<&str> for Value {
     }
 }
 
-// ANCHOR: to_string
-impl<'a> From<&'a Value> for &'a str {
+impl From<Vec<u8>> for Value {
+    fn from(v: Vec<u8>) -> Self {
+        let len = v.len();
+        if len <= SHORT_STR_MAX {
+            let mut buf = [0; SHORT_STR_MAX];
+            buf[..len].copy_from_slice(&v);
+            Value::ShortStr(len as u8, buf)
+
+        } else if len <= MID_STR_MAX {
+            let mut buf = [0; MID_STR_MAX];
+            buf[..len].copy_from_slice(&v);
+            Value::MidStr(Rc::new((len as u8, buf)))
+
+        } else {
+            Value::LongStr(Rc::new(v))
+        }
+    }
+}
+
+// ANCHOR: to_vec_string
+impl<'a> From<&'a Value> for &'a [u8] {
     fn from(v: &'a Value) -> Self {
         match v {
-            Value::ShortStr(len, buf) => std::str::from_utf8(&buf[..*len as usize]).unwrap(),
-            Value::MidStr(s) => std::str::from_utf8(&s.1[..s.0 as usize]).unwrap(),
+            Value::ShortStr(len, buf) => &buf[..*len as usize],
+            Value::MidStr(s) => &s.1[..s.0 as usize],
             Value::LongStr(s) => s,
             _ => panic!("invalid string Value"),
         }
     }
 }
 
-impl From<&Value> for String {
-    fn from(v: &Value) -> Self {
-        match v {
-            Value::ShortStr(len, buf) => String::from_utf8_lossy(&buf[..*len as usize]).to_string(),
-            Value::MidStr(s) => String::from_utf8_lossy(&s.1[..s.0 as usize]).to_string(),
-            Value::LongStr(s) => s.as_ref().clone(),
-            _ => panic!("invalid string Value"),
-        }
+impl<'a> From<&'a Value> for &'a str {
+    fn from(v: &'a Value) -> Self {
+        std::str::from_utf8(v.into()).unwrap()
     }
 }
-// ANCHOR_END: to_string
+
+impl From<&Value> for String {
+    fn from(v: &Value) -> Self {
+        String::from_utf8_lossy(v.into()).to_string()
+    }
+}
+// ANCHOR_END: to_vec_string

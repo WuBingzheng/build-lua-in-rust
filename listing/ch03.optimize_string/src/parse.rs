@@ -74,7 +74,7 @@ impl<R: Read> ParseProto<R> {
                 let code = self.load_const(iarg, s);
                 self.byte_codes.push(code);
             }
-            _ => panic!("expected string"),
+            t => panic!("expected string {t:?}"),
         }
 
         self.byte_codes.push(ByteCode::Call(ifunc as u8, 1));
