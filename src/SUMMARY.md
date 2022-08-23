@@ -16,3 +16,4 @@
   - [字符串定义](./ch03-01.string_type.md)
   - [类型转换](./ch03-02.from_trait.md)
   - [输入类型](./ch03-03.read_input.md)
+  - [Unicode和UTF-8](./ch03-04.unicode_utf8.md)
