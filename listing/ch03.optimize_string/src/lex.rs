@@ -223,18 +223,46 @@ impl<R: Read> Lex<R> {
     fn read_string(&mut self, quote: u8) -> Token {
         let mut s = Vec::new();
         loop {
-            if let Some(byt) = self.next_byte() {
-                match byt {
-                    b'\n' => panic!("unfinished string"),
-                    b'\\' => todo!("escape"),
-                    byt if byt == quote => break,
-                    byt => s.push(byt),
-                }
-            } else {
-                panic!("unfinished string");
+            match self.next_byte().expect("unfinished string") {
+                b'\n' => panic!("unfinished string"),
+                b'\\' => s.push(self.read_escape()),
+                byt if byt == quote => break,
+                byt => s.push(byt),
             }
         }
         Token::String(s)
+    }
+    fn read_escape(&mut self) -> u8 {
+        match self.next_byte().expect("string escape") {
+            b'a' => 0x07,
+            b'b' => 0x08,
+            b'f' => 0x0c,
+            b'v' => 0x0b,
+            b'n' => b'\n',
+            b'r' => b'\r',
+            b't' => b'\t',
+            b'\\' => b'\\',
+            b'"' => b'"',
+            b'\'' => b'\'',
+            b'x' => { // format: \xXX
+                let n1 = char::to_digit(self.next_byte().unwrap() as char, 16).unwrap();
+                let n2 = char::to_digit(self.next_byte().unwrap() as char, 16).unwrap();
+                (n1 * 16 + n2) as u8
+            }
+            ch@b'0'..=b'9' => { // format: \d[d[d]]
+                let mut n = char::to_digit(ch as char, 10).unwrap(); // TODO no unwrap
+                if let Some(d) = char::to_digit(self.peek_byte() as char, 10) {
+                    self.next_byte();
+                    n = n * 10 + d;
+                    if let Some(d) = char::to_digit(self.peek_byte() as char, 10) {
+                        self.next_byte();
+                        n = n * 10 + d;
+                    }
+                }
+                u8::try_from(n).expect("decimal escape too large")
+            }
+            _ => panic!("invalid string escape")
+        }
     }
 
     fn read_name(&mut self, first: u8) -> Token {
