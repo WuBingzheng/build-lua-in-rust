@@ -99,51 +99,47 @@ impl From<i64> for Value {
 }
 // ANCHOR_END: from_num
 
-// ANCHOR: from_string
-impl From<String> for Value {
-    fn from(s: String) -> Self {
-        let len = s.len();
-        if len <= SHORT_STR_MAX {
-            let mut buf = [0; SHORT_STR_MAX];
-            buf[..len].copy_from_slice(s.as_bytes());
-            Value::ShortStr(len as u8, buf)
-
-        } else if len <= MID_STR_MAX {
-            let mut buf = [0; MID_STR_MAX];
-            buf[..len].copy_from_slice(s.as_bytes());
-            Value::MidStr(Rc::new((len as u8, buf)))
-
-        } else {
-            Value::LongStr(Rc::new(s.into_bytes()))
-        }
+// ANCHOR: from_vec_string
+// convert &[u8], Vec<u8>, &str and String into Value
+impl From<&[u8]> for Value {
+    fn from(v: &[u8]) -> Self {
+        vec_to_short_mid_str(v).unwrap_or(Value::LongStr(Rc::new(v.to_vec())))
     }
 }
-// ANCHOR_END: from_string
-
 impl From<&str> for Value {
     fn from(s: &str) -> Self {
-        s.to_string().into()
+        s.as_bytes().into() // &[u8]
     }
 }
 
 impl From<Vec<u8>> for Value {
     fn from(v: Vec<u8>) -> Self {
-        let len = v.len();
-        if len <= SHORT_STR_MAX {
-            let mut buf = [0; SHORT_STR_MAX];
-            buf[..len].copy_from_slice(&v);
-            Value::ShortStr(len as u8, buf)
-
-        } else if len <= MID_STR_MAX {
-            let mut buf = [0; MID_STR_MAX];
-            buf[..len].copy_from_slice(&v);
-            Value::MidStr(Rc::new((len as u8, buf)))
-
-        } else {
-            Value::LongStr(Rc::new(v))
-        }
+        vec_to_short_mid_str(&v).unwrap_or(Value::LongStr(Rc::new(v)))
     }
 }
+impl From<String> for Value {
+    fn from(s: String) -> Self {
+        s.into_bytes().into() // Vec<u8>
+    }
+}
+
+fn vec_to_short_mid_str(v: &[u8]) -> Option<Value> {
+    let len = v.len();
+    if len <= SHORT_STR_MAX {
+        let mut buf = [0; SHORT_STR_MAX];
+        buf[..len].copy_from_slice(&v);
+        Some(Value::ShortStr(len as u8, buf))
+
+    } else if len <= MID_STR_MAX {
+        let mut buf = [0; MID_STR_MAX];
+        buf[..len].copy_from_slice(&v);
+        Some(Value::MidStr(Rc::new((len as u8, buf))))
+
+    } else {
+        None
+    }
+}
+// ANCHOR_END: from_vec_string
 
 // ANCHOR: to_vec_string
 impl<'a> From<&'a Value> for &'a [u8] {
