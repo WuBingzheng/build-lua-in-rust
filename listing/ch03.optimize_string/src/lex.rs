@@ -69,61 +69,63 @@ impl<R: Read> Lex<R> {
 // ANCHOR_END: peek_next
 
     fn do_next(&mut self) -> Token {
-        let byt = self.next_byte();
-        match byt {
-            b'\n' | b'\r' | b'\t' | b' ' => self.do_next(),
-            b'+' => Token::Add,
-            b'*' => Token::Mul,
-            b'%' => Token::Mod,
-            b'^' => Token::Pow,
-            b'#' => Token::Len,
-            b'&' => Token::BitAnd,
-            b'|' => Token::BitOr,
-            b'(' => Token::ParL,
-            b')' => Token::ParR,
-            b'{' => Token::CurlyL,
-            b'}' => Token::CurlyR,
-            b'[' => Token::SqurL,
-            b']' => Token::SqurR,
-            b';' => Token::SemiColon,
-            b',' => Token::Comma,
-            b'/' => self.check_ahead(b'/', Token::Idiv, Token::Div),
-            b'=' => self.check_ahead(b'=', Token::Equal, Token::Assign),
-            b'~' => self.check_ahead(b'=', Token::NotEq, Token::BitXor),
-            b':' => self.check_ahead(b':', Token::DoubColon, Token::Colon),
-            b'<' => self.check_ahead2(b'=', Token::LesEq, b'<', Token::ShiftL, Token::Less),
-            b'>' => self.check_ahead2(b'=', Token::GreEq, b'>', Token::ShiftR, Token::Greater),
-            b'\'' | b'"' => self.read_string(byt),
-            b'.' => match self.peek_byte() {
-                b'.' => {
-                    self.next_byte();
-                    if self.peek_byte() == b'.' {
+        if let Some(byt) = self.next_byte() {
+            match byt {
+                b'\n' | b'\r' | b'\t' | b' ' => self.do_next(),
+                b'+' => Token::Add,
+                b'*' => Token::Mul,
+                b'%' => Token::Mod,
+                b'^' => Token::Pow,
+                b'#' => Token::Len,
+                b'&' => Token::BitAnd,
+                b'|' => Token::BitOr,
+                b'(' => Token::ParL,
+                b')' => Token::ParR,
+                b'{' => Token::CurlyL,
+                b'}' => Token::CurlyR,
+                b'[' => Token::SqurL,
+                b']' => Token::SqurR,
+                b';' => Token::SemiColon,
+                b',' => Token::Comma,
+                b'/' => self.check_ahead(b'/', Token::Idiv, Token::Div),
+                b'=' => self.check_ahead(b'=', Token::Equal, Token::Assign),
+                b'~' => self.check_ahead(b'=', Token::NotEq, Token::BitXor),
+                b':' => self.check_ahead(b':', Token::DoubColon, Token::Colon),
+                b'<' => self.check_ahead2(b'=', Token::LesEq, b'<', Token::ShiftL, Token::Less),
+                b'>' => self.check_ahead2(b'=', Token::GreEq, b'>', Token::ShiftR, Token::Greater),
+                b'\'' | b'"' => self.read_string(byt),
+                b'.' => match self.peek_byte() {
+                    b'.' => {
                         self.next_byte();
-                        Token::Dots
+                        if self.peek_byte() == b'.' {
+                            self.next_byte();
+                            Token::Dots
+                        } else {
+                            Token::Concat
+                        }
+                    },
+                    b'0'..=b'9' => {
+                        self.read_number_fraction(0)
+                    },
+                    _ => {
+                        Token::Dot
+                    },
+                },
+                b'-' => {
+                    if self.peek_byte() == b'-' {
+                        self.next_byte();
+                        self.read_comment();
+                        self.do_next()
                     } else {
-                        Token::Concat
+                        Token::Sub
                     }
                 },
-                b'0'..=b'9' => {
-                    self.read_number_fraction(0)
-                },
-                _ => {
-                    Token::Dot
-                },
-            },
-            b'-' => {
-                if self.peek_byte() == b'-' {
-                    self.next_byte();
-                    self.read_comment();
-                    self.do_next()
-                } else {
-                    Token::Sub
-                }
-            },
-            b'0'..=b'9' => self.read_number(byt),
-            b'A'..=b'Z' | b'a'..=b'z' | b'_' => self.read_name(byt),
-            b'\0' => Token::Eos, // TODO
-            _ => panic!("invalid char {byt}"),
+                b'0'..=b'9' => self.read_number(byt),
+                b'A'..=b'Z' | b'a'..=b'z' | b'_' => self.read_name(byt),
+                _ => panic!("invalid char {byt}"),
+            }
+        } else {
+            Token::Eos
         }
     }
 
@@ -131,15 +133,11 @@ impl<R: Read> Lex<R> {
         match self.input.peek() {
             Some(Ok(byt)) => *byt,
             Some(_) => panic!("lex peek error"),
-            None => b'\0',
+            None => b'\0', // good for usage
         }
     }
-    fn next_byte(&mut self) -> u8 {
-        match self.input.next() {
-            Some(Ok(byt)) => byt,
-            Some(_) => panic!("lex read error"),
-            None => b'\0',
-        }
+    fn next_byte(&mut self) -> Option<u8> {
+        self.input.next().and_then(|r|Some(r.unwrap()))
     }
 
     fn check_ahead(&mut self, ahead: u8, long: Token, short: Token) -> Token {
@@ -225,11 +223,15 @@ impl<R: Read> Lex<R> {
     fn read_string(&mut self, quote: u8) -> Token {
         let mut s = Vec::new();
         loop {
-            match self.next_byte() {
-                b'\n' | b'\0' => panic!("unfinished string"),
-                b'\\' => todo!("escape"),
-                byt if byt == quote => break,
-                byt => s.push(byt),
+            if let Some(byt) = self.next_byte() {
+                match byt {
+                    b'\n' => panic!("unfinished string"),
+                    b'\\' => todo!("escape"),
+                    byt if byt == quote => break,
+                    byt => s.push(byt),
+                }
+            } else {
+                panic!("unfinished string");
             }
         }
         Token::String(s)
@@ -279,11 +281,11 @@ impl<R: Read> Lex<R> {
     // '--' has been read
     fn read_comment(&mut self) {
         match self.next_byte() {
-            b'[' => todo!("long comment"),
-            _ => { // line comment
-                loop {
-                    let byt = self.next_byte();
-                    if byt == b'\n' || byt == b'\0' {
+            None => (),
+            Some(b'[') => todo!("long comment"),
+            Some(_) => { // line comment
+                while let Some(byt) = self.next_byte() {
+                    if byt == b'\n' {
                         break;
                     }
                 }
