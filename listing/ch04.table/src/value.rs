@@ -1,7 +1,9 @@
 use std::fmt;
 use std::mem;
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
+use std::collections::HashMap;
 use crate::vm::ExeState;
 
 const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
@@ -16,7 +18,24 @@ pub enum Value {
     ShortStr(u8, [u8; SHORT_STR_MAX]),
     MidStr(Rc<(u8, [u8; MID_STR_MAX])>),
     LongStr(Rc<Vec<u8>>),
+    Table(Rc<RefCell<Table>>),
     Function(fn (&mut ExeState) -> i32),
+}
+
+// ANCHOR: table
+pub struct Table {
+    pub array: Vec<Value>,
+    pub map: HashMap<Value, Value>,
+}
+// ANCHOR_END: table
+
+impl Table {
+    pub fn new(narray: usize, nmap: usize) -> Self {
+        Table {
+            array: Vec::with_capacity(narray),
+            map: HashMap::with_capacity(nmap),
+        }
+    }
 }
 
 impl fmt::Debug for Value {
@@ -29,6 +48,10 @@ impl fmt::Debug for Value {
             Value::ShortStr(len, buf) => write!(f, "{}", String::from_utf8_lossy(&buf[..*len as usize])),
             Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(&s)),
+            Value::Table(t) => {
+                let t = t.borrow();
+                write!(f, "table:{}:{}", t.array.len(), t.map.len())
+            }
             Value::Function(_) => write!(f, "function"),
         }
     }
@@ -46,6 +69,7 @@ impl PartialEq for Value {
             (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) => s1[..*len1 as usize] == s2[..*len2 as usize],
             (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
+            (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
             (Value::Function(f1), Value::Function(f2)) => std::ptr::eq(f1, f2),
             (_, _) => false,
         }
@@ -68,6 +92,7 @@ impl Hash for Value {
             Value::ShortStr(len, buf) => buf[..*len as usize].hash(state),
             Value::MidStr(s) => s.1[..s.0 as usize].hash(state),
             Value::LongStr(s) => s.hash(state),
+            Value::Table(t) => Rc::as_ptr(t).hash(state),
             Value::Function(f) => (*f as *const usize).hash(state),
         }
     }
