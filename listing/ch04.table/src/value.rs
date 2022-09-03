@@ -38,7 +38,7 @@ impl Table {
     }
 }
 
-impl fmt::Debug for Value {
+impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
             Value::Nil => write!(f, "nil"),
@@ -48,6 +48,22 @@ impl fmt::Debug for Value {
             Value::ShortStr(len, buf) => write!(f, "{}", String::from_utf8_lossy(&buf[..*len as usize])),
             Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(&s)),
+            Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
+            Value::Function(_) => write!(f, "function"),
+        }
+    }
+}
+
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match self {
+            Value::Nil => write!(f, "nil"),
+            Value::Boolean(b) => write!(f, "{b}"),
+            Value::Integer(i) => write!(f, "{i}"),
+            Value::Float(n) => write!(f, "{n:?}"),
+            Value::ShortStr(len, buf) => write!(f, "SS:'{}'", String::from_utf8_lossy(&buf[..*len as usize])),
+            Value::MidStr(s) => write!(f, "MS:'{}'", String::from_utf8_lossy(&s.1[..s.0 as usize])),
+            Value::LongStr(s) => write!(f, "LS:'{}'", String::from_utf8_lossy(&s)),
             Value::Table(t) => {
                 let t = t.borrow();
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
@@ -77,8 +93,11 @@ impl PartialEq for Value {
 }
 // ANCHOR_END: peq
 
+// ANCHOR: eq
 impl Eq for Value {}
+// ANCHOR_END: eq
 
+// ANCHOR: hash
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
@@ -97,6 +116,7 @@ impl Hash for Value {
         }
     }
 }
+// ANCHOR_END: hash
 
 impl From<()> for Value {
     fn from(_: ()) -> Self {
