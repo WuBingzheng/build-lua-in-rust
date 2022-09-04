@@ -1,15 +1,17 @@
 use std::io::Read;
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
-use crate::value::Value;
+use crate::value::{Value, Table};
 use crate::parse::ParseProto;
 
 // ANCHOR: print
 // "print" function in Lua's std-lib.
 // It supports only 1 argument and assumes the argument is at index:1 on stack.
 fn lib_print(state: &mut ExeState) -> i32 {
-    println!("{:?}", state.stack[state.func_index + 1]);
+    println!("{}", state.stack[state.func_index + 1]);
     0
 }
 // ANCHOR_END: print
@@ -80,6 +82,39 @@ impl ExeState {
                     let v = self.stack[src as usize].clone();
                     self.set_stack(dst, v);
                 }
+// ANCHOR: vm_table
+                ByteCode::NewTable(dst, narray, nmap) => {
+                    let table = Table::new(narray as usize, nmap as usize);
+                    self.set_stack(dst, Value::Table(Rc::new(RefCell::new(table))));
+                }
+                ByteCode::SetTable(table, key, value) => {
+                    let key = self.stack[key as usize].clone();
+                    let value = self.stack[value as usize].clone();
+                    if let Value::Table(table) = &self.stack[table as usize] {
+                        table.borrow_mut().map.insert(key, value);
+                    } else {
+                        panic!("not table");
+                    }
+                }
+                ByteCode::SetField(table, key, value) => {
+                    let key = proto.constants[key as usize].clone();
+                    let value = self.stack[value as usize].clone();
+                    if let Value::Table(table) = &self.stack[table as usize] {
+                        table.borrow_mut().map.insert(key, value);
+                    } else {
+                        panic!("not table");
+                    }
+                }
+                ByteCode::SetList(table, n) => {
+                    let ivalue = table as usize + 1;
+                    if let Value::Table(table) = self.stack[table as usize].clone() {
+                        let values = self.stack.drain(ivalue .. ivalue + n as usize);
+                        table.borrow_mut().array.extend(values);
+                    } else {
+                        panic!("not table");
+                    }
+                }
+// ANCHOR_END: vm_table
                 ByteCode::Call(func, _) => {
                     self.func_index = func as usize;
                     let func = &self.stack[self.func_index];

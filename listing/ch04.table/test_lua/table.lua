@@ -1,1 +1,5 @@
-print {1,2,3; x="hello", y="world"}
+local key = "kkk"
+print { 100, 200, 300;  -- list style
+        x="hello", y="world";  -- record style
+        [key]="vvv";  -- general style
+      }

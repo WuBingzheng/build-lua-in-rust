@@ -67,6 +67,10 @@ impl<R: Read> Lex<R> {
         &self.ahead
     }
 // ANCHOR_END: peek_next
+//
+    pub fn expect(&mut self, t: Token) {
+        assert_eq!(self.next(), t);
+    }
 
     fn do_next(&mut self) -> Token {
         if let Some(byt) = self.next_byte() {
