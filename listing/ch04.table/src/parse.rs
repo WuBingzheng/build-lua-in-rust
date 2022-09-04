@@ -181,6 +181,10 @@ impl<R: Read> ParseProto<R> {
             Token::Float(f) => self.load_const(dst, f),
             Token::String(s) => self.load_const(dst, s),
             Token::Name(var) => self.load_var(dst, var),
+            Token::CurlyL => {
+                self.table_constructor(dst);
+                return;
+            }
             _ => panic!("invalid argument"),
         };
         self.byte_codes.push(code);
