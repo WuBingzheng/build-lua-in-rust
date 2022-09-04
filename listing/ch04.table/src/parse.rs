@@ -130,6 +130,13 @@ impl<R: Read> ParseProto<R> {
                         ByteCode::SetGlobalGlobal(dst, self.add_const(var) as u8)
                     }
 
+                // from table constructor
+                Token::CurlyL => {
+                    let sp = self.locals.len();
+                    self.table_constructor(sp);
+                    ByteCode::SetGlobal(dst, sp as u8)
+                }
+
                 _ => panic!("invalid argument"),
             };
             self.byte_codes.push(code);
