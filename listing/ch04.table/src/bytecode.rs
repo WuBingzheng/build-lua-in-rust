@@ -12,6 +12,10 @@ pub enum ByteCode {
     NewTable(u8, u8, u8),
     SetTable(u8, u8, u8),
     SetField(u8, u8, u8),
+    SetInt(u8, u8, u8),
+    SetTableConst(u8, u8, u8),
+    SetFieldConst(u8, u8, u8),
+    SetIntConst(u8, u8, u8),
     SetList(u8, u8),
     Call(u8, u8),
 }

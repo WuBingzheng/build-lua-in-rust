@@ -87,23 +87,33 @@ impl ExeState {
                     let table = Table::new(narray as usize, nmap as usize);
                     self.set_stack(dst, Value::Table(Rc::new(RefCell::new(table))));
                 }
-                ByteCode::SetTable(table, key, value) => {
-                    let key = self.stack[key as usize].clone();
-                    let value = self.stack[value as usize].clone();
-                    if let Value::Table(table) = &self.stack[table as usize] {
-                        table.borrow_mut().map.insert(key, value);
-                    } else {
-                        panic!("not table");
-                    }
+                ByteCode::SetInt(t, i, v) => {
+                    let value = self.stack[v as usize].clone();
+                    self.set_table_int(t, i as i64, value);
                 }
-                ByteCode::SetField(table, key, value) => {
-                    let key = proto.constants[key as usize].clone();
-                    let value = self.stack[value as usize].clone();
-                    if let Value::Table(table) = &self.stack[table as usize] {
-                        table.borrow_mut().map.insert(key, value);
-                    } else {
-                        panic!("not table");
-                    }
+                ByteCode::SetIntConst(t, i, v) => {
+                    let value = proto.constants[v as usize].clone();
+                    self.set_table_int(t, i as i64, value);
+                }
+                ByteCode::SetField(t, k, v) => {
+                    let key = proto.constants[k as usize].clone();
+                    let value = self.stack[v as usize].clone();
+                    self.set_table(t, key, value);
+                }
+                ByteCode::SetFieldConst(t, k, v) => {
+                    let key = proto.constants[k as usize].clone();
+                    let value = proto.constants[v as usize].clone();
+                    self.set_table(t, key, value);
+                }
+                ByteCode::SetTable(t, k, v) => {
+                    let key = self.stack[k as usize].clone();
+                    let value = self.stack[v as usize].clone();
+                    self.set_table(t, key, value);
+                }
+                ByteCode::SetTableConst(t, k, v) => {
+                    let key = self.stack[k as usize].clone();
+                    let value = proto.constants[v as usize].clone();
+                    self.set_table(t, key, value);
                 }
                 ByteCode::SetList(table, n) => {
                     let ivalue = table as usize + 1;
@@ -139,4 +149,39 @@ impl ExeState {
         }
     }
 // ANCHOR_END: set_stack
+
+    fn set_table(&mut self, t: u8, key: Value, value: Value) {
+        match &key {
+            Value::Integer(i) => self.set_table_int(t, *i, value), // TODO Float
+            _ => if let Value::Table(table) = &self.stack[t as usize] {
+                    table.borrow_mut().map.insert(key, value);
+                } else {
+                    panic!("invalid table");
+                }
+        }
+    }
+    fn set_table_int(&mut self, t: u8, i: i64, value: Value) {
+        if let Value::Table(table) = &self.stack[t as usize] {
+            let mut table = table.borrow_mut();
+            // this is not same with Lua's official implement
+            if i > 0 && (i < 4 || i < table.array.capacity() as i64 * 2) {
+                set_vec(&mut table.array, i as usize - 1, value);
+            } else {
+                table.map.insert(Value::Integer(i), value);
+            }
+        } else {
+            panic!("invalid table");
+        }
+    }
+}
+
+fn set_vec(vec: &mut Vec<Value>, i: usize, value: Value) {
+    match i.cmp(&vec.len()) {
+        Ordering::Less => vec[i] = value,
+        Ordering::Equal => vec.push(value),
+        Ordering::Greater => {
+            vec.resize(i, Value::Nil);
+            vec.push(value);
+        }
+    }
 }
