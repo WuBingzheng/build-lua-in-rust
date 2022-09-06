@@ -3,9 +3,8 @@ pub enum ByteCode {
     GetGlobal(u8, u8),
     SetGlobal(u8, u8),
     SetGlobalConst(u8, u8), // TODO u8?
-    SetGlobalGlobal(u8, u8),
     LoadConst(u8, u16),
-    LoadNil(u8),
+    LoadNil(u8, u8),
     LoadBool(u8, bool),
     LoadInt(u8, i16),
     Move(u8, u8),
@@ -17,5 +16,8 @@ pub enum ByteCode {
     SetFieldConst(u8, u8, u8),
     SetIntConst(u8, u8, u8),
     SetList(u8, u8),
+    GetTable(u8, u8, u8),
+    GetField(u8, u8, u8),
+    GetInt(u8, u8, u8),
     Call(u8, u8),
 }

@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::cmp::Ordering;
 use crate::lex::{Lex, Token};
 use crate::bytecode::ByteCode;
 use crate::value::Value;
@@ -13,6 +14,10 @@ enum ExpDesc {
     Const(usize), // add above types into ParseProto.constants
     Local(usize), // on stack, including local and temprary variables
     Global(usize), // global variable
+    Index(usize, usize),
+    IndexStr(usize, usize),
+    IndexInt(usize, u8),
+    Call,
 }
 
 // ANCHOR: proto
@@ -49,16 +54,39 @@ impl<R: Read> ParseProto<R> {
     }
 
     fn chunk(&mut self) {
+        self.block()
+    }
+
+    // BNF:
+    //   block ::= {stat} [retstat]
+    //   stat ::= `;` |
+    // 	   varlist `=` explist |
+    // 	   functioncall |
+    // 	   label |
+    // 	   break |
+    // 	   goto Name |
+    // 	   do block end |
+    // 	   while exp do block end |
+    // 	   repeat block until exp |
+    // 	   if exp then block {elseif exp then block} [else block] end |
+    // 	   for Name `=` exp `,` exp [`,` exp] do block end |
+    // 	   for namelist in explist do block end |
+    // 	   function funcname funcbody |
+    // 	   local function Name funcbody |
+    // 	   local attnamelist [`=` explist]
+    fn block(&mut self) {
         loop {
             // reset sp before each statement
             self.sp = self.locals.len();
 
             match self.lex.next() {
-                Token::Name(name) => {
-                    if self.lex.peek() == &Token::Assign {
-                        self.assignment(name);
+                Token::SemiColon => (),
+                Token::Name(name) => { // functioncall or assignment
+                    let desc = self.prefixexp(Token::Name(name));
+                    if desc == ExpDesc::Call {
+                        // do nothing
                     } else {
-                        self.function_call(name);
+                        self.assignment(desc);
                     }
                 }
                 Token::Local => self.local(),
@@ -68,82 +96,140 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
-    // Name LiteralString
-    // Name ( exp )
-    fn function_call(&mut self, name: String) {
-        let ifunc = self.locals.len();
-
-        // function, variable
-        let code = self.load_var(ifunc, name);
-        self.byte_codes.push(code);
-        self.sp = ifunc + 1; // tmp
-
-        // argument, (exp) or "string"
-        match self.lex.next() {
-            Token::ParL => { // '('
-                self.load_exp();
-
-                if self.lex.next() != Token::ParR { // ')'
-                    panic!("expected `)`");
-                }
-            }
-            Token::CurlyL => { // '{'
-                self.table_constructor();
-            }
-            Token::String(s) => {
-                let code = self.load_const(ifunc+1, s);
-                self.byte_codes.push(code);
-            }
-            t => panic!("expected string {t:?}"),
-        }
-
-        self.byte_codes.push(ByteCode::Call(ifunc as u8, 1));
-    }
-
-    // local Name = exp
+    // BNF:
+    //   local attnamelist [`=` explist]
+    //   attnamelist ::=  Name attrib {`,` Name attrib}
     fn local(&mut self) {
-        let var = if let Token::Name(var) = self.lex.next() {
-            var
-        } else {
-            panic!("expected variable");
+        let mut vars = Vec::new();
+        let nexp = loop {
+            vars.push(self.read_name());
+
+            match self.lex.peek() {
+                Token::Comma => {
+                    self.lex.next(); // more var
+                }
+                Token::Assign => {
+                    self.lex.next();
+                    break self.explist();
+                }
+                _ => break 0, // no explist
+            }
         };
 
-        if self.lex.next() != Token::Assign {
-            panic!("expected `=`");
+        if nexp < vars.len() {
+            let ivar = self.locals.len() + nexp;
+            let nnil = vars.len() - nexp;
+            self.byte_codes.push(ByteCode::LoadNil(ivar as u8, nnil as u8));
         }
 
-        self.load_exp();
-
-        // add to locals after load_exp()
-        self.locals.push(var);
+        // append vars into self.locals after evaluating explist
+        self.locals.append(&mut vars);
     }
 
-    fn assignment(&mut self, var: String) {
-        self.lex.next(); // `=`
+// ANCHOR: assignment
+    // BNF:
+    //   varlist = explist
+    fn assignment(&mut self, first_var: ExpDesc) {
+        // read varlist into @vars
+        let mut vars = vec![first_var];
+        loop {
+            match self.lex.next() {
+                Token::Comma => { // more variable
+                    let token = self.lex.next();
+                    vars.push(self.prefixexp(token));
+                }
+                Token::Assign => break,
+                t => panic!("invalid assign {t:?}"),
+            }
+        }
 
-        if let Some(i) = self.get_local(&var) {
-            // local variable
+        // simlar to explist(), except that does not discharge the last exp.
+        let exp_sp0 = self.sp;  // discharge front exps starts at here
+        let mut nfexp = 0;  // number of discharged exps, excluding the last one
+        let last_exp = loop {
             let desc = self.exp();
-            self.discharge(i, desc);
+
+            if self.lex.peek() == &Token::Comma {
+                // there are more exps, so discharge the previous one
+                self.lex.next();
+                self.discharge(exp_sp0 + nfexp, desc);
+                nfexp += 1;
+            } else { // the last exp
+                break desc;
+            }
+        };
+
+        // assignment last variable
+        match (nfexp + 1).cmp(&vars.len()) {
+            Ordering::Equal => {
+                // assign last variable directly to avoid potential discharging
+                let last_var = vars.pop().unwrap();
+                self.assign_var(last_var, last_exp);
+            }
+            Ordering::Less => {
+                todo!("expand last exps");
+            }
+            Ordering::Greater => {
+                // drop extra exps
+                nfexp = vars.len();
+            }
+        }
+
+        // assign previous variables from tmp registers, in reverse order
+        while let Some(var) = vars.pop() {
+            nfexp -= 1;
+            self.assign_from_reg(var, exp_sp0 + nfexp);
+        }
+    }
+// ANCHOR_END: assignment
+
+// ANCHOR: assign_var
+    fn assign_var(&mut self, var: ExpDesc, value: ExpDesc) {
+        if let ExpDesc::Local(i) = var {
+            // self.sp will be set to i+1 in self.discharge(), which is
+            // NOT expected, but it's ok because self.sp will not be used
+            // before next statement.
+            self.discharge(i, value);
         } else {
-            // global variable
-            let dst = self.add_const(var) as u8;
-
-            let desc = self.exp();
-            let code = match self.try_into_const(desc) {
-                ExpDesc::Const(i) => ByteCode::SetGlobalConst(dst, i as u8),
-                ExpDesc::Local(i) => ByteCode::SetGlobal(dst, i as u8),
-                ExpDesc::Global(i) => ByteCode::SetGlobalGlobal(dst, i as u8),
-                _ => panic!("invalid argument"),
-            };
-            self.byte_codes.push(code);
+            let value = self.try_into_const(value);
+            if let ExpDesc::Const(i) = value {
+                self.assign_from_const(var, i);
+            } else {
+                let i = self.discharge_tmp(value);
+                self.assign_from_reg(var, i);
+            }
         }
     }
+// ANCHOR_END: assign_var
 
-// ANCHOR: add_const
+// ANCHOR: assign_from_reg_const
+    fn assign_from_reg(&mut self, desc: ExpDesc, value: usize) {
+        let code = match desc {
+            ExpDesc::Local(i) => ByteCode::Move(i as u8, value as u8),
+            ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
+            ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
+            ExpDesc::IndexStr(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) => ByteCode::SetInt(t as u8, key, value as u8),
+            _ => panic!("assign from reg"),
+        };
+        self.byte_codes.push(code);
+    }
+
+    fn assign_from_const(&mut self, desc: ExpDesc, value: usize) {
+        let code = match desc {
+            ExpDesc::Local(i) => ByteCode::LoadConst(i as u8, value as u16),
+            ExpDesc::Global(name) => ByteCode::SetGlobalConst(name as u8, value as u8),
+            ExpDesc::Index(t, key) => ByteCode::SetTableConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexStr(t, key) => ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) => ByteCode::SetIntConst(t as u8, key, value as u8),
+            _ => panic!("assign from const"),
+        };
+        self.byte_codes.push(code);
+    }
+// ANCHOR_END: assign_from_reg_const
+
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
-// ANCHOR_END: add_const
         let constants = &mut self.constants;
         constants.iter().position(|v| v == &c)
             .unwrap_or_else(|| {
@@ -156,28 +242,43 @@ impl<R: Read> ParseProto<R> {
         ByteCode::LoadConst(dst as u8, self.add_const(c) as u16)
     }
 
-    fn load_var(&mut self, dst: usize, name: String) -> ByteCode {
-        if let Some(i) = self.get_local(&name) {
-            // local variable
-            ByteCode::Move(dst as u8, i as u8)
-        } else {
-            // global variable
-            let ic = self.add_const(name);
-            ByteCode::GetGlobal(dst as u8, ic as u8)
-        }
-    }
-
-    fn get_local(&self, name: &str) -> Option<usize> {
-        self.locals.iter().rposition(|v| v == name)
-    }
-
     fn load_exp(&mut self) {
         let sp0 = self.sp;
         let desc = self.exp();
         self.discharge(sp0, desc);
     }
 
+    // explist ::= exp {`,` exp}
+    fn explist(&mut self) -> usize {
+        let mut n = 0;
+        let sp0 = self.sp;
+        loop {
+            let desc = self.exp();
+            self.discharge(sp0 + n, desc);
+
+            n += 1;
+            if self.lex.peek() != &Token::Comma {
+                return n;
+            }
+            self.lex.next();
+        }
+    }
+
+    // BNF:
+    //   exp ::= nil | false | true | Numeral | LiteralString | `...` | functiondef |
+    //           prefixexp | tableconstructor | exp binop exp | unop exp
+    //
+    // Remove left recursion:
+    //
+    //   exp ::= (nil | false | true | Numeral | LiteralString | `...` | functiondef |
+    //           prefixexp | tableconstructor | unop exp) A'
+    // where:
+    //   A' ::= binop exp A' | Epsilon
     fn exp(&mut self) -> ExpDesc {
+        self.exp_limit(0)
+    }
+    fn exp_limit(&mut self, _: i32) -> ExpDesc {
+        // beta
         match self.lex.next() {
             Token::Nil => ExpDesc::Nil,
             Token::True => ExpDesc::Boolean(true),
@@ -185,11 +286,92 @@ impl<R: Read> ParseProto<R> {
             Token::Integer(i) => ExpDesc::Integer(i),
             Token::Float(f) => ExpDesc::Float(f),
             Token::String(s) => ExpDesc::String(s),
-            Token::Name(var) => self.simple_name(var),
+            Token::Function => todo!("Function"),
             Token::CurlyL => self.table_constructor(),
-            t => panic!("invalid exp: {:?}", t),
+            Token::Sub | Token::Not | Token::BitXor | Token::Len => todo!("unop"),
+            Token::Dots => todo!("dots"),
+            t => self.prefixexp(t),
+        }
+        // TODO loop for binop
+    }
+
+    // BNF:
+    //   prefixexp ::= var | functioncall | `(` exp `)`
+    //   var ::=  Name | prefixexp `[` exp `]` | prefixexp `.` Name
+    //   functioncall ::=  prefixexp args | prefixexp `:` Name args
+    //
+    // We need to remove left recursion amount these 3 rules.
+    //
+    // First unfold 'var' and 'functioncall' in 'prefixexp' to remove indirect recursion:
+    //
+    //   prefixexp ::= Name | prefixexp `[` exp `]` | prefixexp `.` Name | prefixexp args | prefixexp `:` Name args | `(` exp `)`
+    //
+    // Then remove the direct left recursion following:
+    //   A ::= A alpha | beta
+    // into
+    //   A ::= beta A'
+    //   A' ::= alpha A' | Epsilon
+    //
+    // so
+    //   prefixexp ::= prefixexp (`[` exp `]` | `.` Name | args | `:` Name args) | Name | `(` exp `)`
+    //               = prefixexp alpha | beta
+    // where
+    //   alpha ::= `[` exp `]` | `.` Name | args | `:` Name args
+    //   beta ::= Name | `(` exp `)`
+    //
+    // Finally we get:
+    //   prefixexp ::= beta A'
+    //               = (Name | `(` exp `)`) A'
+    // where:
+    //   A' ::= alpha A' | Epsilon
+    //        = (`[` exp `]` | `.` Name | args | `:` Name args) A' | Epsilon
+// ANCHOR: prefixexp
+    fn prefixexp(&mut self, ahead: Token) -> ExpDesc {
+        let sp0 = self.sp;
+
+        // beta
+        let mut desc = match ahead {
+            Token::Name(name) => self.simple_name(name),
+            Token::ParL => { // `(` exp `)`
+                let desc = self.exp();
+                self.lex.expect(Token::ParR);
+                desc
+            }
+            t => panic!("invalid prefixexp {t:?}"),
+        };
+
+        // A' = alpha A'
+        loop {
+            match self.lex.peek() {
+                Token::SqurL => { // `[` exp `]`
+                    self.lex.next();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = match self.exp() {
+                        ExpDesc::String(s) => ExpDesc::IndexStr(itable, self.add_const(s)),
+                        ExpDesc::Integer(i) if u8::try_from(i).is_ok() => ExpDesc::IndexInt(itable, u8::try_from(i).unwrap()),
+                        key => ExpDesc::Index(itable, self.discharge_if_need(sp0, key)),
+                    };
+
+                    self.lex.expect(Token::SqurR);
+                }
+                Token::Dot => { // .Name
+                    self.lex.next();
+                    let name = self.read_name();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = ExpDesc::IndexStr(itable, self.add_const(name));
+                }
+                Token::Colon => todo!("args"), // :Name args
+                Token::ParL | Token::CurlyL | Token::String(_) => { // args
+                    self.discharge(sp0, desc);
+                    desc = self.args();
+                }
+                _ => { // Epsilon
+                    return desc;
+                }
+            }
         }
     }
+// ANCHOR_END: prefixexp
 
     fn simple_name(&mut self, name: String) -> ExpDesc {
         // search reversely, so new variable covers old one with same name
@@ -198,6 +380,35 @@ impl<R: Read> ParseProto<R> {
         } else {
             ExpDesc::Global(self.add_const(name))
         }
+    }
+
+    // args ::= `(` [explist] `)` | tableconstructor | LiteralString
+    fn args(&mut self) -> ExpDesc {
+        let ifunc = self.sp - 1;
+        let argn = match self.lex.next() {
+            Token::ParL => {
+                if self.lex.peek() != &Token::ParR {
+                    let argn = self.explist();
+                    self.lex.expect(Token::ParR);
+                    argn
+                } else {
+                    self.lex.next();
+                    0
+                }
+            }
+            Token::CurlyL => {
+                self.table_constructor();
+                1
+            }
+            Token::String(s) => {
+                self.discharge(ifunc+1, ExpDesc::String(s));
+                1
+            }
+            t => panic!("invalid args {t:?}"),
+        };
+
+        self.byte_codes.push(ByteCode::Call(ifunc as u8, argn as u8));
+        ExpDesc::Call
     }
 
     fn discharge_tmp(&mut self, desc: ExpDesc) -> usize {
@@ -216,7 +427,7 @@ impl<R: Read> ParseProto<R> {
     // discharge @desc into @dst, and set self.sp=dst+1
     fn discharge(&mut self, dst: usize, desc: ExpDesc) {
         let code = match desc {
-            ExpDesc::Nil => ByteCode::LoadNil(dst as u8),
+            ExpDesc::Nil => ByteCode::LoadNil(dst as u8, 1),
             ExpDesc::Boolean(b) => ByteCode::LoadBool(dst as u8, b),
             ExpDesc::Integer(i) =>
                 if let Ok(i) = i16::try_from(i) {
@@ -226,7 +437,7 @@ impl<R: Read> ParseProto<R> {
                 }
             ExpDesc::Float(f) => self.load_const(dst, f),
             ExpDesc::String(s) => self.load_const(dst, s),
-            ExpDesc::Const(i) => ByteCode::LoadConst(dst as u8, i as u16),
+            ExpDesc::Const(_) => panic!("no here"),
             ExpDesc::Local(src) =>
                 if dst != src {
                     ByteCode::Move(dst as u8, src as u8)
@@ -234,6 +445,10 @@ impl<R: Read> ParseProto<R> {
                     return;
                 }
             ExpDesc::Global(iname) => ByteCode::GetGlobal(dst as u8, iname as u8),
+            ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
+            ExpDesc::IndexStr(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
+            ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
+            ExpDesc::Call => todo!("discharge Call"),
         };
         self.byte_codes.push(code);
         self.sp = dst + 1;
@@ -286,7 +501,7 @@ impl<R: Read> ParseProto<R> {
                     };
                     self.new_table_entry(op, opk, table, key, value);
                     self.sp = sp0;
-                },
+                }
                 Token::Name(_) => { // Name `=` exp
                     nmap += 1;
                     let sp0 = self.sp;
@@ -302,7 +517,7 @@ impl<R: Read> ParseProto<R> {
 
                     self.new_table_entry(ByteCode::SetField, ByteCode::SetFieldConst, table, key, value);
                     self.sp = sp0;
-                },
+                }
                 _ => { // exp
                     narray += 1;
                     self.load_exp();
@@ -311,7 +526,7 @@ impl<R: Read> ParseProto<R> {
                         self.byte_codes.push(ByteCode::SetList(table as u8, (self.sp - (table + 1)) as u8));
                         self.sp = table + 1;
                     }
-                },
+                }
             }
 
             match self.lex.next() {
@@ -341,5 +556,13 @@ impl<R: Read> ParseProto<R> {
             desc => op(t as u8, key as u8, self.discharge_tmp(desc) as u8),
         };
         self.byte_codes.push(code);
+    }
+
+    fn read_name(&mut self) -> String {
+        if let Token::Name(name) = self.lex.next() {
+            name
+        } else {
+            panic!("expect name");
+        }
     }
 }
