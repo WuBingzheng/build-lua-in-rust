@@ -11,13 +11,17 @@ enum ExpDesc {
     Integer(i64),
     Float(f64),
     String(Vec<u8>),
-    Const(usize), // add above types into ParseProto.constants
     Local(usize), // on stack, including local and temprary variables
     Global(usize), // global variable
     Index(usize, usize),
     IndexStr(usize, usize),
     IndexInt(usize, u8),
     Call,
+}
+
+enum ConstStack {
+    Const(usize),
+    Stack(usize),
 }
 
 // ANCHOR: proto
@@ -178,7 +182,7 @@ impl<R: Read> ParseProto<R> {
         // assign previous variables from tmp registers, in reverse order
         while let Some(var) = vars.pop() {
             nfexp -= 1;
-            self.assign_from_reg(var, exp_sp0 + nfexp);
+            self.assign_from_stack(var, exp_sp0 + nfexp);
         }
     }
 // ANCHOR_END: assignment
@@ -191,26 +195,23 @@ impl<R: Read> ParseProto<R> {
             // before next statement.
             self.discharge(i, value);
         } else {
-            let value = self.try_into_const(value);
-            if let ExpDesc::Const(i) = value {
-                self.assign_from_const(var, i);
-            } else {
-                let i = self.discharge_tmp(value);
-                self.assign_from_reg(var, i);
+            match self.discharge_const(value) {
+                ConstStack::Const(i) => self.assign_from_const(var, i),
+                ConstStack::Stack(i) => self.assign_from_stack(var, i),
             }
         }
     }
 // ANCHOR_END: assign_var
 
-// ANCHOR: assign_from_reg_const
-    fn assign_from_reg(&mut self, desc: ExpDesc, value: usize) {
+// ANCHOR: assign_from_stack_const
+    fn assign_from_stack(&mut self, desc: ExpDesc, value: usize) {
         let code = match desc {
             ExpDesc::Local(i) => ByteCode::Move(i as u8, value as u8),
             ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
             ExpDesc::IndexStr(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
             ExpDesc::IndexInt(t, key) => ByteCode::SetInt(t as u8, key, value as u8),
-            _ => panic!("assign from reg"),
+            _ => panic!("assign from stack"),
         };
         self.byte_codes.push(code);
     }
@@ -226,7 +227,7 @@ impl<R: Read> ParseProto<R> {
         };
         self.byte_codes.push(code);
     }
-// ANCHOR_END: assign_from_reg_const
+// ANCHOR_END: assign_from_stack_const
 
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
@@ -437,7 +438,6 @@ impl<R: Read> ParseProto<R> {
                 }
             ExpDesc::Float(f) => self.load_const(dst, f),
             ExpDesc::String(s) => self.load_const(dst, s),
-            ExpDesc::Const(_) => panic!("no here"),
             ExpDesc::Local(src) =>
                 if dst != src {
                     ByteCode::Move(dst as u8, src as u8)
@@ -454,14 +454,16 @@ impl<R: Read> ParseProto<R> {
         self.sp = dst + 1;
     }
 
-    fn try_into_const(&mut self, desc: ExpDesc) -> ExpDesc {
+    fn discharge_const(&mut self, desc: ExpDesc) -> ConstStack {
         match desc {
-            ExpDesc::Nil => ExpDesc::Const(self.add_const(())),
-            ExpDesc::Boolean(b) => ExpDesc::Const(self.add_const(b)),
-            ExpDesc::Integer(i) => ExpDesc::Const(self.add_const(i)),
-            ExpDesc::Float(f) => ExpDesc::Const(self.add_const(f)),
-            ExpDesc::String(s) => ExpDesc::Const(self.add_const(s)),
-            _ => desc,
+            // add const
+            ExpDesc::Nil => ConstStack::Const(self.add_const(())),
+            ExpDesc::Boolean(b) => ConstStack::Const(self.add_const(b)),
+            ExpDesc::Integer(i) => ConstStack::Const(self.add_const(i)),
+            ExpDesc::Float(f) => ConstStack::Const(self.add_const(f)),
+            ExpDesc::String(s) => ConstStack::Const(self.add_const(s)),
+            // discharge to tmp stack
+            _ => ConstStack::Stack(self.discharge_tmp(desc)),
         }
     }
 
@@ -551,9 +553,9 @@ impl<R: Read> ParseProto<R> {
     fn new_table_entry(&mut self, op: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode,
             t: usize, key: usize, value: ExpDesc) {
 
-        let code = match self.try_into_const(value) {
-            ExpDesc::Const(i) => opk(t as u8, key as u8, i as u8),
-            desc => op(t as u8, key as u8, self.discharge_tmp(desc) as u8),
+        let code = match self.discharge_const(value) {
+            ConstStack::Const(i) => opk(t as u8, key as u8, i as u8),
+            ConstStack::Stack(i) => op(t as u8, key as u8, i as u8),
         };
         self.byte_codes.push(code);
     }
