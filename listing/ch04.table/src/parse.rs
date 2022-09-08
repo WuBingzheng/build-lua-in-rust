@@ -14,7 +14,7 @@ enum ExpDesc {
     Local(usize), // on stack, including local and temprary variables
     Global(usize), // global variable
     Index(usize, usize),
-    IndexStr(usize, usize),
+    IndexField(usize, usize),
     IndexInt(usize, u8),
     Call,
 }
@@ -209,7 +209,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Local(i) => ByteCode::Move(i as u8, value as u8),
             ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
-            ExpDesc::IndexStr(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
             ExpDesc::IndexInt(t, key) => ByteCode::SetInt(t as u8, key, value as u8),
             _ => panic!("assign from stack"),
         };
@@ -221,7 +221,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Local(i) => ByteCode::LoadConst(i as u8, value as u16),
             ExpDesc::Global(name) => ByteCode::SetGlobalConst(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTableConst(t as u8, key as u8, value as u8),
-            ExpDesc::IndexStr(t, key) => ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) => ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
             ExpDesc::IndexInt(t, key) => ByteCode::SetIntConst(t as u8, key, value as u8),
             _ => panic!("assign from const"),
         };
@@ -237,16 +237,6 @@ impl<R: Read> ParseProto<R> {
                 constants.push(c);
                 constants.len() - 1
             })
-    }
-
-    fn load_const(&mut self, dst: usize, c: impl Into<Value>) -> ByteCode {
-        ByteCode::LoadConst(dst as u8, self.add_const(c) as u16)
-    }
-
-    fn load_exp(&mut self) {
-        let sp0 = self.sp;
-        let desc = self.exp();
-        self.discharge(sp0, desc);
     }
 
     // explist ::= exp {`,` exp}
@@ -276,9 +266,6 @@ impl<R: Read> ParseProto<R> {
     // where:
     //   A' ::= binop exp A' | Epsilon
     fn exp(&mut self) -> ExpDesc {
-        self.exp_limit(0)
-    }
-    fn exp_limit(&mut self, _: i32) -> ExpDesc {
         // beta
         match self.lex.next() {
             Token::Nil => ExpDesc::Nil,
@@ -348,9 +335,9 @@ impl<R: Read> ParseProto<R> {
                     self.lex.next();
                     let itable = self.discharge_if_need(sp0, desc);
                     desc = match self.exp() {
-                        ExpDesc::String(s) => ExpDesc::IndexStr(itable, self.add_const(s)),
+                        ExpDesc::String(s) => ExpDesc::IndexField(itable, self.add_const(s)),
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => ExpDesc::IndexInt(itable, u8::try_from(i).unwrap()),
-                        key => ExpDesc::Index(itable, self.discharge_if_need(sp0, key)),
+                        key => ExpDesc::Index(itable, self.discharge_top(key)),
                     };
 
                     self.lex.expect(Token::SqurR);
@@ -359,7 +346,7 @@ impl<R: Read> ParseProto<R> {
                     self.lex.next();
                     let name = self.read_name();
                     let itable = self.discharge_if_need(sp0, desc);
-                    desc = ExpDesc::IndexStr(itable, self.add_const(name));
+                    desc = ExpDesc::IndexField(itable, self.add_const(name));
                 }
                 Token::Colon => todo!("args"), // :Name args
                 Token::ParL | Token::CurlyL | Token::String(_) => { // args
@@ -412,20 +399,22 @@ impl<R: Read> ParseProto<R> {
         ExpDesc::Call
     }
 
-    fn discharge_tmp(&mut self, desc: ExpDesc) -> usize {
+    // discharge @desc into the top of stack, if need
+    fn discharge_top(&mut self, desc: ExpDesc) -> usize {
         self.discharge_if_need(self.sp, desc)
     }
 
+    // discharge @desc into @dst, if need
     fn discharge_if_need(&mut self, dst: usize, desc: ExpDesc) -> usize {
         if let ExpDesc::Local(i) = desc {
-            i
+            i // no need
         } else {
             self.discharge(dst, desc);
             dst
         }
     }
 
-    // discharge @desc into @dst, and set self.sp=dst+1
+    // discharge @desc into @dst, and update self.sp=dst+1
     fn discharge(&mut self, dst: usize, desc: ExpDesc) {
         let code = match desc {
             ExpDesc::Nil => ByteCode::LoadNil(dst as u8, 1),
@@ -434,10 +423,10 @@ impl<R: Read> ParseProto<R> {
                 if let Ok(i) = i16::try_from(i) {
                     ByteCode::LoadInt(dst as u8, i)
                 } else {
-                    self.load_const(dst, i)
+                    ByteCode::LoadConst(dst as u8, self.add_const(i) as u16)
                 }
-            ExpDesc::Float(f) => self.load_const(dst, f),
-            ExpDesc::String(s) => self.load_const(dst, s),
+            ExpDesc::Float(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
+            ExpDesc::String(s) => ByteCode::LoadConst(dst as u8, self.add_const(s) as u16),
             ExpDesc::Local(src) =>
                 if dst != src {
                     ByteCode::Move(dst as u8, src as u8)
@@ -446,7 +435,7 @@ impl<R: Read> ParseProto<R> {
                 }
             ExpDesc::Global(iname) => ByteCode::GetGlobal(dst as u8, iname as u8),
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
-            ExpDesc::IndexStr(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
+            ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Call => todo!("discharge Call"),
         };
@@ -454,6 +443,8 @@ impl<R: Read> ParseProto<R> {
         self.sp = dst + 1;
     }
 
+    // for constant types, add @desc to constants;
+    // otherwise, discharge @desc into the top of stack
     fn discharge_const(&mut self, desc: ExpDesc) -> ConstStack {
         match desc {
             // add const
@@ -462,8 +453,9 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Integer(i) => ConstStack::Const(self.add_const(i)),
             ExpDesc::Float(f) => ConstStack::Const(self.add_const(f)),
             ExpDesc::String(s) => ConstStack::Const(self.add_const(s)),
-            // discharge to tmp stack
-            _ => ConstStack::Stack(self.discharge_tmp(desc)),
+
+            // discharge to stack
+            _ => ConstStack::Stack(self.discharge_top(desc)),
         }
     }
 
@@ -499,7 +491,7 @@ impl<R: Read> ParseProto<R> {
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
                         ExpDesc::Nil => panic!("nil can not be table key"),
                         ExpDesc::Float(f) if f.is_nan() => panic!("NaN can not be table key"),
-                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_tmp(key)),
+                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_top(key)),
                     };
                     self.new_table_entry(op, opk, table, key, value);
                     self.sp = sp0;
@@ -522,7 +514,10 @@ impl<R: Read> ParseProto<R> {
                 }
                 _ => { // exp
                     narray += 1;
-                    self.load_exp();
+                    let sp0 = self.sp;
+
+                    let desc = self.exp();
+                    self.discharge(sp0, desc);
 
                     if self.sp - (table + 1) > 50 { // too many, reset it
                         self.byte_codes.push(ByteCode::SetList(table as u8, (self.sp - (table + 1)) as u8));
