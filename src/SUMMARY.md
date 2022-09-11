@@ -21,5 +21,6 @@
 - [表和ExpDesc](./ch04-00.table.md)
   - [表的定义](./ch04-01.table_definition.md)
   - [表的构造](./ch04-02.table_constructor.md)
-  - [ExpDesc](./ch04-03.expdesc.md)
-  - [表的读写和BNF]()
+  - [ExpDesc概念](./ch04-03.expdesc.md)
+  - [ExpDesc改造](./ch04-04.expdesc_rewrite.md)
+  - [表的读写和BNF](./ch04-05.table_rw_and_bnf.md)
