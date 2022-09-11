@@ -64,35 +64,42 @@ impl<R: Read> ParseProto<R> {
     // BNF:
     //   block ::= {stat} [retstat]
     //   stat ::= `;` |
-    // 	   varlist `=` explist |
-    // 	   functioncall |
-    // 	   label |
-    // 	   break |
-    // 	   goto Name |
-    // 	   do block end |
-    // 	   while exp do block end |
-    // 	   repeat block until exp |
-    // 	   if exp then block {elseif exp then block} [else block] end |
-    // 	   for Name `=` exp `,` exp [`,` exp] do block end |
-    // 	   for namelist in explist do block end |
-    // 	   function funcname funcbody |
-    // 	   local function Name funcbody |
-    // 	   local attnamelist [`=` explist]
+    //     varlist `=` explist |
+    //     functioncall |
+    //     label |
+    //     break |
+    //     goto Name |
+    //     do block end |
+    //     while exp do block end |
+    //     repeat block until exp |
+    //     if exp then block {elseif exp then block} [else block] end |
+    //     for Name `=` exp `,` exp [`,` exp] do block end |
+    //     for namelist in explist do block end |
+    //     function funcname funcbody |
+    //     local function Name funcbody |
+    //     local attnamelist [`=` explist]
     fn block(&mut self) {
         loop {
             // reset sp before each statement
             self.sp = self.locals.len();
 
+// ANCHOR: func_or_assign
             match self.lex.next() {
                 Token::SemiColon => (),
-                Token::Name(name) => { // functioncall or assignment
-                    let desc = self.prefixexp(Token::Name(name));
+                t@Token::Name(_) | t@Token::ParL => {
+                    // functioncall and var-assignment both begin with
+                    // `prefixexp` which begins with `Name` or `(`.
+                    let desc = self.prefixexp(t);
                     if desc == ExpDesc::Call {
-                        // do nothing
+                        // prefixexp() matches the whole functioncall
+                        // statement, so nothing more to do
                     } else {
+                        // prefixexp() matches only the first variable, so we
+                        // continue the statement
                         self.assignment(desc);
                     }
                 }
+// ANCHOR_END: func_or_assign
                 Token::Local => self.local(),
                 Token::Eos => break,
                 t => panic!("unexpected token: {t:?}"),
@@ -133,6 +140,7 @@ impl<R: Read> ParseProto<R> {
 // ANCHOR: assignment
     // BNF:
     //   varlist = explist
+    //   varlist ::= var {`,` var}
     fn assignment(&mut self, first_var: ExpDesc) {
         // read varlist into @vars
         let mut vars = vec![first_var];
@@ -187,7 +195,8 @@ impl<R: Read> ParseProto<R> {
     }
 // ANCHOR_END: assignment
 
-// ANCHOR: assign_var
+// ANCHOR: assign_helper
+    // process assignment: var = value
     fn assign_var(&mut self, var: ExpDesc, value: ExpDesc) {
         if let ExpDesc::Local(i) = var {
             // self.sp will be set to i+1 in self.discharge(), which is
@@ -201,12 +210,9 @@ impl<R: Read> ParseProto<R> {
             }
         }
     }
-// ANCHOR_END: assign_var
 
-// ANCHOR: assign_from_stack_const
-    fn assign_from_stack(&mut self, desc: ExpDesc, value: usize) {
-        let code = match desc {
-            ExpDesc::Local(i) => ByteCode::Move(i as u8, value as u8),
+    fn assign_from_stack(&mut self, var: ExpDesc, value: usize) {
+        let code = match var {
             ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
             ExpDesc::IndexField(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
@@ -216,9 +222,8 @@ impl<R: Read> ParseProto<R> {
         self.byte_codes.push(code);
     }
 
-    fn assign_from_const(&mut self, desc: ExpDesc, value: usize) {
-        let code = match desc {
-            ExpDesc::Local(i) => ByteCode::LoadConst(i as u8, value as u16),
+    fn assign_from_const(&mut self, var: ExpDesc, value: usize) {
+        let code = match var {
             ExpDesc::Global(name) => ByteCode::SetGlobalConst(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTableConst(t as u8, key as u8, value as u8),
             ExpDesc::IndexField(t, key) => ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
@@ -227,7 +232,7 @@ impl<R: Read> ParseProto<R> {
         };
         self.byte_codes.push(code);
     }
-// ANCHOR_END: assign_from_stack_const
+// ANCHOR_END: assign_helper
 
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
@@ -399,6 +404,7 @@ impl<R: Read> ParseProto<R> {
         ExpDesc::Call
     }
 
+// ANCHOR: discharge_helper
     // discharge @desc into the top of stack, if need
     fn discharge_top(&mut self, desc: ExpDesc) -> usize {
         self.discharge_if_need(self.sp, desc)
@@ -413,6 +419,7 @@ impl<R: Read> ParseProto<R> {
             dst
         }
     }
+// ANCHOR_END: discharge_helper
 
     // discharge @desc into @dst, and update self.sp=dst+1
     fn discharge(&mut self, dst: usize, desc: ExpDesc) {
@@ -443,6 +450,7 @@ impl<R: Read> ParseProto<R> {
         self.sp = dst + 1;
     }
 
+// ANCHOR: discharge_const
     // for constant types, add @desc to constants;
     // otherwise, discharge @desc into the top of stack
     fn discharge_const(&mut self, desc: ExpDesc) -> ConstStack {
@@ -458,6 +466,7 @@ impl<R: Read> ParseProto<R> {
             _ => ConstStack::Stack(self.discharge_top(desc)),
         }
     }
+// ANCHOR_END: discharge_const
 
 // ANCHOR: table_constructor
     fn table_constructor(&mut self) -> ExpDesc {
@@ -545,6 +554,7 @@ impl<R: Read> ParseProto<R> {
     }
 // ANCHOR_END: table_constructor
 
+// ANCHOR: new_table_entry
     fn new_table_entry(&mut self, op: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode,
             t: usize, key: usize, value: ExpDesc) {
 
@@ -554,6 +564,7 @@ impl<R: Read> ParseProto<R> {
         };
         self.byte_codes.push(code);
     }
+// ANCHOR_END: new_table_entry
 
     fn read_name(&mut self) -> String {
         if let Token::Name(name) = self.lex.next() {
