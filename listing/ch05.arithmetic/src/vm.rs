@@ -133,6 +133,41 @@ impl ExeState {
                     self.set_stack(dst, value);
                 }
 // ANCHOR_END: vm_table
+
+                ByteCode::Neg(dst, src) => {
+                    let value = match &self.stack[src as usize] {
+                        Value::Integer(i) => Value::Integer(-i),
+                        Value::Float(f) => Value::Float(-f),
+                        _ => panic!("invalid -"),
+                    };
+                    self.set_stack(dst, value);
+                }
+                ByteCode::Not(dst, src) => {
+                    let value = match &self.stack[src as usize] {
+                        Value::Nil => Value::Boolean(true),
+                        Value::Boolean(b) => Value::Boolean(!b),
+                        _ => Value::Boolean(false),
+                    };
+                    self.set_stack(dst, value);
+                }
+                ByteCode::BitNot(dst, src) => {
+                    let value = match &self.stack[src as usize] {
+                        Value::Integer(i) => Value::Integer(!i),
+                        _ => panic!("invalid ~"),
+                    };
+                    self.set_stack(dst, value);
+                }
+                ByteCode::Len(dst, src) => {
+                    let value = match &self.stack[src as usize] {
+                        Value::ShortStr(len, _) => Value::Integer(*len as i64),
+                        Value::MidStr(s) => Value::Integer(s.0 as i64),
+                        Value::LongStr(s) => Value::Integer(s.len() as i64),
+                        Value::Table(t) => Value::Integer(t.borrow().array.len() as i64),
+                        _ => panic!("invalid -"),
+                    };
+                    self.set_stack(dst, value);
+                }
+
                 ByteCode::Call(func, _) => {
                     self.func_index = func as usize;
                     let func = &self.stack[self.func_index];

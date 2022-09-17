@@ -6,17 +6,27 @@ use crate::value::Value;
 
 #[derive(Debug, PartialEq)]
 enum ExpDesc {
+    // constants
     Nil,
     Boolean(bool),
     Integer(i64),
     Float(f64),
     String(Vec<u8>),
-    Local(usize), // on stack, including local and temprary variables
-    Global(usize), // global variable
+
+    // variables
+    Local(usize), // including temprary variables on stack
+    Global(usize),
+
+    // table index
     Index(usize, usize),
     IndexField(usize, usize),
     IndexInt(usize, u8),
+
+    // function call
     Call,
+
+    // need to re-locate destination
+    Relocate(usize, fn(u8, u8)->ByteCode, usize),
 }
 
 enum ConstStack {
@@ -279,10 +289,16 @@ impl<R: Read> ParseProto<R> {
             Token::Integer(i) => ExpDesc::Integer(i),
             Token::Float(f) => ExpDesc::Float(f),
             Token::String(s) => ExpDesc::String(s),
+
+            Token::Dots => todo!("dots"),
             Token::Function => todo!("Function"),
             Token::CurlyL => self.table_constructor(),
-            Token::Sub | Token::Not | Token::BitXor | Token::Len => todo!("unop"),
-            Token::Dots => todo!("dots"),
+
+            Token::Sub => self.unop_neg(),
+            Token::Not => self.unop_not(),
+            Token::BitNot => self.unop_bitnot(),
+            Token::Len => self.unop_len(),
+
             t => self.prefixexp(t),
         }
         // TODO loop for binop
@@ -375,6 +391,42 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
+    fn unop_neg(&mut self) -> ExpDesc {
+        match self.exp() {
+            ExpDesc::Integer(i) => ExpDesc::Integer(-i),
+            ExpDesc::Float(f) => ExpDesc::Float(-f),
+            ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::String(_) => panic!("invalid - operator"),
+            desc => self.runtime_unop(ByteCode::Neg, desc),
+        }
+    }
+    fn unop_not(&mut self) -> ExpDesc {
+        match self.exp() {
+            ExpDesc::Nil => ExpDesc::Boolean(true),
+            ExpDesc::Boolean(b) => ExpDesc::Boolean(!b),
+            ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => ExpDesc::Boolean(false),
+            desc => self.runtime_unop(ByteCode::Not, desc),
+        }
+    }
+    fn unop_bitnot(&mut self) -> ExpDesc {
+        match self.exp() {
+            ExpDesc::Integer(i) => ExpDesc::Integer(!i),
+            ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Float(_) | ExpDesc::String(_) => panic!("invalid ~ operator"),
+            desc => self.runtime_unop(ByteCode::BitNot, desc),
+        }
+    }
+    fn unop_len(&mut self) -> ExpDesc {
+        match self.exp() {
+            ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
+            ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Integer(_) | ExpDesc::Float(_) => panic!("invalid ~ operator"),
+            desc => self.runtime_unop(ByteCode::Len, desc),
+        }
+    }
+    fn runtime_unop(&mut self, op: fn(u8, u8)->ByteCode, desc: ExpDesc) -> ExpDesc {
+        let i = self.discharge_top(desc);
+        self.byte_codes.push(op(0, 0)); // hold the place, and will be reset in discharge()
+        ExpDesc::Relocate(self.byte_codes.len() - 1, op, i)
+    }
+
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
     fn args(&mut self) -> ExpDesc {
         let ifunc = self.sp - 1;
@@ -445,6 +497,11 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Call => todo!("discharge Call"),
+            ExpDesc::Relocate(i, op, value) => {
+                self.byte_codes[i] = op(dst as u8, value as u8);
+                self.sp = dst + 1;
+                return;
+            }
         };
         self.byte_codes.push(code);
         self.sp = dst + 1;

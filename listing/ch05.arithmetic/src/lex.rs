@@ -14,7 +14,7 @@ pub enum Token {
  // +       -       *       /       %       ^       #
     Add,    Sub,    Mul,    Div,    Mod,    Pow,    Len,
  // &       ~       |       <<      >>      //
-    BitAnd, BitXor, BitOr,  ShiftL, ShiftR, Idiv,
+    BitAnd, BitNot, BitOr,  ShiftL, ShiftR, Idiv,
  // ==       ~=     <=      >=      <       >        =
     Equal,  NotEq,  LesEq,  GreEq,  Less,   Greater, Assign,
  // (       )       {       }       [       ]       ::
@@ -93,7 +93,7 @@ impl<R: Read> Lex<R> {
                 b',' => Token::Comma,
                 b'/' => self.check_ahead(b'/', Token::Idiv, Token::Div),
                 b'=' => self.check_ahead(b'=', Token::Equal, Token::Assign),
-                b'~' => self.check_ahead(b'=', Token::NotEq, Token::BitXor),
+                b'~' => self.check_ahead(b'=', Token::NotEq, Token::BitNot),
                 b':' => self.check_ahead(b':', Token::DoubColon, Token::Colon),
                 b'<' => self.check_ahead2(b'=', Token::LesEq, b'<', Token::ShiftL, Token::Less),
                 b'>' => self.check_ahead2(b'=', Token::GreEq, b'>', Token::ShiftR, Token::Greater),
