@@ -462,6 +462,7 @@ impl<R: Read> ParseProto<R> {
             Token::BitOr  => self.do_binop(left, right, ByteCode::BitOr, ByteCode::BitOrInt, ByteCode::BitOrConst),
             Token::ShiftL => self.do_binop(left, right, ByteCode::ShiftL, ByteCode::ShiftLInt, ByteCode::ShiftLConst),
             Token::ShiftR => self.do_binop(left, right, ByteCode::ShiftR, ByteCode::ShiftRInt, ByteCode::ShiftRConst),
+            Token::Concat => self.do_binop(left, right, ByteCode::Concat, ByteCode::ConcatInt, ByteCode::ConcatConst),
             _ => panic!("impossible"),
         }
     }
@@ -735,6 +736,14 @@ fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc>
         Token::BitOr  => do_fold_const_int(left, right, |a,b|a|b),
         Token::ShiftL => do_fold_const_int(left, right, |a,b|a<<b),
         Token::ShiftR => do_fold_const_int(left, right, |a,b|a>>b),
+
+        Token::Concat => {
+            if let (ExpDesc::String(s1), ExpDesc::String(s2)) = (left, right) {
+                Some(ExpDesc::String([s1.as_slice(), s2.as_slice()].concat()))
+            } else {
+                None
+            }
+        }
         _ => panic!("impossible"),
     }
 }
