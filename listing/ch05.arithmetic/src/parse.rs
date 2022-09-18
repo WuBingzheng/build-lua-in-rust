@@ -26,7 +26,8 @@ enum ExpDesc {
     Call,
 
     // need to re-locate destination
-    Relocate(usize, Box<dyn Fn(usize)->ByteCode>),
+    UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
+    BinaryOp(usize, fn(u8,u8,u8)->ByteCode, usize, usize), // (code-index, opcode, left-operand, right-operand)
 }
 
 enum ConstStack {
@@ -407,40 +408,37 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
+// ANCHOR: unop_neg
     fn unop_neg(&mut self) -> ExpDesc {
         match self.exp() {
             ExpDesc::Integer(i) => ExpDesc::Integer(-i),
             ExpDesc::Float(f) => ExpDesc::Float(-f),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::String(_) => panic!("invalid - operator"),
-            desc => self.runtime_unop(ByteCode::Neg, desc),
+            desc => ExpDesc::UnaryOp(ByteCode::Neg, self.discharge_top(desc))
         }
     }
+// ANCHOR_END: unop_neg
     fn unop_not(&mut self) -> ExpDesc {
         match self.exp() {
             ExpDesc::Nil => ExpDesc::Boolean(true),
             ExpDesc::Boolean(b) => ExpDesc::Boolean(!b),
             ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => ExpDesc::Boolean(false),
-            desc => self.runtime_unop(ByteCode::Not, desc),
+            desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_top(desc))
         }
     }
     fn unop_bitnot(&mut self) -> ExpDesc {
         match self.exp() {
             ExpDesc::Integer(i) => ExpDesc::Integer(!i),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Float(_) | ExpDesc::String(_) => panic!("invalid ~ operator"),
-            desc => self.runtime_unop(ByteCode::BitNot, desc),
+            desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_top(desc))
         }
     }
     fn unop_len(&mut self) -> ExpDesc {
         match self.exp() {
             ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Integer(_) | ExpDesc::Float(_) => panic!("invalid ~ operator"),
-            desc => self.runtime_unop(ByteCode::Len, desc),
+            desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_top(desc))
         }
-    }
-    fn runtime_unop(&mut self, op: fn(u8, u8)->ByteCode, desc: ExpDesc) -> ExpDesc {
-        let i = self.discharge_top(desc);
-        self.byte_codes.push(op(0, 0)); // hold the place, and will be reset in discharge()
-        ExpDesc::Relocate(self.byte_codes.len() - 1, Box::new(move |dst| op(dst as u8, i as u8)))
     }
 
 // ANCHOR_END: binop
@@ -467,10 +465,10 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
-    fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc, op: fn(u8,u8,u8)->ByteCode,
+    fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,u8)->ByteCode,
             opi: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode) -> ExpDesc {
 
-        if op == ByteCode::Add || op == ByteCode::Mul { // commutative
+        if opr == ByteCode::Add || opr == ByteCode::Mul { // commutative
             if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
                 // swap the left-const-operand to right, in order to use opi/opk
                 (left, right) = (right, left);
@@ -487,12 +485,14 @@ impl<R: Read> ParseProto<R> {
                     (opk, self.add_const(i))
                 }
             ExpDesc::Float(f) => (opk, self.add_const(f)),
-            _ => (op, self.discharge_top(right)),
+            _ => (opr, self.discharge_top(right)),
         };
 
-        self.byte_codes.push(op(0, 0, 0)); // hold the place
-        ExpDesc::Relocate(self.byte_codes.len() - 1, Box::new(move
-                |dst| op(dst as u8, left as u8, right as u8)))
+        // generate a fake code to hold the place, which will be reset
+        // later in discharge()
+        self.byte_codes.push(op(0, 0, 0));
+
+        ExpDesc::BinaryOp(self.byte_codes.len() - 1, op, left, right)
     }
 // ANCHOR_END: process_binop
 
@@ -566,8 +566,9 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Call => todo!("discharge Call"),
-            ExpDesc::Relocate(i, code) => {
-                self.byte_codes[i] = code(dst);
+            ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
+            ExpDesc::BinaryOp(icode, op, left, right) => {
+                self.byte_codes[icode] = op(dst as u8, left as u8, right as u8);
                 self.sp = dst + 1;
                 return;
             }
