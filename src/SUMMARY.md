@@ -24,3 +24,7 @@
   - [ExpDesc概念](./ch04-03.expdesc.md)
   - [ExpDesc改造](./ch04-04.expdesc_rewrite.md)
   - [表的读写和BNF](./ch04-05.table_rw_and_bnf.md)
+
+- [数值运算](./ch05-00.arithmetic_ops.md)
+  - [一元运算](./ch05-01.unary_ops.md)
+  - [二元运算](./ch05-02.binary_ops.md)
