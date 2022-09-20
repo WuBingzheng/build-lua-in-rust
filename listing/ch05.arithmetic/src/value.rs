@@ -61,9 +61,9 @@ impl fmt::Debug for Value {
             Value::Boolean(b) => write!(f, "{b}"),
             Value::Integer(i) => write!(f, "{i}"),
             Value::Float(n) => write!(f, "{n:?}"),
-            Value::ShortStr(len, buf) => write!(f, "SS:'{}'", String::from_utf8_lossy(&buf[..*len as usize])),
-            Value::MidStr(s) => write!(f, "MS:'{}'", String::from_utf8_lossy(&s.1[..s.0 as usize])),
-            Value::LongStr(s) => write!(f, "LS:'{}'", String::from_utf8_lossy(&s)),
+            Value::ShortStr(len, buf) => write!(f, "'{}'", String::from_utf8_lossy(&buf[..*len as usize])),
+            Value::MidStr(s) => write!(f, "\"{}\"", String::from_utf8_lossy(&s.1[..s.0 as usize])),
+            Value::LongStr(s) => write!(f, "'''{}'''", String::from_utf8_lossy(&s)),
             Value::Table(t) => {
                 let t = t.borrow();
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
