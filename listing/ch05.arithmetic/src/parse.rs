@@ -27,7 +27,7 @@ enum ExpDesc {
 
     // need to re-locate destination
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
-    BinaryOp(usize, fn(u8,u8,u8)->ByteCode, usize, usize), // (code-index, opcode, left-operand, right-operand)
+    BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
 }
 
 enum ConstStack {
@@ -488,11 +488,7 @@ impl<R: Read> ParseProto<R> {
             _ => (opr, self.discharge_top(right)),
         };
 
-        // generate a fake code to hold the place, which will be reset
-        // later in discharge()
-        self.byte_codes.push(op(0, 0, 0));
-
-        ExpDesc::BinaryOp(self.byte_codes.len() - 1, op, left, right)
+        ExpDesc::BinaryOp(op, left, right)
     }
 // ANCHOR_END: process_binop
 
@@ -567,11 +563,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Call => todo!("discharge Call"),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
-            ExpDesc::BinaryOp(icode, op, left, right) => {
-                self.byte_codes[icode] = op(dst as u8, left as u8, right as u8);
-                self.sp = dst + 1;
-                return;
-            }
+            ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
         };
         self.byte_codes.push(code);
         self.sp = dst + 1;
