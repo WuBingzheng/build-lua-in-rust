@@ -308,8 +308,8 @@ impl<R: Read> ParseProto<R> {
 
         // A' = alpha A'
         loop {
-            /* Expand only if operators have priorities higher than 'limit'.
-             * Non-operators have lowest priority so they always break here. */
+            /* Expand only if next operator has priority higher than 'limit'.
+             * Non-operator tokens' priority is -1(lowest) so they always break here. */
             let (left_pri, right_pri) = binop_pri(self.lex.peek());
             if left_pri <= limit {
                 return desc;
@@ -320,6 +320,13 @@ impl<R: Read> ParseProto<R> {
             desc = self.process_binop(binop, desc, right_desc);
         }
     }
+
+    // used for unary operand
+// ANCHOR: exp_unop
+    fn exp_unop(&mut self) -> ExpDesc {
+        self.exp_limit(12) // 12 is all unary operators' priority
+    }
+// ANCHOR_END: exp_unop
 
     // BNF:
     //   prefixexp ::= var | functioncall | `(` exp `)`
@@ -410,7 +417,7 @@ impl<R: Read> ParseProto<R> {
 
 // ANCHOR: unop_neg
     fn unop_neg(&mut self) -> ExpDesc {
-        match self.exp() {
+        match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(-i),
             ExpDesc::Float(f) => ExpDesc::Float(-f),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::String(_) => panic!("invalid - operator"),
@@ -419,7 +426,7 @@ impl<R: Read> ParseProto<R> {
     }
 // ANCHOR_END: unop_neg
     fn unop_not(&mut self) -> ExpDesc {
-        match self.exp() {
+        match self.exp_unop() {
             ExpDesc::Nil => ExpDesc::Boolean(true),
             ExpDesc::Boolean(b) => ExpDesc::Boolean(!b),
             ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => ExpDesc::Boolean(false),
@@ -427,14 +434,14 @@ impl<R: Read> ParseProto<R> {
         }
     }
     fn unop_bitnot(&mut self) -> ExpDesc {
-        match self.exp() {
+        match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(!i),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Float(_) | ExpDesc::String(_) => panic!("invalid ~ operator"),
             desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_top(desc))
         }
     }
     fn unop_len(&mut self) -> ExpDesc {
-        match self.exp() {
+        match self.exp_unop() {
             ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Integer(_) | ExpDesc::Float(_) => panic!("invalid ~ operator"),
             desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_top(desc))
