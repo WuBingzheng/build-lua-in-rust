@@ -4,7 +4,7 @@ use crate::lex::{Lex, Token};
 use crate::bytecode::ByteCode;
 use crate::value::Value;
 
-//#[derive(PartialEq)]
+#[derive(PartialEq)]
 enum ExpDesc {
     // constants
     Nil,
@@ -25,7 +25,7 @@ enum ExpDesc {
     // function call
     Call,
 
-    // need to re-locate destination
+    // operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
     BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
 }
@@ -101,7 +101,7 @@ impl<R: Read> ParseProto<R> {
                     // functioncall and var-assignment both begin with
                     // `prefixexp` which begins with `Name` or `(`.
                     let desc = self.prefixexp(t);
-                    if matches!(desc, ExpDesc::Call) {
+                    if desc == ExpDesc::Call {
                         // prefixexp() matches the whole functioncall
                         // statement, so nothing more to do
                     } else {
@@ -448,7 +448,6 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
-// ANCHOR_END: binop
     fn process_binop(&mut self, binop: Token, left: ExpDesc, right: ExpDesc) -> ExpDesc {
         if let Some(r) = fold_const(&binop, &left, &right) {
             return r;
@@ -472,6 +471,7 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
+// ANCHOR: do_binop
     fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,u8)->ByteCode,
             opi: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode) -> ExpDesc {
 
@@ -497,7 +497,7 @@ impl<R: Read> ParseProto<R> {
 
         ExpDesc::BinaryOp(op, left, right)
     }
-// ANCHOR_END: process_binop
+// ANCHOR_END: do_binop
 
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
     fn args(&mut self) -> ExpDesc {
