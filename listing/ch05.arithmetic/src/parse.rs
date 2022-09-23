@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use crate::lex::{Lex, Token};
 use crate::bytecode::ByteCode;
 use crate::value::Value;
+use crate::utils::ftoi;
 
 #[derive(PartialEq)]
 enum ExpDesc {
@@ -248,7 +249,7 @@ impl<R: Read> ParseProto<R> {
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
         let constants = &mut self.constants;
-        constants.iter().position(|v| v == &c)
+        constants.iter().position(|v| v.same(&c))
             .unwrap_or_else(|| {
                 constants.push(c);
                 constants.len() - 1
@@ -778,13 +779,4 @@ fn do_fold_const_float(left: &ExpDesc, right: &ExpDesc, arith_f: fn(f64,f64)->f6
         (_, _) => return None,
     };
     Some(ExpDesc::Float(arith_f(f1, f2)))
-}
-
-fn ftoi(f: f64) -> Option<i64> {
-    let i = f as i64;
-    if i as f64 != f {
-        None
-    } else {
-        Some(i)
-    }
 }

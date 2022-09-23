@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use crate::vm::ExeState;
+use crate::utils::ftoi;
 
 const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
 const MID_STR_MAX: usize = 48 - 1;
@@ -76,11 +77,12 @@ impl fmt::Debug for Value {
 // ANCHOR: peq
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
-        // TODO compare Integer vs Float
         match (self, other) {
             (Value::Nil, Value::Nil) => true,
             (Value::Boolean(b1), Value::Boolean(b2)) => *b1 == *b2,
             (Value::Integer(i1), Value::Integer(i2)) => *i1 == *i2,
+            (Value::Integer(i), Value::Float(f)) |
+            (Value::Float(f), Value::Integer(i)) => *i as f64 == *f && *i == *f as i64,
             (Value::Float(f1), Value::Float(f2)) => *f1 == *f2,
             (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) => s1[..*len1 as usize] == s2[..*len2 as usize],
             (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
@@ -97,6 +99,13 @@ impl PartialEq for Value {
 impl Eq for Value {}
 // ANCHOR_END: eq
 
+impl Value {
+    pub fn same(&self, other: &Self) -> bool {
+        // eliminate Integer and Float with same number value
+        mem::discriminant(self) == mem::discriminant(other) && self == other
+    }
+}
+
 // ANCHOR: hash
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -104,9 +113,13 @@ impl Hash for Value {
             Value::Nil => (),
             Value::Boolean(b) => b.hash(state),
             Value::Integer(i) => i.hash(state),
-            Value::Float(f) => // TODO try to convert to integer
-                unsafe {
-                    mem::transmute::<f64, i64>(*f).hash(state)
+            Value::Float(f) =>
+                if let Some(i) = ftoi(*f) {
+                    i.hash(state)
+                } else {
+                    unsafe {
+                        mem::transmute::<f64, i64>(*f).hash(state)
+                    }
                 }
             Value::ShortStr(len, buf) => buf[..*len as usize].hash(state),
             Value::MidStr(s) => s.1[..s.0 as usize].hash(state),

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
 use crate::parse::ParseProto;
+use crate::utils::ftoi;
 
 // ANCHOR: print
 // "print" function in Lua's std-lib.
@@ -512,13 +513,4 @@ fn exe_concat(v1: &Value, v2: &Value) -> Value {
     };
 
     [v1, v2].concat().into()
-}
-
-fn ftoi(f: f64) -> Option<i64> {
-    let i = f as i64;
-    if i as f64 != f {
-        None
-    } else {
-        Some(i)
-    }
 }

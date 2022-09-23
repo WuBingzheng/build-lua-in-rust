@@ -7,6 +7,7 @@ mod bytecode;
 mod lex;
 mod parse;
 mod vm;
+mod utils;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
