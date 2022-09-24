@@ -91,6 +91,7 @@ impl<R: Read> ParseProto<R> {
     //     local function Name funcbody |
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
+        let nvar = self.locals.len();
         loop {
             // reset sp before each statement
             self.sp = self.locals.len();
@@ -114,7 +115,11 @@ impl<R: Read> ParseProto<R> {
 // ANCHOR_END: func_or_assign
                 Token::Local => self.local(),
                 Token::If => self.if_stat(),
-                t => break t,
+                t => {
+                    // expire local variables in this block
+                    self.locals.truncate(nvar);
+                    break t;
+                }
             }
         }
     }
