@@ -27,6 +27,7 @@ pub enum ByteCode {
 
     // condition structures
     Test(u8, u16),
+    Jump(u16),
 
     // function call
     Call(u8, u8),

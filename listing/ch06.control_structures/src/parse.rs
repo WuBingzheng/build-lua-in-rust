@@ -62,8 +62,8 @@ impl<R: Read> ParseProto<R> {
 
         println!("constants: {:?}", &proto.constants);
         println!("byte_codes:");
-        for c in proto.byte_codes.iter() {
-            println!("  {:?}", c);
+        for (i,c) in proto.byte_codes.iter().enumerate() {
+            println!("  {i}\t{c:?}");
         }
 
         proto
@@ -212,18 +212,61 @@ impl<R: Read> ParseProto<R> {
     }
 // ANCHOR_END: assignment
 
+    // BNF:
+    //   if exp then block {elseif exp then block} [else block] end
     fn if_stat(&mut self) {
-        let condition = self.exp();
-        self.lex.expect(Token::Then);
+        let mut jmp_ends = Vec::new();
 
-        let icond = self.discharge_top(condition);
-        self.byte_codes.push(ByteCode::Test(0, 0)); // hold place
-        let itest = self.byte_codes.len() - 1;
+        // == if exp then block
+        let mut end_token = self.do_if_block(&mut jmp_ends);
 
-        assert_eq!(self.block(), Token::End);
+        // == {elseif exp then block}
+        while end_token == Token::Elseif {
+            end_token = self.do_if_block(&mut jmp_ends);
+        }
+
+        // == [else block]
+        if end_token == Token::Else {
+            end_token = self.block();
+        }
+
+        assert_eq!(end_token, Token::End);
 
         let iend = self.byte_codes.len() - 1;
+        for i in jmp_ends.into_iter() {
+            self.byte_codes[i] = ByteCode::Jump((iend - i) as u16);
+        }
+    }
+
+    fn do_if_block(&mut self, jmp_ends: &mut Vec<usize>) -> Token {
+        let condition = self.exp();
+        let icond = self.discharge_top(condition);
+        self.lex.expect(Token::Then);
+
+        // Test the condition and jump to the end of this block
+        // if condition is false.
+        // Make a fake byte-code to hold the place, and fix it at
+        // end of this function.
+        self.byte_codes.push(ByteCode::Test(0, 0));
+        let itest = self.byte_codes.len() - 1;
+
+        let end_token = self.block();
+
+        // If there are following 'elseif' or 'else' blocks,
+        // jump to the very end of this whole if-statment at the
+        // end of this block.
+        // Make a fake byte-code to hold the place, and fix it
+        // at the end of whole if-statment.
+        if matches!(end_token, Token::Elseif | Token::Else) {
+            self.byte_codes.push(ByteCode::Jump(0));
+            jmp_ends.push(self.byte_codes.len() - 1);
+        }
+
+        // fix the Test byte-code
+        let iend = self.byte_codes.len() - 1;
         self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
+
+        return end_token;
     }
 
 // ANCHOR: assign_helper

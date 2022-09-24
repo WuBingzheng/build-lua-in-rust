@@ -43,6 +43,7 @@ impl ExeState {
     pub fn execute<R: Read>(&mut self, proto: &ParseProto<R>) {
         let mut pc = 0;
         while pc < proto.byte_codes.len() {
+            println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
             match proto.byte_codes[pc] {
 // ANCHOR: vm_global
                 ByteCode::GetGlobal(dst, name) => {
@@ -142,6 +143,9 @@ impl ExeState {
                     if matches!(cond, Value::Nil | Value::Boolean(false)) {
                         pc += jmp as usize; // jump if false
                     }
+                }
+                ByteCode::Jump(jmp) => {
+                    pc += jmp as usize;
                 }
 
                 // function call
