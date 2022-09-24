@@ -119,6 +119,7 @@ impl<R: Read> ParseProto<R> {
                 Token::If => self.if_stat(),
                 Token::While => self.while_stat(),
                 Token::Break => self.break_stat(),
+                Token::Do => self.do_stat(),
                 t => {
                     // expire local variables in this block
                     self.locals.truncate(nvar);
@@ -313,6 +314,10 @@ impl<R: Read> ParseProto<R> {
         } else {
             panic!("break outside loop");
         }
+    }
+
+    fn do_stat(&mut self) {
+        assert_eq!(self.block(), Token::End);
     }
 
 // ANCHOR: assign_helper
