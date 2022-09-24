@@ -70,7 +70,7 @@ impl<R: Read> ParseProto<R> {
     }
 
     fn chunk(&mut self) {
-        self.block()
+        assert_eq!(self.block(), Token::Eos);
     }
 
     // BNF:
@@ -90,7 +90,7 @@ impl<R: Read> ParseProto<R> {
     //     function funcname funcbody |
     //     local function Name funcbody |
     //     local attnamelist [`=` explist]
-    fn block(&mut self) {
+    fn block(&mut self) -> Token {
         loop {
             // reset sp before each statement
             self.sp = self.locals.len();
@@ -113,8 +113,8 @@ impl<R: Read> ParseProto<R> {
                 }
 // ANCHOR_END: func_or_assign
                 Token::Local => self.local(),
-                Token::Eos => break,
-                t => panic!("unexpected token: {t:?}"),
+                Token::If => self.if_stat(),
+                t => break t,
             }
         }
     }
@@ -206,6 +206,20 @@ impl<R: Read> ParseProto<R> {
         }
     }
 // ANCHOR_END: assignment
+
+    fn if_stat(&mut self) {
+        let condition = self.exp();
+        self.lex.expect(Token::Then);
+
+        let icond = self.discharge_top(condition);
+        self.byte_codes.push(ByteCode::Test(0, 0)); // hold place
+        let itest = self.byte_codes.len() - 1;
+
+        assert_eq!(self.block(), Token::End);
+
+        let iend = self.byte_codes.len() - 1;
+        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
+    }
 
 // ANCHOR: assign_helper
     // process assignment: var = value

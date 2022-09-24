@@ -25,6 +25,9 @@ pub enum ByteCode {
     GetField(u8, u8, u8),
     GetInt(u8, u8, u8),
 
+    // condition structures
+    Test(u8, u16),
+
     // function call
     Call(u8, u8),
 

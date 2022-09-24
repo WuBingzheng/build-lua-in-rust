@@ -41,8 +41,9 @@ impl ExeState {
 
 // ANCHOR: execute
     pub fn execute<R: Read>(&mut self, proto: &ParseProto<R>) {
-        for code in proto.byte_codes.iter() {
-            match *code {
+        let mut pc = 0;
+        while pc < proto.byte_codes.len() {
+            match proto.byte_codes[pc] {
 // ANCHOR: vm_global
                 ByteCode::GetGlobal(dst, name) => {
                     let name: &str = (&proto.constants[name as usize]).into();
@@ -134,6 +135,14 @@ impl ExeState {
                     self.set_stack(dst, value);
                 }
 // ANCHOR_END: vm_table
+
+                // condition structures
+                ByteCode::Test(icond, jmp) => {
+                    let cond = &self.stack[icond as usize];
+                    if matches!(cond, Value::Nil | Value::Boolean(false)) {
+                        pc += jmp as usize; // jump if false
+                    }
+                }
 
                 // function call
                 ByteCode::Call(func, _) => {
@@ -340,6 +349,8 @@ impl ExeState {
                     self.set_stack(dst, r);
                 }
             }
+
+            pc += 1;
         }
     }
 // ANCHOR_END: execute
