@@ -145,7 +145,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::Jump(jmp) => {
-                    pc += jmp as usize;
+                    pc = (pc as isize + jmp as isize) as usize;
                 }
 
                 // function call

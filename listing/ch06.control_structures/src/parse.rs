@@ -115,6 +115,7 @@ impl<R: Read> ParseProto<R> {
 // ANCHOR_END: func_or_assign
                 Token::Local => self.local(),
                 Token::If => self.if_stat(),
+                Token::While => self.while_stat(),
                 t => {
                     // expire local variables in this block
                     self.locals.truncate(nvar);
@@ -234,7 +235,7 @@ impl<R: Read> ParseProto<R> {
 
         let iend = self.byte_codes.len() - 1;
         for i in jmp_ends.into_iter() {
-            self.byte_codes[i] = ByteCode::Jump((iend - i) as u16);
+            self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
         }
     }
 
@@ -267,6 +268,32 @@ impl<R: Read> ParseProto<R> {
         self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
 
         return end_token;
+    }
+
+    // BNF:
+    //   while exp do block end
+    fn while_stat(&mut self) {
+        let istart = self.byte_codes.len() - 1;
+
+        let condition = self.exp();
+        let icond = self.discharge_top(condition);
+        self.lex.expect(Token::Do);
+
+        // Test the condition and jump to the end of this block
+        // if condition is false.
+        // Make a fake byte-code to hold the place, and fix it at
+        // end of this function.
+        self.byte_codes.push(ByteCode::Test(0, 0));
+        let itest = self.byte_codes.len() - 1;
+
+        assert_eq!(self.block(), Token::End);
+
+        // jump back
+        let iend = self.byte_codes.len();
+        self.byte_codes.push(ByteCode::Jump(-((iend - istart) as i16)));
+
+        // fix the Test byte-code
+        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
     }
 
 // ANCHOR: assign_helper
