@@ -141,7 +141,7 @@ impl ExeState {
                 ByteCode::Test(icond, jmp) => {
                     let cond = &self.stack[icond as usize];
                     if matches!(cond, Value::Nil | Value::Boolean(false)) {
-                        pc += jmp as usize; // jump if false
+                        pc = (pc as isize + jmp as isize) as usize; // jump if false
                     }
                 }
                 ByteCode::Jump(jmp) => {

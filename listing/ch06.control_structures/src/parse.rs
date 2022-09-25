@@ -118,6 +118,7 @@ impl<R: Read> ParseProto<R> {
                 Token::Local => self.local(),
                 Token::If => self.if_stat(),
                 Token::While => self.while_stat(),
+                Token::Repeat => self.repeat_stat(),
                 Token::Break => self.break_stat(),
                 Token::Do => self.do_stat(),
                 t => {
@@ -269,7 +270,7 @@ impl<R: Read> ParseProto<R> {
 
         // fix the Test byte-code
         let iend = self.byte_codes.len() - 1;
-        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
+        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
 
         return end_token;
     }
@@ -290,7 +291,7 @@ impl<R: Read> ParseProto<R> {
         self.byte_codes.push(ByteCode::Test(0, 0));
         let itest = self.byte_codes.len() - 1;
 
-        self.break_blocks.push(Vec::new());
+        self.push_break_block();
 
         assert_eq!(self.block(), Token::End);
 
@@ -298,13 +299,27 @@ impl<R: Read> ParseProto<R> {
         let iend = self.byte_codes.len();
         self.byte_codes.push(ByteCode::Jump(-((iend - istart + 1) as i16)));
 
-        // fix break jump
-        for i in self.break_blocks.pop().unwrap().into_iter() {
-            self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
-        }
+        self.pop_break_block();
 
         // fix the Test byte-code
-        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as u16);
+        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
+    }
+
+    // BNF:
+    //   repeat block until exp
+    fn repeat_stat(&mut self) {
+        let istart = self.byte_codes.len();
+
+        self.push_break_block();
+
+        assert_eq!(self.block(), Token::Until);
+
+        let condition = self.exp();
+        let icond = self.discharge_top(condition);
+        let iend = self.byte_codes.len();
+        self.byte_codes.push(ByteCode::Test(icond as u8, -((iend - istart + 1) as i16)));
+
+        self.pop_break_block();
     }
 
     fn break_stat(&mut self) {
@@ -318,6 +333,16 @@ impl<R: Read> ParseProto<R> {
 
     fn do_stat(&mut self) {
         assert_eq!(self.block(), Token::End);
+    }
+
+    fn push_break_block(&mut self) {
+        self.break_blocks.push(Vec::new());
+    }
+    fn pop_break_block(&mut self) {
+        let iend = self.byte_codes.len() - 1;
+        for i in self.break_blocks.pop().unwrap().into_iter() {
+            self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
+        }
     }
 
 // ANCHOR: assign_helper
