@@ -36,6 +36,13 @@ enum ConstStack {
     Stack(usize),
 }
 
+#[derive(Debug)]
+struct GotoLabel {
+    name: String,
+    icode: usize,
+    nvar: usize,
+}
+
 // ANCHOR: proto
 #[derive(Debug)]
 pub struct ParseProto<R: Read> {
@@ -45,6 +52,8 @@ pub struct ParseProto<R: Read> {
     sp: usize,
     locals: Vec::<String>,
     break_blocks: Vec::<Vec::<usize>>,
+    gotos: Vec<GotoLabel>,
+    labels: Vec<GotoLabel>,
     lex: Lex<R>,
 }
 // ANCHOR_END: proto
@@ -57,6 +66,8 @@ impl<R: Read> ParseProto<R> {
             sp: 0,
             locals: Vec::new(),
             break_blocks: Vec::new(),
+            gotos: Vec::new(),
+            labels: Vec::new(),
             lex: Lex::new(input),
         };
 
@@ -73,6 +84,9 @@ impl<R: Read> ParseProto<R> {
 
     fn chunk(&mut self) {
         assert_eq!(self.block(), Token::Eos);
+        if let Some(goto) = self.gotos.first() {
+            panic!("goto {} no destination", &goto.name);
+        }
     }
 
     // BNF:
@@ -94,6 +108,8 @@ impl<R: Read> ParseProto<R> {
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
         let nvar = self.locals.len();
+        let igoto = self.gotos.len();
+        let ilabel = self.labels.len();
         loop {
             // reset sp before each statement
             self.sp = self.locals.len();
@@ -121,9 +137,12 @@ impl<R: Read> ParseProto<R> {
                 Token::Repeat => self.repeat_stat(),
                 Token::Break => self.break_stat(),
                 Token::Do => self.do_stat(),
+                Token::DoubColon => self.label_stat(),
+                Token::Goto => self.goto_stat(),
                 t => {
                     // expire local variables in this block
                     self.locals.truncate(nvar);
+                    self.close_goto_labels(igoto, ilabel);
                     break t;
                 }
             }
@@ -331,10 +350,6 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
-    fn do_stat(&mut self) {
-        assert_eq!(self.block(), Token::End);
-    }
-
     fn push_break_block(&mut self) {
         self.break_blocks.push(Vec::new());
     }
@@ -343,6 +358,63 @@ impl<R: Read> ParseProto<R> {
         for i in self.break_blocks.pop().unwrap().into_iter() {
             self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
         }
+    }
+
+    // BNF:
+    //   do block end
+    fn do_stat(&mut self) {
+        assert_eq!(self.block(), Token::End);
+    }
+
+    // BNF:
+    //   label ::= `::` Name `::`
+    fn label_stat(&mut self) {
+        let name = self.read_name();
+        self.lex.expect(Token::DoubColon);
+
+        if self.labels.iter().find(|l|l.name == name).is_some() {
+            panic!("duplicate label {name}");
+        }
+
+        self.labels.push(GotoLabel {
+            name,
+            icode: self.byte_codes.len(),
+            nvar: self.locals.len() });
+    }
+
+    // BNF:
+    //   goto Name
+    fn goto_stat(&mut self) {
+        let name = self.read_name();
+
+        self.byte_codes.push(ByteCode::Jump(0));
+
+        self.gotos.push(GotoLabel {
+            name,
+            icode: self.byte_codes.len() - 1,
+            nvar: self.locals.len() });
+    }
+
+    // match the gotos and labels, and close the labels at the end of block
+    fn close_goto_labels(&mut self, igoto: usize, ilabel: usize) {
+        // try to match gotos defined in this block
+        let mut no_dsts = Vec::new();
+        for goto in self.gotos.drain(igoto..) {
+            if let Some(label) = self.labels.iter().rev().find(|l|l.name == goto.name) {
+                if label.icode != self.byte_codes.len() && label.nvar > goto.nvar {
+                    panic!("goto jump into scope {}", goto.name);
+                }
+                let d = (label.icode as isize - goto.icode as isize) as i16;
+                self.byte_codes[goto.icode] = ByteCode::Jump(d - 1);
+            } else {
+                // no matched label
+                no_dsts.push(goto);
+            }
+        }
+        self.gotos.append(&mut no_dsts);
+
+        // close the labels defined in this block
+        self.labels.truncate(ilabel);
     }
 
 // ANCHOR: assign_helper
