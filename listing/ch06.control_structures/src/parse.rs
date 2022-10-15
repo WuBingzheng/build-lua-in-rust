@@ -267,8 +267,7 @@ impl<R: Read> ParseProto<R> {
     }
 
     fn do_if_block(&mut self, jmp_ends: &mut Vec<usize>) -> Token {
-        let condition = self.exp();
-        let icond = self.discharge_top(condition);
+        let icond = self.exp_discharge_top();
         self.lex.expect(Token::Then);
 
         // Test the condition and jump to the end of this block
@@ -302,8 +301,7 @@ impl<R: Read> ParseProto<R> {
     fn while_stat(&mut self) {
         let istart = self.byte_codes.len();
 
-        let condition = self.exp();
-        let icond = self.discharge_top(condition);
+        let icond = self.exp_discharge_top();
         self.lex.expect(Token::Do);
 
         // Test the condition and jump to the end of this block
@@ -338,8 +336,7 @@ impl<R: Read> ParseProto<R> {
 
         assert_eq!(self.block_scope(), Token::Until);
 
-        let condition = self.exp();
-        let icond = self.discharge_top(condition);
+        let icond = self.exp_discharge_top();
 
         // expire internal local variables AFTER condition exp.
         self.locals.truncate(nvar);
@@ -424,6 +421,11 @@ impl<R: Read> ParseProto<R> {
 
         // close the labels defined in this block
         self.labels.truncate(ilabel);
+    }
+
+    fn exp_discharge_top(&mut self) -> usize {
+        let e = self.exp();
+        self.discharge_top(e)
     }
 
 // ANCHOR: assign_helper
