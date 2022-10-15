@@ -108,6 +108,11 @@ impl<R: Read> ParseProto<R> {
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
         let nvar = self.locals.len();
+        let end_token = self.block_scope();
+        self.locals.truncate(nvar); // expire internal local variables
+        return end_token;
+    }
+    fn block_scope(&mut self) -> Token {
         let igoto = self.gotos.len();
         let ilabel = self.labels.len();
         loop {
@@ -140,8 +145,6 @@ impl<R: Read> ParseProto<R> {
                 Token::DoubColon => self.label_stat(),
                 Token::Goto => self.goto_stat(),
                 t => {
-                    // expire local variables in this block
-                    self.locals.truncate(nvar);
                     self.close_goto_labels(igoto, ilabel);
                     break t;
                 }
@@ -331,10 +334,16 @@ impl<R: Read> ParseProto<R> {
 
         self.push_break_block();
 
-        assert_eq!(self.block(), Token::Until);
+        let nvar = self.locals.len();
+
+        assert_eq!(self.block_scope(), Token::Until);
 
         let condition = self.exp();
         let icond = self.discharge_top(condition);
+
+        // expire internal local variables AFTER condition exp.
+        self.locals.truncate(nvar);
+
         let iend = self.byte_codes.len();
         self.byte_codes.push(ByteCode::Test(icond as u8, -((iend - istart + 1) as i16)));
 
