@@ -29,3 +29,10 @@
   - [一元运算](./ch05-01.unary_ops.md)
   - [二元运算](./ch05-02.binary_ops.md)
   - [整数和浮点数](./ch05-03.int_and_float.md)
+
+- [控制结构](./ch06-00.control_structures.md)
+  - [if语句](./ch06-01.if.md)
+  - [elseif和else分支](./ch06-02.elseif_else.md)
+  - [while和break语句](./ch06-03.while_break.md)
+  - [repeat和continue语句](./ch06-04.repeat_continue.md)
+  
