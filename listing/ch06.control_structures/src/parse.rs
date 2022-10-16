@@ -52,6 +52,7 @@ pub struct ParseProto<R: Read> {
     sp: usize,
     locals: Vec::<String>,
     break_blocks: Vec::<Vec::<usize>>,
+    continue_blocks: Vec::<Vec::<(usize, usize)>>,
     gotos: Vec<GotoLabel>,
     labels: Vec<GotoLabel>,
     lex: Lex<R>,
@@ -66,6 +67,7 @@ impl<R: Read> ParseProto<R> {
             sp: 0,
             locals: Vec::new(),
             break_blocks: Vec::new(),
+            continue_blocks: Vec::new(),
             gotos: Vec::new(),
             labels: Vec::new(),
             lex: Lex::new(input),
@@ -123,6 +125,11 @@ impl<R: Read> ParseProto<R> {
             match self.lex.next() {
                 Token::SemiColon => (),
                 t@Token::Name(_) | t@Token::ParL => {
+                    // this is not standard!
+                    if self.try_continue_stat(&t) {
+                        continue;
+                    }
+
                     // functioncall and var-assignment both begin with
                     // `prefixexp` which begins with `Name` or `(`.
                     let desc = self.prefixexp(t);
@@ -311,15 +318,15 @@ impl<R: Read> ParseProto<R> {
         self.byte_codes.push(ByteCode::Test(0, 0));
         let itest = self.byte_codes.len() - 1;
 
-        self.push_break_block();
+        self.push_loop_block();
 
         assert_eq!(self.block(), Token::End);
 
         // jump back
         let iend = self.byte_codes.len();
-        self.byte_codes.push(ByteCode::Jump(-((iend - istart + 1) as i16)));
+        self.byte_codes.push(ByteCode::Jump(-((iend - istart) as i16) - 1));
 
-        self.pop_break_block();
+        self.pop_loop_block(istart);
 
         // fix the Test byte-code
         self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
@@ -330,21 +337,23 @@ impl<R: Read> ParseProto<R> {
     fn repeat_stat(&mut self) {
         let istart = self.byte_codes.len();
 
-        self.push_break_block();
+        self.push_loop_block();
 
         let nvar = self.locals.len();
 
         assert_eq!(self.block_scope(), Token::Until);
+        let iend1 = self.byte_codes.len();
 
         let icond = self.exp_discharge_top();
 
-        // expire internal local variables AFTER condition exp.
+        let iend2 = self.byte_codes.len();
+        self.byte_codes.push(ByteCode::Test(icond as u8, -((iend2 - istart + 1) as i16)));
+
+        self.pop_loop_block(iend1);
+
+        // expire internal local variables AFTER reading condition exp
+        // and pop_loop_block()
         self.locals.truncate(nvar);
-
-        let iend = self.byte_codes.len();
-        self.byte_codes.push(ByteCode::Test(icond as u8, -((iend - istart + 1) as i16)));
-
-        self.pop_break_block();
     }
 
     fn break_stat(&mut self) {
@@ -356,13 +365,47 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
-    fn push_break_block(&mut self) {
-        self.break_blocks.push(Vec::new());
+    fn try_continue_stat(&mut self, name: &Token) -> bool {
+        if let Token::Name(name) = name {
+            if name.as_str() != "continue" {
+                return false;
+            }
+            if !matches!(self.lex.peek(), Token::End | Token::Elseif | Token::Else) {
+                return false;
+            }
+
+            if let Some(continues) = self.continue_blocks.last_mut() {
+                self.byte_codes.push(ByteCode::Jump(0));
+                continues.push((self.byte_codes.len() - 1, self.locals.len()));
+            } else {
+                panic!("continue outside loop");
+            }
+            true
+        } else {
+            false
+        }
     }
-    fn pop_break_block(&mut self) {
+
+    // before entering loop block
+    fn push_loop_block(&mut self) {
+        self.break_blocks.push(Vec::new());
+        self.continue_blocks.push(Vec::new());
+    }
+    // after leaving loop block, fix `break` and `continue` Jumps
+    fn pop_loop_block(&mut self, icontinue: usize) {
+        // breaks
         let iend = self.byte_codes.len() - 1;
         for i in self.break_blocks.pop().unwrap().into_iter() {
             self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
+        }
+
+        // continues
+        let end_nvar = self.locals.len();
+        for (i, i_nvar) in self.continue_blocks.pop().unwrap().into_iter() {
+            if i_nvar < end_nvar {
+                panic!("continue jump into local scope");
+            }
+            self.byte_codes[i] = ByteCode::Jump((icontinue as isize - i as isize) as i16 - 1);
         }
     }
 
