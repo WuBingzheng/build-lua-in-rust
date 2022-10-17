@@ -150,25 +150,29 @@ impl ExeState {
 
                 // for-loop
                 ByteCode::ForPrepare(dst, jmp) => {
-                    if let (&Value::Integer(i), &Value::Integer(step)) = (&self.stack[dst as usize], &self.stack[dst as usize + 2]) {
-                        // integer
+                    // clear into 2 cases: integer and float
+                    // stack: i, limit, step
+                    if let (&Value::Integer(mut i), &Value::Integer(step)) =
+                            (&self.stack[dst as usize], &self.stack[dst as usize + 2]) {
+                        // integer case
                         if step == 0 {
                             panic!("0 step in numerical for");
                         }
                         let limit = match &self.stack[dst as usize + 1] {
-                            Value::Integer(limit) => *limit,
-                            Value::Float(limit) => {
-                                let li = if step > 0 { limit.floor() } else { limit.ceil() } as i64;
-                                self.set_stack(dst+1, Value::Integer(li));
-                                li
+                            &Value::Integer(limit) => limit,
+                            &Value::Float(limit) => {
+                                let limit = for_int_limit(limit, step>0, &mut i);
+                                self.set_stack(dst+1, Value::Integer(limit));
+                                limit
                             }
+                            // TODO convert string
                             _ => panic!("invalid limit type"),
                         };
                         if !for_check(i, limit, step, 0) {
                             pc += jmp as usize;
                         }
                     } else {
-                        // float
+                        // float case
                         let i = self.make_float(dst);
                         let limit = self.make_float(dst+1);
                         let step = self.make_float(dst+2);
@@ -181,6 +185,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::ForLoop(dst, jmp) => {
+                    // stack: i, limit, step
                     match &self.stack[dst as usize] {
                         Value::Integer(i) => {
                             let limit = self.read_int(dst + 1);
@@ -496,6 +501,7 @@ impl ExeState {
                 self.set_stack(dst, Value::Float(f));
                 f
             }
+            // TODO convert string
             v => panic!("not number {v:?}"),
         }
     }
@@ -617,5 +623,31 @@ fn for_check<T: PartialOrd>(i: T, limit: T, step: T, zero: T) -> bool {
         i <= limit
     } else {
         i >= limit
+    }
+}
+
+fn for_int_limit(limit: f64, is_step_positive: bool, i: &mut i64) -> i64 {
+    if is_step_positive {
+        if limit < i64::MIN as f64 {
+            // The limit is so negative that the for-loop should not run,
+            // because any initial integer value is greater than such limit.
+            // If we do not handle this case specially and return (limit as i64)
+            // as normal, which will be converted into i64::MIN, and if the
+            // initial integer is i64::MIN too, then the loop will run once,
+            // which is wrong!
+            // So we reset the initial integer to 0 and return limit as -1,
+            // to make sure the loop must not be run.
+            *i = 0;
+            -1
+        } else {
+            limit.floor() as i64
+        }
+    } else {
+        if limit > i64::MAX as f64 {
+            *i = 0;
+            1
+        } else {
+            limit.ceil() as i64
+        }
     }
 }

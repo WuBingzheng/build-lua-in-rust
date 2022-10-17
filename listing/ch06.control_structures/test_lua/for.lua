@@ -17,3 +17,9 @@ end
 for i = 1.0, 3 do
     print(i)
 end
+
+-- special case, should not run
+local max = 9223372036854775807
+for i = max, max*10.0, -1 do
+    print (i)
+end
