@@ -147,6 +147,7 @@ impl<R: Read> ParseProto<R> {
                 Token::If => self.if_stat(),
                 Token::While => self.while_stat(),
                 Token::Repeat => self.repeat_stat(),
+                Token::For => self.for_stat(),
                 Token::Break => self.break_stat(),
                 Token::Do => self.do_stat(),
                 Token::DoubColon => self.label_stat(),
@@ -354,6 +355,53 @@ impl<R: Read> ParseProto<R> {
         // expire internal local variables AFTER reading condition exp
         // and pop_loop_block()
         self.locals.truncate(nvar);
+    }
+
+    // * numerical: for Name `=` ...
+    // * generic:   for Name {, Name} in ...
+    fn for_stat(&mut self) {
+        let name = self.read_name();
+        if self.lex.peek() == &Token::Assign {
+            self.for_numerical(name);
+        } else {
+            todo!("generic for");
+        }
+    }
+
+    // BNF:
+    //   for Name `=` exp `,` exp [`,` exp] do block end
+    fn for_numerical(&mut self, name: String) {
+        self.lex.next(); // skip `=`
+
+        match self.explist() {
+            2 => self.discharge(self.sp, ExpDesc::Integer(1)),
+            3 => (),
+            _ => panic!("invalid numerical for exp"),
+        }
+
+        self.locals.push(name);
+        self.locals.push(String::from(""));
+        self.locals.push(String::from(""));
+
+        self.lex.expect(Token::Do);
+
+        self.byte_codes.push(ByteCode::ForPrepare(0, 0));
+        let iprepare = self.byte_codes.len() - 1;
+        let iname = self.sp - 3;
+
+        self.push_loop_block();
+
+        assert_eq!(self.block(), Token::End);
+
+        self.locals.pop();
+        self.locals.pop();
+        self.locals.pop();
+
+        let d = self.byte_codes.len() - iprepare;
+        self.byte_codes.push(ByteCode::ForLoop(iname as u8, d as u16));
+        self.byte_codes[iprepare] = ByteCode::ForPrepare(iname as u8, d as u16);
+
+        self.pop_loop_block(self.byte_codes.len() - 1);
     }
 
     fn break_stat(&mut self) {

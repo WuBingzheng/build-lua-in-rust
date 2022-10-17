@@ -29,6 +29,10 @@ pub enum ByteCode {
     Test(u8, i16),
     Jump(i16),
 
+    // for-loop
+    ForPrepare(u8, u16),
+    ForLoop(u8, u16),
+
     // function call
     Call(u8, u8),
 

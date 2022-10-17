@@ -148,6 +148,62 @@ impl ExeState {
                     pc = (pc as isize + jmp as isize) as usize;
                 }
 
+                // for-loop
+                ByteCode::ForPrepare(dst, jmp) => {
+                    if let (&Value::Integer(i), &Value::Integer(step)) = (&self.stack[dst as usize], &self.stack[dst as usize + 2]) {
+                        // integer
+                        if step == 0 {
+                            panic!("0 step in numerical for");
+                        }
+                        let limit = match &self.stack[dst as usize + 1] {
+                            Value::Integer(limit) => *limit,
+                            Value::Float(limit) => {
+                                let li = if step > 0 { limit.floor() } else { limit.ceil() } as i64;
+                                self.set_stack(dst+1, Value::Integer(li));
+                                li
+                            }
+                            _ => panic!("invalid limit type"),
+                        };
+                        if !for_check(i, limit, step, 0) {
+                            pc += jmp as usize;
+                        }
+                    } else {
+                        // float
+                        let i = self.make_float(dst);
+                        let limit = self.make_float(dst+1);
+                        let step = self.make_float(dst+2);
+                        if step == 0.0 {
+                            panic!("0 step in numerical for");
+                        }
+                        if !for_check(i, limit, step, 0.0) {
+                            pc += jmp as usize;
+                        }
+                    }
+                }
+                ByteCode::ForLoop(dst, jmp) => {
+                    match &self.stack[dst as usize] {
+                        Value::Integer(i) => {
+                            let limit = self.read_int(dst + 1);
+                            let step = self.read_int(dst + 2);
+                            let i = *i + step;
+                            if for_check(i, limit, step, 0) {
+                                self.set_stack(dst, Value::Integer(i));
+                                pc -= jmp as usize;
+                            }
+                        }
+                        Value::Float(f) => {
+                            let limit = self.read_float(dst + 1);
+                            let step = self.read_float(dst + 2);
+                            let i = *f + step;
+                            if for_check(i, limit, step, 0.0) {
+                                self.set_stack(dst, Value::Float(i));
+                                pc -= jmp as usize;
+                            }
+                        }
+                        _ => panic!("xx"),
+                    }
+                }
+
                 // function call
                 ByteCode::Call(func, _) => {
                     self.func_index = func as usize;
@@ -431,6 +487,32 @@ impl ExeState {
             panic!("set invalid table");
         }
     }
+
+    fn make_float(&mut self, dst: u8) -> f64 {
+        match &self.stack[dst as usize] {
+            Value::Float(f) => *f,
+            Value::Integer(i) => {
+                let f = *i as f64;
+                self.set_stack(dst, Value::Float(f));
+                f
+            }
+            v => panic!("not number {v:?}"),
+        }
+    }
+    fn read_int(&self, dst: u8) -> i64 {
+        if let Value::Integer(i) = &self.stack[dst as usize] {
+            *i
+        } else {
+            panic!("invalid integer");
+        }
+    }
+    fn read_float(&self, dst: u8) -> f64 {
+        if let Value::Float(f) = &self.stack[dst as usize] {
+            *f
+        } else {
+            panic!("invalid integer");
+        }
+    }
 }
 
 fn set_vec(vec: &mut Vec<Value>, i: usize, value: Value) {
@@ -528,4 +610,12 @@ fn exe_concat(v1: &Value, v2: &Value) -> Value {
     };
 
     [v1, v2].concat().into()
+}
+
+fn for_check<T: PartialOrd>(i: T, limit: T, step: T, zero: T) -> bool {
+    if step > zero {
+        i <= limit
+    } else {
+        i >= limit
+    }
 }
