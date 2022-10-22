@@ -48,7 +48,7 @@ impl fmt::Display for Value {
             Value::Float(n) => write!(f, "{n:?}"),
             Value::ShortStr(len, buf) => write!(f, "{}", String::from_utf8_lossy(&buf[..*len as usize])),
             Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
-            Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(&s)),
+            Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(s)),
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
             Value::Function(_) => write!(f, "function"),
         }
@@ -64,7 +64,7 @@ impl fmt::Debug for Value {
             Value::Float(n) => write!(f, "{n:?}"),
             Value::ShortStr(len, buf) => write!(f, "'{}'", String::from_utf8_lossy(&buf[..*len as usize])),
             Value::MidStr(s) => write!(f, "\"{}\"", String::from_utf8_lossy(&s.1[..s.0 as usize])),
-            Value::LongStr(s) => write!(f, "'''{}'''", String::from_utf8_lossy(&s)),
+            Value::LongStr(s) => write!(f, "'''{}'''", String::from_utf8_lossy(s)),
             Value::Table(t) => {
                 let t = t.borrow();
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
@@ -79,11 +79,11 @@ impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Value::Nil, Value::Nil) => true,
-            (Value::Boolean(b1), Value::Boolean(b2)) => *b1 == *b2,
-            (Value::Integer(i1), Value::Integer(i2)) => *i1 == *i2,
-            (Value::Integer(i), Value::Float(f)) |
-            (Value::Float(f), Value::Integer(i)) => *i as f64 == *f && *i == *f as i64,
-            (Value::Float(f1), Value::Float(f2)) => *f1 == *f2,
+            (&Value::Boolean(b1), &Value::Boolean(b2)) => b1 == b2,
+            (&Value::Integer(i1), &Value::Integer(i2)) => i1 == i2,
+            (&Value::Integer(i), &Value::Float(f)) |
+            (&Value::Float(f), &Value::Integer(i)) => i as f64 == f && i == f as i64,
+            (&Value::Float(f1), &Value::Float(f2)) => f1 == f2,
             (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) => s1[..*len1 as usize] == s2[..*len2 as usize],
             (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
@@ -113,13 +113,11 @@ impl Hash for Value {
             Value::Nil => (),
             Value::Boolean(b) => b.hash(state),
             Value::Integer(i) => i.hash(state),
-            Value::Float(f) =>
-                if let Some(i) = ftoi(*f) {
+            &Value::Float(f) =>
+                if let Some(i) = ftoi(f) {
                     i.hash(state)
                 } else {
-                    unsafe {
-                        mem::transmute::<f64, i64>(*f).hash(state)
-                    }
+                    (f.to_bits() as i64).hash(state)
                 }
             Value::ShortStr(len, buf) => buf[..*len as usize].hash(state),
             Value::MidStr(s) => s.1[..s.0 as usize].hash(state),
@@ -161,7 +159,7 @@ impl From<i64> for Value {
 // convert &[u8], Vec<u8>, &str and String into Value
 impl From<&[u8]> for Value {
     fn from(v: &[u8]) -> Self {
-        vec_to_short_mid_str(v).unwrap_or(Value::LongStr(Rc::new(v.to_vec())))
+        vec_to_short_mid_str(v).unwrap_or_else(||Value::LongStr(Rc::new(v.to_vec())))
     }
 }
 impl From<&str> for Value {
@@ -172,7 +170,7 @@ impl From<&str> for Value {
 
 impl From<Vec<u8>> for Value {
     fn from(v: Vec<u8>) -> Self {
-        vec_to_short_mid_str(&v).unwrap_or(Value::LongStr(Rc::new(v)))
+        vec_to_short_mid_str(&v).unwrap_or_else(||Value::LongStr(Rc::new(v)))
     }
 }
 impl From<String> for Value {
@@ -185,12 +183,12 @@ fn vec_to_short_mid_str(v: &[u8]) -> Option<Value> {
     let len = v.len();
     if len <= SHORT_STR_MAX {
         let mut buf = [0; SHORT_STR_MAX];
-        buf[..len].copy_from_slice(&v);
+        buf[..len].copy_from_slice(v);
         Some(Value::ShortStr(len as u8, buf))
 
     } else if len <= MID_STR_MAX {
         let mut buf = [0; MID_STR_MAX];
-        buf[..len].copy_from_slice(&v);
+        buf[..len].copy_from_slice(v);
         Some(Value::MidStr(Rc::new((len as u8, buf))))
 
     } else {

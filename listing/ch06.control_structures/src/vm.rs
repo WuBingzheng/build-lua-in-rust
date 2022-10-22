@@ -49,7 +49,7 @@ impl ExeState {
                 ByteCode::GetGlobal(dst, name) => {
                     let name: &str = (&proto.constants[name as usize]).into();
                     let v = self.globals.get(name).unwrap_or(&Value::Nil).clone();
-                    self.set_stack(dst.into(), v);
+                    self.set_stack(dst, v);
                 }
                 ByteCode::SetGlobal(name, src) => {
                     let name = &proto.constants[name as usize];
@@ -159,9 +159,9 @@ impl ExeState {
                         if step == 0 {
                             panic!("0 step in numerical for");
                         }
-                        let limit = match &self.stack[dst as usize + 1] {
-                            &Value::Integer(limit) => limit,
-                            &Value::Float(limit) => {
+                        let limit = match self.stack[dst as usize + 1] {
+                            Value::Integer(limit) => limit,
+                            Value::Float(limit) => {
                                 let limit = for_int_limit(limit, step>0, &mut i);
                                 self.set_stack(dst+1, Value::Integer(limit));
                                 limit
@@ -188,11 +188,11 @@ impl ExeState {
 // ANCHOR_END: for_prepare
                 ByteCode::ForLoop(dst, jmp) => {
                     // stack: i, limit, step
-                    match &self.stack[dst as usize] {
+                    match self.stack[dst as usize] {
                         Value::Integer(i) => {
                             let limit = self.read_int(dst + 1);
                             let step = self.read_int(dst + 2);
-                            let i = *i + step;
+                            let i = i + step;
                             if for_check(i, limit, step>0) {
                                 self.set_stack(dst, Value::Integer(i));
                                 pc -= jmp as usize;
@@ -201,7 +201,7 @@ impl ExeState {
                         Value::Float(f) => {
                             let limit = self.read_float(dst + 1);
                             let step = self.read_float(dst + 2);
-                            let i = *f + step;
+                            let i = f + step;
                             if for_check(i, limit, step>0.0) {
                                 self.set_stack(dst, Value::Float(i));
                                 pc -= jmp as usize;
@@ -496,27 +496,27 @@ impl ExeState {
     }
 
     fn make_float(&mut self, dst: u8) -> f64 {
-        match &self.stack[dst as usize] {
-            Value::Float(f) => *f,
+        match self.stack[dst as usize] {
+            Value::Float(f) => f,
             Value::Integer(i) => {
-                let f = *i as f64;
+                let f = i as f64;
                 self.set_stack(dst, Value::Float(f));
                 f
             }
             // TODO convert string
-            v => panic!("not number {v:?}"),
+            ref v => panic!("not number {v:?}"),
         }
     }
     fn read_int(&self, dst: u8) -> i64 {
-        if let Value::Integer(i) = &self.stack[dst as usize] {
-            *i
+        if let Value::Integer(i) = self.stack[dst as usize] {
+            i
         } else {
             panic!("invalid integer");
         }
     }
     fn read_float(&self, dst: u8) -> f64 {
-        if let Value::Float(f) = &self.stack[dst as usize] {
-            *f
+        if let Value::Float(f) = self.stack[dst as usize] {
+            f
         } else {
             panic!("invalid integer");
         }
@@ -536,35 +536,35 @@ fn set_vec(vec: &mut Vec<Value>, i: usize, value: Value) {
 
 fn exe_binop(v1: &Value, v2: &Value, arith_i: fn(i64,i64)->i64, arith_f: fn(f64,f64)->f64) -> Value {
     match (v1, v2) {
-        (Value::Integer(i1), Value::Integer(i2)) => Value::Integer(arith_i(*i1, *i2)),
-        (Value::Integer(i1), Value::Float(f2)) => Value::Float(arith_f(*i1 as f64, *f2)),
-        (Value::Float(f1), Value::Float(f2)) => Value::Float(arith_f(*f1, *f2)),
-        (Value::Float(f1), Value::Integer(i2)) => Value::Float(arith_f(*f1, *i2 as f64)),
+        (&Value::Integer(i1), &Value::Integer(i2)) => Value::Integer(arith_i(i1, i2)),
+        (&Value::Integer(i1), &Value::Float(f2)) => Value::Float(arith_f(i1 as f64, f2)),
+        (&Value::Float(f1), &Value::Float(f2)) => Value::Float(arith_f(f1, f2)),
+        (&Value::Float(f1), &Value::Integer(i2)) => Value::Float(arith_f(f1, i2 as f64)),
         (_, _) => todo!("meta"),
     }
 }
 fn exe_binop_int(v1: &Value, i2: u8, arith_i: fn(i64,i64)->i64, arith_f: fn(f64,f64)->f64) -> Value {
     match v1 {
-        Value::Integer(i1) => Value::Integer(arith_i(*i1, i2 as i64)),
-        Value::Float(f1) => Value::Float(arith_f(*f1, i2 as f64)),
+        &Value::Integer(i1) => Value::Integer(arith_i(i1, i2 as i64)),
+        &Value::Float(f1) => Value::Float(arith_f(f1, i2 as f64)),
         _ => todo!("meta"),
     }
 }
 
 fn exe_binop_f(v1: &Value, v2: &Value, arith_f: fn(f64,f64)->f64) -> Value {
     let (f1, f2) = match (v1, v2) {
-        (Value::Integer(i1), Value::Integer(i2)) => (*i1 as f64, *i2 as f64),
-        (Value::Integer(i1), Value::Float(f2)) => (*i1 as f64, *f2),
-        (Value::Float(f1), Value::Float(f2)) => (*f1, *f2),
-        (Value::Float(f1), Value::Integer(i2)) => (*f1, *i2 as f64),
+        (&Value::Integer(i1), &Value::Integer(i2)) => (i1 as f64, i2 as f64),
+        (&Value::Integer(i1), &Value::Float(f2)) => (i1 as f64, f2),
+        (&Value::Float(f1), &Value::Float(f2)) => (f1, f2),
+        (&Value::Float(f1), &Value::Integer(i2)) => (f1, i2 as f64),
         (_, _) => todo!("meta"),
     };
     Value::Float(arith_f(f1, f2))
 }
 fn exe_binop_int_f(v1: &Value, i2: u8, arith_f: fn(f64,f64)->f64) -> Value {
     let f1 = match v1 {
-        Value::Integer(i1) => *i1 as f64,
-        Value::Float(f1) => *f1,
+        &Value::Integer(i1) => i1 as f64,
+        &Value::Float(f1) => f1,
         _ => todo!("meta"),
     };
     Value::Float(arith_f(f1, i2 as f64))
@@ -572,18 +572,18 @@ fn exe_binop_int_f(v1: &Value, i2: u8, arith_f: fn(f64,f64)->f64) -> Value {
 
 fn exe_binop_i(v1: &Value, v2: &Value, arith_i: fn(i64,i64)->i64) -> Value {
     let (i1, i2) = match (v1, v2) {
-        (Value::Integer(i1), Value::Integer(i2)) => (*i1, *i2),
-        (Value::Integer(i1), Value::Float(f2)) => (*i1, ftoi(*f2).unwrap()),
-        (Value::Float(f1), Value::Float(f2)) => (ftoi(*f1).unwrap(), ftoi(*f2).unwrap()),
-        (Value::Float(f1), Value::Integer(i2)) => (ftoi(*f1).unwrap(), *i2),
+        (&Value::Integer(i1), &Value::Integer(i2)) => (i1, i2),
+        (&Value::Integer(i1), &Value::Float(f2)) => (i1, ftoi(f2).unwrap()),
+        (&Value::Float(f1), &Value::Float(f2)) => (ftoi(f1).unwrap(), ftoi(f2).unwrap()),
+        (&Value::Float(f1), &Value::Integer(i2)) => (ftoi(f1).unwrap(), i2),
         (_, _) => todo!("meta"),
     };
     Value::Integer(arith_i(i1, i2))
 }
 fn exe_binop_int_i(v1: &Value, i2: u8, arith_i: fn(i64,i64)->i64) -> Value {
     let i1 = match v1 {
-        Value::Integer(i1) => *i1,
-        Value::Float(f1) => ftoi(*f1).unwrap(),
+        &Value::Integer(i1) => i1,
+        &Value::Float(f1) => ftoi(f1).unwrap(),
         _ => todo!("meta"),
     };
     Value::Integer(arith_i(i1, i2 as i64))

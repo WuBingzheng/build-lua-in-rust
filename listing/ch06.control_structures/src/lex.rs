@@ -141,7 +141,7 @@ impl<R: Read> Lex<R> {
         }
     }
     fn next_byte(&mut self) -> Option<u8> {
-        self.input.next().and_then(|r|Some(r.unwrap()))
+        self.input.next().map(|r| r.unwrap())
     }
 
     fn check_ahead(&mut self, ahead: u8, long: Token, short: Token) -> Token {

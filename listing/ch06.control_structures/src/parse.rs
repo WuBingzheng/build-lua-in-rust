@@ -112,7 +112,7 @@ impl<R: Read> ParseProto<R> {
         let nvar = self.locals.len();
         let end_token = self.block_scope();
         self.locals.truncate(nvar); // expire internal local variables
-        return end_token;
+        end_token
     }
     fn block_scope(&mut self) -> Token {
         let igoto = self.gotos.len();
@@ -301,7 +301,7 @@ impl<R: Read> ParseProto<R> {
         let iend = self.byte_codes.len() - 1;
         self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
 
-        return end_token;
+        end_token
     }
 
     // BNF:
@@ -469,7 +469,7 @@ impl<R: Read> ParseProto<R> {
         let name = self.read_name();
         self.lex.expect(Token::DoubColon);
 
-        if self.labels.iter().find(|l|l.name == name).is_some() {
+        if self.labels.iter().any(|l|l.name == name) {
             panic!("duplicate label {name}");
         }
 
@@ -1078,10 +1078,10 @@ fn do_fold_const(left: &ExpDesc, right: &ExpDesc, arith_i: fn(i64,i64)->i64, ari
 
 fn do_fold_const_int(left: &ExpDesc, right: &ExpDesc, arith_i: fn(i64,i64)->i64) -> Option<ExpDesc> {
     let (i1, i2) = match (left, right) {
-        (ExpDesc::Integer(i1), ExpDesc::Integer(i2)) => (*i1, *i2),
-        (ExpDesc::Float(f1), ExpDesc::Float(f2)) => (ftoi(*f1).unwrap(), ftoi(*f2).unwrap()),
-        (ExpDesc::Float(f1), ExpDesc::Integer(i2)) => (ftoi(*f1).unwrap(), *i2),
-        (ExpDesc::Integer(i1), ExpDesc::Float(f2)) => (*i1, ftoi(*f2).unwrap()),
+        (&ExpDesc::Integer(i1), &ExpDesc::Integer(i2)) => (i1, i2),
+        (&ExpDesc::Float(f1), &ExpDesc::Float(f2)) => (ftoi(f1).unwrap(), ftoi(f2).unwrap()),
+        (&ExpDesc::Float(f1), &ExpDesc::Integer(i2)) => (ftoi(f1).unwrap(), i2),
+        (&ExpDesc::Integer(i1), &ExpDesc::Float(f2)) => (i1, ftoi(f2).unwrap()),
         (_, _) => return None,
     };
     Some(ExpDesc::Integer(arith_i(i1, i2)))
@@ -1089,10 +1089,10 @@ fn do_fold_const_int(left: &ExpDesc, right: &ExpDesc, arith_i: fn(i64,i64)->i64)
 
 fn do_fold_const_float(left: &ExpDesc, right: &ExpDesc, arith_f: fn(f64,f64)->f64) -> Option<ExpDesc> {
     let (f1, f2) = match (left, right) {
-        (ExpDesc::Integer(i1), ExpDesc::Integer(i2)) => (*i1 as f64, *i2 as f64),
-        (ExpDesc::Float(f1), ExpDesc::Float(f2)) => (*f1, *f2),
-        (ExpDesc::Float(f1), ExpDesc::Integer(i2)) => (*f1, *i2 as f64),
-        (ExpDesc::Integer(i1), ExpDesc::Float(f2)) => (*i1 as f64, *f2),
+        (&ExpDesc::Integer(i1), &ExpDesc::Integer(i2)) => (i1 as f64, i2 as f64),
+        (&ExpDesc::Float(f1), &ExpDesc::Float(f2)) => (f1, f2),
+        (&ExpDesc::Float(f1), &ExpDesc::Integer(i2)) => (f1, i2 as f64),
+        (&ExpDesc::Integer(i1), &ExpDesc::Float(f2)) => (i1 as f64, f2),
         (_, _) => return None,
     };
     Some(ExpDesc::Float(arith_f(f1, f2)))
