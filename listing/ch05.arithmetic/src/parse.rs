@@ -316,6 +316,19 @@ impl<R: Read> ParseProto<R> {
                 return desc;
             }
 
+            /* Discharge left operand before reading right operand, which may
+             * affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
+             * the `f(t)` may change `t.k`, so we must evaluate `t.k` before
+             * calling `f(t)`.
+             *
+             * But we do not discharge constants, because they will not be
+             * affected by right operand. Besides we try to fold constants
+             * in process_binop() later.
+             */
+            if !matches!(desc, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
+                desc = ExpDesc::Local(self.discharge_top(desc));
+            }
+
             let binop = self.lex.next();
             let right_desc = self.exp_limit(right_pri);
             desc = self.process_binop(binop, desc, right_desc);
