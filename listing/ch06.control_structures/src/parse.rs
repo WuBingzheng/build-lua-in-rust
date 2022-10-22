@@ -275,7 +275,7 @@ impl<R: Read> ParseProto<R> {
     }
 
     fn do_if_block(&mut self, jmp_ends: &mut Vec<usize>) -> Token {
-        let icond = self.exp_discharge_top();
+        let icond = self.exp_discharge_any();
         self.lex.expect(Token::Then);
 
         // Test the condition and jump to the end of this block
@@ -309,7 +309,7 @@ impl<R: Read> ParseProto<R> {
     fn while_stat(&mut self) {
         let istart = self.byte_codes.len();
 
-        let icond = self.exp_discharge_top();
+        let icond = self.exp_discharge_any();
         self.lex.expect(Token::Do);
 
         // Test the condition and jump to the end of this block
@@ -345,7 +345,7 @@ impl<R: Read> ParseProto<R> {
         assert_eq!(self.block_scope(), Token::Until);
         let iend1 = self.byte_codes.len();
 
-        let icond = self.exp_discharge_top();
+        let icond = self.exp_discharge_any();
 
         let iend2 = self.byte_codes.len();
         self.byte_codes.push(ByteCode::Test(icond as u8, -((iend2 - istart + 1) as i16)));
@@ -519,9 +519,9 @@ impl<R: Read> ParseProto<R> {
         self.labels.truncate(ilabel);
     }
 
-    fn exp_discharge_top(&mut self) -> usize {
+    fn exp_discharge_any(&mut self) -> usize {
         let e = self.exp();
-        self.discharge_top(e)
+        self.discharge_any(e)
     }
 
 // ANCHOR: assign_helper
@@ -700,7 +700,7 @@ impl<R: Read> ParseProto<R> {
                     desc = match self.exp() {
                         ExpDesc::String(s) => ExpDesc::IndexField(itable, self.add_const(s)),
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => ExpDesc::IndexInt(itable, u8::try_from(i).unwrap()),
-                        key => ExpDesc::Index(itable, self.discharge_top(key)),
+                        key => ExpDesc::Index(itable, self.discharge_any(key)),
                     };
 
                     self.lex.expect(Token::SqurR);
@@ -739,7 +739,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Integer(i) => ExpDesc::Integer(-i),
             ExpDesc::Float(f) => ExpDesc::Float(-f),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::String(_) => panic!("invalid - operator"),
-            desc => ExpDesc::UnaryOp(ByteCode::Neg, self.discharge_top(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::Neg, self.discharge_any(desc))
         }
     }
 // ANCHOR_END: unop_neg
@@ -748,21 +748,21 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Nil => ExpDesc::Boolean(true),
             ExpDesc::Boolean(b) => ExpDesc::Boolean(!b),
             ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => ExpDesc::Boolean(false),
-            desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_top(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_any(desc))
         }
     }
     fn unop_bitnot(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(!i),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Float(_) | ExpDesc::String(_) => panic!("invalid ~ operator"),
-            desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_top(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_any(desc))
         }
     }
     fn unop_len(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Integer(_) | ExpDesc::Float(_) => panic!("invalid ~ operator"),
-            desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_top(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_any(desc))
         }
     }
 
@@ -800,7 +800,7 @@ impl<R: Read> ParseProto<R> {
             }
         }
 
-        let left = self.discharge_top(left);
+        let left = self.discharge_any(left);
 
         let (op, right) = match right {
             ExpDesc::Integer(i) =>
@@ -810,7 +810,7 @@ impl<R: Read> ParseProto<R> {
                     (opk, self.add_const(i))
                 }
             ExpDesc::Float(f) => (opk, self.add_const(f)),
-            _ => (opr, self.discharge_top(right)),
+            _ => (opr, self.discharge_any(right)),
         };
 
         ExpDesc::BinaryOp(op, left, right)
@@ -848,7 +848,7 @@ impl<R: Read> ParseProto<R> {
 
 // ANCHOR: discharge_helper
     // discharge @desc into the top of stack, if need
-    fn discharge_top(&mut self, desc: ExpDesc) -> usize {
+    fn discharge_any(&mut self, desc: ExpDesc) -> usize {
         self.discharge_if_need(self.sp, desc)
     }
 
@@ -907,7 +907,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::String(s) => ConstStack::Const(self.add_const(s)),
 
             // discharge to stack
-            _ => ConstStack::Stack(self.discharge_top(desc)),
+            _ => ConstStack::Stack(self.discharge_any(desc)),
         }
     }
 // ANCHOR_END: discharge_const
@@ -944,7 +944,7 @@ impl<R: Read> ParseProto<R> {
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
                         ExpDesc::Nil => panic!("nil can not be table key"),
                         ExpDesc::Float(f) if f.is_nan() => panic!("NaN can not be table key"),
-                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_top(key)),
+                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_any(key)),
                     };
                     self.new_table_entry(op, opk, table, key, value);
                     self.sp = sp0;
