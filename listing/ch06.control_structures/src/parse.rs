@@ -494,11 +494,16 @@ impl<R: Read> ParseProto<R> {
 
     // match the gotos and labels, and close the labels at the end of block
     fn close_goto_labels(&mut self, igoto: usize, ilabel: usize) {
-        // try to match gotos defined in this block
+        // try to match gotos defined in this block between all labels
         let mut no_dsts = Vec::new();
         for goto in self.gotos.drain(igoto..) {
             if let Some(label) = self.labels.iter().rev().find(|l|l.name == goto.name) {
                 if label.icode != self.byte_codes.len() && label.nvar > goto.nvar {
+                    // check if jump into local variables' scope:
+                    // 1. label's byte-code is not the last one, meaning there
+                    //    are non-void expressions following;
+                    // 2. label's #vars is more than goto's, meaning there are
+                    //    new local variables defined between the goto and label.
                     panic!("goto jump into scope {}", goto.name);
                 }
                 let d = (label.icode as isize - goto.icode as isize) as i16;

@@ -149,6 +149,7 @@ impl ExeState {
                 }
 
                 // for-loop
+// ANCHOR: for_prepare
                 ByteCode::ForPrepare(dst, jmp) => {
                     // clear into 2 cases: integer and float
                     // stack: i, limit, step
@@ -168,7 +169,7 @@ impl ExeState {
                             // TODO convert string
                             _ => panic!("invalid limit type"),
                         };
-                        if !for_check(i, limit, step, 0) {
+                        if !for_check(i, limit, step>0) {
                             pc += jmp as usize;
                         }
                     } else {
@@ -179,11 +180,12 @@ impl ExeState {
                         if step == 0.0 {
                             panic!("0 step in numerical for");
                         }
-                        if !for_check(i, limit, step, 0.0) {
+                        if !for_check(i, limit, step>0.0) {
                             pc += jmp as usize;
                         }
                     }
                 }
+// ANCHOR_END: for_prepare
                 ByteCode::ForLoop(dst, jmp) => {
                     // stack: i, limit, step
                     match &self.stack[dst as usize] {
@@ -191,7 +193,7 @@ impl ExeState {
                             let limit = self.read_int(dst + 1);
                             let step = self.read_int(dst + 2);
                             let i = *i + step;
-                            if for_check(i, limit, step, 0) {
+                            if for_check(i, limit, step>0) {
                                 self.set_stack(dst, Value::Integer(i));
                                 pc -= jmp as usize;
                             }
@@ -200,7 +202,7 @@ impl ExeState {
                             let limit = self.read_float(dst + 1);
                             let step = self.read_float(dst + 2);
                             let i = *f + step;
-                            if for_check(i, limit, step, 0.0) {
+                            if for_check(i, limit, step>0.0) {
                                 self.set_stack(dst, Value::Float(i));
                                 pc -= jmp as usize;
                             }
@@ -618,8 +620,8 @@ fn exe_concat(v1: &Value, v2: &Value) -> Value {
     [v1, v2].concat().into()
 }
 
-fn for_check<T: PartialOrd>(i: T, limit: T, step: T, zero: T) -> bool {
-    if step > zero {
+fn for_check<T: PartialOrd>(i: T, limit: T, is_step_positive: bool) -> bool {
+    if is_step_positive {
         i <= limit
     } else {
         i >= limit
