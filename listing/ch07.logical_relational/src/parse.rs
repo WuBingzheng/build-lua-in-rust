@@ -5,7 +5,7 @@ use crate::bytecode::ByteCode;
 use crate::value::Value;
 use crate::utils::ftoi;
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum ExpDesc {
     // constants
     Nil,
@@ -29,6 +29,9 @@ enum ExpDesc {
     // operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
     BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
+
+    // test
+    Test(usize, Vec<usize>, Vec<usize>), // (condition, true-list, false-list)
 }
 
 enum ConstStack {
@@ -275,15 +278,10 @@ impl<R: Read> ParseProto<R> {
     }
 
     fn do_if_block(&mut self, jmp_ends: &mut Vec<usize>) -> Token {
-        let icond = self.exp_discharge_any();
-        self.lex.expect(Token::Then);
+        let condition = self.exp();
+        let false_list = self.test_or_jump(condition);
 
-        // Test the condition and jump to the end of this block
-        // if condition is false.
-        // Make a fake byte-code to hold the place, and fix it at
-        // end of this function.
-        self.byte_codes.push(ByteCode::Test(0, 0));
-        let itest = self.byte_codes.len() - 1;
+        self.lex.expect(Token::Then);
 
         let end_token = self.block();
 
@@ -297,9 +295,7 @@ impl<R: Read> ParseProto<R> {
             jmp_ends.push(self.byte_codes.len() - 1);
         }
 
-        // fix the Test byte-code
-        let iend = self.byte_codes.len() - 1;
-        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
+        self.fix_test_list(false_list);
 
         end_token
     }
@@ -309,15 +305,10 @@ impl<R: Read> ParseProto<R> {
     fn while_stat(&mut self) {
         let istart = self.byte_codes.len();
 
-        let icond = self.exp_discharge_any();
-        self.lex.expect(Token::Do);
+        let condition = self.exp();
+        let false_list = self.test_or_jump(condition);
 
-        // Test the condition and jump to the end of this block
-        // if condition is false.
-        // Make a fake byte-code to hold the place, and fix it at
-        // end of this function.
-        self.byte_codes.push(ByteCode::Test(0, 0));
-        let itest = self.byte_codes.len() - 1;
+        self.lex.expect(Token::Do);
 
         self.push_loop_block();
 
@@ -329,8 +320,7 @@ impl<R: Read> ParseProto<R> {
 
         self.pop_loop_block(istart);
 
-        // fix the Test byte-code
-        self.byte_codes[itest] = ByteCode::Test(icond as u8, (iend - itest) as i16);
+        self.fix_test_list(false_list);
     }
 
     // BNF:
@@ -343,14 +333,13 @@ impl<R: Read> ParseProto<R> {
         let nvar = self.locals.len();
 
         assert_eq!(self.block_scope(), Token::Until);
-        let iend1 = self.byte_codes.len();
+        let iend = self.byte_codes.len();
 
-        let icond = self.exp_discharge_any();
+        let condition = self.exp();
+        let false_list = self.test_or_jump(condition);
+        self.fix_test_list_to(false_list, istart);
 
-        let iend2 = self.byte_codes.len();
-        self.byte_codes.push(ByteCode::Test(icond as u8, -((iend2 - istart + 1) as i16)));
-
-        self.pop_loop_block(iend1);
+        self.pop_loop_block(iend);
 
         // expire internal local variables AFTER reading condition exp
         // and pop_loop_block()
@@ -519,11 +508,6 @@ impl<R: Read> ParseProto<R> {
         self.labels.truncate(ilabel);
     }
 
-    fn exp_discharge_any(&mut self) -> usize {
-        let e = self.exp();
-        self.discharge_any(e)
-    }
-
 // ANCHOR: assign_helper
     // process assignment: var = value
     fn assign_var(&mut self, var: ExpDesc, value: ExpDesc) {
@@ -626,27 +610,15 @@ impl<R: Read> ParseProto<R> {
 
         // A' = alpha A'
         loop {
-            /* Expand only if next operator has priority higher than 'limit'.
-             * Non-operator tokens' priority is -1(lowest) so they always break here. */
+            // Expand only if next operator has priority higher than 'limit'.
+            // Non-operator tokens' priority is -1(lowest) so they always break here.
             let (left_pri, right_pri) = binop_pri(self.lex.peek());
             if left_pri <= limit {
                 return desc;
             }
 
-            /* Discharge left operand before reading right operand, which may
-             * affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
-             * the `f(t)` may change `t.k`, so we must evaluate `t.k` before
-             * calling `f(t)`.
-             *
-             * But we do not discharge constants, because they will not be
-             * affected by right operand. Besides we try to fold constants
-             * in process_binop() later.
-             */
-            if !matches!(desc, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
-                desc = ExpDesc::Local(self.discharge_any(desc));
-            }
-
             let binop = self.lex.next();
+            desc = self.preprocess_binop_left(desc, &binop);
             let right_desc = self.exp_limit(right_pri);
             desc = self.process_binop(binop, desc, right_desc);
         }
@@ -779,6 +751,29 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
+    fn preprocess_binop_left(&mut self, left: ExpDesc, binop: &Token) -> ExpDesc {
+        match binop {
+            // Generate TestOrJump/TestAndJump before reading right operand,
+            // because of short-circuit evaluation.
+            Token::And => ExpDesc::Test(0, Vec::new(), self.test_or_jump(left)),
+            Token::Or => ExpDesc::Test(0, self.test_and_jump(left), Vec::new()),
+
+            // Discharge left operand before reading right operand, which may
+            // affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
+            // the `f(t)` may change `t.k`, so we must evaluate `t.k` before
+            // calling `f(t)`. */
+            // But we do not discharge constants, because they will not be
+            // affected by right operand. Besides we try to fold constants
+            // in process_binop() later.
+            _ =>
+                if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
+                    left
+                } else {
+                    ExpDesc::Local(self.discharge_any(left))
+                }
+        }
+    }
+
     fn process_binop(&mut self, binop: Token, left: ExpDesc, right: ExpDesc) -> ExpDesc {
         if let Some(r) = fold_const(&binop, &left, &right) {
             return r;
@@ -798,6 +793,22 @@ impl<R: Read> ParseProto<R> {
             Token::ShiftL => self.do_binop(left, right, ByteCode::ShiftL, ByteCode::ShiftLInt, ByteCode::ShiftLConst),
             Token::ShiftR => self.do_binop(left, right, ByteCode::ShiftR, ByteCode::ShiftRInt, ByteCode::ShiftRConst),
             Token::Concat => self.do_binop(left, right, ByteCode::Concat, ByteCode::ConcatInt, ByteCode::ConcatConst),
+            Token::And | Token::Or => {
+                // left operand has been made into ExpDesc::Test in preprocess_binop_left()
+                if let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left {
+                    let icondition = match right {
+                        ExpDesc::Test(icondition, mut right_true_list, mut right_false_list) => {
+                            left_true_list.append(&mut right_true_list);
+                            left_false_list.append(&mut right_false_list);
+                            icondition
+                        }
+                        _ => self.discharge_any(right),
+                    };
+                    ExpDesc::Test(icondition, left_true_list, left_false_list)
+                } else {
+                    panic!("impossible");
+                }
+            }
             _ => panic!("impossible"),
         }
     }
@@ -829,6 +840,68 @@ impl<R: Read> ParseProto<R> {
         ExpDesc::BinaryOp(op, left, right)
     }
 // ANCHOR_END: do_binop
+
+    // Generate a TestOrJump: test @condition or jump to somewhere unknown.
+    // Link the new code to previous false-list if any.
+    // Close true-list if any.
+    // Return false-list to be fixed later in fix_test_list()
+    fn test_or_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
+        let (icondition, true_list, mut false_list) = match condition {
+            ExpDesc::Test(icondition, true_list, false_list) =>
+                (icondition, Some(true_list), false_list),
+            _ => (self.discharge_any(condition), None, Vec::new()),
+        };
+
+        self.byte_codes.push(ByteCode::TestOrJump(icondition as u8, 0));
+
+        false_list.push(self.byte_codes.len() - 1);
+
+        if let Some(true_list) = true_list {
+            // close true_list to jump here, after TestOrJump
+            self.fix_test_list(true_list);
+        }
+
+        false_list
+    }
+
+    // see test_or_jump()
+    fn test_and_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
+        let (icondition, mut true_list, false_list) = match condition {
+            ExpDesc::Test(icondition, true_list, false_list) =>
+                (icondition, true_list, Some(false_list)),
+            _ => (self.discharge_any(condition), Vec::new(), None),
+        };
+
+        self.byte_codes.push(ByteCode::TestAndJump(icondition as u8, 0));
+
+        true_list.push(self.byte_codes.len() - 1);
+
+        if let Some(false_list) = false_list {
+            // close false_list to jump here, after TestAndJump
+            self.fix_test_list(false_list);
+        }
+
+        true_list
+    }
+
+    // fix TestAndJump/TestOrJump list to jump to current place
+    fn fix_test_list(&mut self, list: Vec<usize>) {
+        let here = self.byte_codes.len();
+        self.fix_test_list_to(list, here);
+    }
+
+    // fix TestAndJump/TestOrJump list to jump to $to
+    fn fix_test_list_to(&mut self, list: Vec<usize>, to: usize) {
+        for i in list.into_iter() {
+            let jmp = (to as isize - i as isize - 1) as i16;
+            let code = match self.byte_codes[i] {
+                ByteCode::TestOrJump(icondition, 0) => ByteCode::TestOrJump(icondition, jmp),
+                ByteCode::TestAndJump(icondition, 0) => ByteCode::TestAndJump(icondition, jmp),
+                _ => panic!("invalid Test"),
+            };
+            self.byte_codes[i] = code;
+        }
+    }
 
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
     fn args(&mut self) -> ExpDesc {
@@ -902,6 +975,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Call => todo!("discharge Call"),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
+            ExpDesc::Test(_, _, _) => todo!("discharge Test"),
         };
         self.byte_codes.push(code);
         self.sp = dst + 1;
@@ -1075,6 +1149,9 @@ fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc>
                 None
             }
         }
+
+        Token::And | Token::Or => None,
+
         _ => panic!("impossible"),
     }
 }

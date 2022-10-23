@@ -138,10 +138,14 @@ impl ExeState {
 // ANCHOR_END: vm_table
 
                 // condition structures
-                ByteCode::Test(icond, jmp) => {
-                    let cond = &self.stack[icond as usize];
-                    if matches!(cond, Value::Nil | Value::Boolean(false)) {
-                        pc = (pc as isize + jmp as isize) as usize; // jump if false
+                ByteCode::TestAndJump(icondition, jmp) => {
+                    if self.test_bool(icondition) { // jump if true
+                        pc = (pc as isize + jmp as isize) as usize;
+                    }
+                }
+                ByteCode::TestOrJump(icondition, jmp) => {
+                    if !self.test_bool(icondition) { // jump if false
+                        pc = (pc as isize + jmp as isize) as usize;
                     }
                 }
                 ByteCode::Jump(jmp) => {
@@ -520,6 +524,10 @@ impl ExeState {
         } else {
             panic!("invalid integer");
         }
+    }
+    fn test_bool(&self, dst: u8) -> bool {
+        let cond = &self.stack[dst as usize];
+        !matches!(cond, Value::Nil | Value::Boolean(false))
     }
 }
 

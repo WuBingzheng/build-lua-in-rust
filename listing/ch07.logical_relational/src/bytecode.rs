@@ -26,8 +26,9 @@ pub enum ByteCode {
     GetInt(u8, u8, u8),
 
     // condition structures
-    Test(u8, i16),
     Jump(i16),
+    TestAndJump(u8, i16),
+    TestOrJump(u8, i16),
 
     // for-loop
     ForPrepare(u8, u16),
