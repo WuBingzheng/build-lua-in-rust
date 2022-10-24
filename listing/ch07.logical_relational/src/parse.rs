@@ -903,6 +903,31 @@ impl<R: Read> ParseProto<R> {
         }
     }
 
+    // fix TestAndJump/TestOrJump list to TestAndSetJump/TestOrSetJump
+    fn fix_test_set_list(&mut self, list: Vec<usize>, dst: usize) {
+        let here = self.byte_codes.len();
+        let dst = dst as u8;
+        for i in list.into_iter() {
+            let jmp = here - i - 1; // should not be negative
+            let code = match self.byte_codes[i] {
+                ByteCode::TestOrJump(icondition, 0) =>
+                    if icondition == dst {
+                        ByteCode::TestOrJump(icondition, jmp as i16)
+                    } else {
+                        ByteCode::TestOrSetJump(dst as u8, icondition, jmp as u8)
+                    }
+                ByteCode::TestAndJump(icondition, 0) =>
+                    if icondition == dst {
+                        ByteCode::TestAndJump(icondition, jmp as i16)
+                    } else {
+                        ByteCode::TestAndSetJump(dst as u8, icondition, jmp as u8)
+                    }
+                _ => panic!("invalid Test"),
+            };
+            self.byte_codes[i] = code;
+        }
+    }
+
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
     fn args(&mut self) -> ExpDesc {
         let ifunc = self.sp - 1;
@@ -975,7 +1000,13 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Call => todo!("discharge Call"),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
-            ExpDesc::Test(_, _, _) => todo!("discharge Test"),
+            ExpDesc::Test(condition, true_list, false_list) => {
+                // fix TestSet list after discharging
+                self.byte_codes.push(ByteCode::Move(dst as u8, condition as u8));
+                self.fix_test_set_list(true_list, dst);
+                self.fix_test_set_list(false_list, dst);
+                return;
+            }
         };
         self.byte_codes.push(code);
         self.sp = dst + 1;

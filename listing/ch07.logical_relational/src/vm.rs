@@ -139,13 +139,27 @@ impl ExeState {
 
                 // condition structures
                 ByteCode::TestAndJump(icondition, jmp) => {
-                    if self.test_bool(icondition) { // jump if true
+                    if (&self.stack[icondition as usize]).into() { // jump if true
                         pc = (pc as isize + jmp as isize) as usize;
                     }
                 }
                 ByteCode::TestOrJump(icondition, jmp) => {
-                    if !self.test_bool(icondition) { // jump if false
+                    if (&self.stack[icondition as usize]).into() {} else { // jump if false
                         pc = (pc as isize + jmp as isize) as usize;
+                    }
+                }
+                ByteCode::TestAndSetJump(dst, icondition, jmp) => {
+                    let condition = &self.stack[icondition as usize];
+                    if condition.into() { // set and jump if true
+                        self.set_stack(dst, condition.clone());
+                        pc += jmp as usize;
+                    }
+                }
+                ByteCode::TestOrSetJump(dst, icondition, jmp) => {
+                    let condition = &self.stack[icondition as usize];
+                    if condition.into() {} else { // set and jump if false
+                        self.set_stack(dst, condition.clone());
+                        pc += jmp as usize;
                     }
                 }
                 ByteCode::Jump(jmp) => {
@@ -519,10 +533,6 @@ impl ExeState {
         } else {
             panic!("invalid integer");
         }
-    }
-    fn test_bool(&self, dst: u8) -> bool {
-        let cond = &self.stack[dst as usize];
-        !matches!(cond, Value::Nil | Value::Boolean(false))
     }
 }
 

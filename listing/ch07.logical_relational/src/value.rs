@@ -220,4 +220,11 @@ impl From<&Value> for String {
         String::from_utf8_lossy(v.into()).to_string()
     }
 }
+
+impl From<&Value> for bool {
+    fn from(v: &Value) -> Self {
+        !matches!(v, Value::Nil | Value::Boolean(false))
+    }
+}
+
 // ANCHOR_END: to_vec_string

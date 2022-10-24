@@ -29,6 +29,8 @@ pub enum ByteCode {
     Jump(i16),
     TestAndJump(u8, i16),
     TestOrJump(u8, i16),
+    TestAndSetJump(u8, u8, u8),
+    TestOrSetJump(u8, u8, u8),
 
     // for-loop
     ForPrepare(u8, u16),
