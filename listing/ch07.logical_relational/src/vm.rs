@@ -428,12 +428,7 @@ impl ExeState {
 
 // ANCHOR: set_stack
     fn set_stack(&mut self, dst: u8, v: Value) {
-        let dst = dst as usize;
-        match dst.cmp(&self.stack.len()) {
-            Ordering::Equal => self.stack.push(v),
-            Ordering::Less => self.stack[dst] = v,
-            Ordering::Greater => panic!("fail in set_stack"),
-        }
+        set_vec(&mut self.stack, dst as usize, v);
     }
 // ANCHOR_END: set_stack
     fn fill_stack(&mut self, begin: usize, num: usize) {
