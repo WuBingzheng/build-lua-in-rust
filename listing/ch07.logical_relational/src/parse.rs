@@ -31,7 +31,7 @@ enum ExpDesc {
     BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
 
     // test
-    Test(usize, Vec<usize>, Vec<usize>), // (condition, true-list, false-list)
+    Test(Box<ExpDesc>, Vec<usize>, Vec<usize>), // (condition, true-list, false-list)
 }
 
 enum ConstStack {
@@ -755,8 +755,8 @@ impl<R: Read> ParseProto<R> {
         match binop {
             // Generate TestOrJump/TestAndJump before reading right operand,
             // because of short-circuit evaluation.
-            Token::And => ExpDesc::Test(0, Vec::new(), self.test_or_jump(left)),
-            Token::Or => ExpDesc::Test(0, self.test_and_jump(left), Vec::new()),
+            Token::And => ExpDesc::Test(Box::new(ExpDesc::Nil), Vec::new(), self.test_or_jump(left)),
+            Token::Or => ExpDesc::Test(Box::new(ExpDesc::Nil), self.test_and_jump(left), Vec::new()),
 
             // Discharge left operand before reading right operand, which may
             // affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
@@ -796,15 +796,15 @@ impl<R: Read> ParseProto<R> {
             Token::And | Token::Or => {
                 // left operand has been made into ExpDesc::Test in preprocess_binop_left()
                 if let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left {
-                    let icondition = match right {
-                        ExpDesc::Test(icondition, mut right_true_list, mut right_false_list) => {
+                    let condition = match right {
+                        ExpDesc::Test(condition, mut right_true_list, mut right_false_list) => {
                             left_true_list.append(&mut right_true_list);
                             left_false_list.append(&mut right_false_list);
-                            icondition
+                            condition
                         }
-                        _ => self.discharge_any(right),
+                        _ => Box::new(right),
                     };
-                    ExpDesc::Test(icondition, left_true_list, left_false_list)
+                    ExpDesc::Test(condition, left_true_list, left_false_list)
                 } else {
                     panic!("impossible");
                 }
@@ -846,12 +846,13 @@ impl<R: Read> ParseProto<R> {
     // Close true-list if any.
     // Return false-list to be fixed later in fix_test_list()
     fn test_or_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
-        let (icondition, true_list, mut false_list) = match condition {
-            ExpDesc::Test(icondition, true_list, false_list) =>
-                (icondition, Some(true_list), false_list),
-            _ => (self.discharge_any(condition), None, Vec::new()),
+        let (condition, true_list, mut false_list) = match condition {
+            ExpDesc::Test(condition, true_list, false_list) =>
+                (*condition, Some(true_list), false_list),
+            _ => (condition, None, Vec::new()),
         };
 
+        let icondition = self.discharge_any(condition);
         self.byte_codes.push(ByteCode::TestOrJump(icondition as u8, 0));
 
         false_list.push(self.byte_codes.len() - 1);
@@ -866,12 +867,13 @@ impl<R: Read> ParseProto<R> {
 
     // see test_or_jump()
     fn test_and_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
-        let (icondition, mut true_list, false_list) = match condition {
-            ExpDesc::Test(icondition, true_list, false_list) =>
-                (icondition, true_list, Some(false_list)),
-            _ => (self.discharge_any(condition), Vec::new(), None),
+        let (condition, mut true_list, false_list) = match condition {
+            ExpDesc::Test(condition, true_list, false_list) =>
+                (*condition, true_list, Some(false_list)),
+            _ => (condition, Vec::new(), None),
         };
 
+        let icondition = self.discharge_any(condition);
         self.byte_codes.push(ByteCode::TestAndJump(icondition as u8, 0));
 
         true_list.push(self.byte_codes.len() - 1);
@@ -1002,7 +1004,7 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
             ExpDesc::Test(condition, true_list, false_list) => {
                 // fix TestSet list after discharging
-                self.byte_codes.push(ByteCode::Move(dst as u8, condition as u8));
+                self.discharge(dst, *condition);
                 self.fix_test_set_list(true_list, dst);
                 self.fix_test_set_list(false_list, dst);
                 return;
