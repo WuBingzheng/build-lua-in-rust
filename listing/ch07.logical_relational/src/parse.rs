@@ -49,13 +49,13 @@ struct GotoLabel {
 // ANCHOR: proto
 #[derive(Debug)]
 pub struct ParseProto<R: Read> {
-    pub constants: Vec::<Value>,
-    pub byte_codes: Vec::<ByteCode>,
+    pub constants: Vec<Value>,
+    pub byte_codes: Vec<ByteCode>,
 
     sp: usize,
-    locals: Vec::<String>,
-    break_blocks: Vec::<Vec::<usize>>,
-    continue_blocks: Vec::<Vec::<(usize, usize)>>,
+    locals: Vec<String>,
+    break_blocks: Vec<Vec<usize>>,
+    continue_blocks: Vec<Vec<(usize, usize)>>,
     gotos: Vec<GotoLabel>,
     labels: Vec<GotoLabel>,
     lex: Lex<R>,
@@ -465,7 +465,8 @@ impl<R: Read> ParseProto<R> {
         self.labels.push(GotoLabel {
             name,
             icode: self.byte_codes.len(),
-            nvar: self.locals.len() });
+            nvar: self.locals.len(),
+        });
     }
 
     // BNF:
@@ -478,7 +479,8 @@ impl<R: Read> ParseProto<R> {
         self.gotos.push(GotoLabel {
             name,
             icode: self.byte_codes.len() - 1,
-            nvar: self.locals.len() });
+            nvar: self.locals.len(),
+        });
     }
 
     // match the gotos and labels, and close the labels at the end of block
@@ -701,9 +703,7 @@ impl<R: Read> ParseProto<R> {
                     self.discharge(sp0, desc);
                     desc = self.args();
                 }
-                _ => { // Epsilon
-                    return desc;
-                }
+                _ => return desc, // Epsilon
             }
         }
     }
@@ -733,21 +733,21 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Nil => ExpDesc::Boolean(true),
             ExpDesc::Boolean(b) => ExpDesc::Boolean(!b),
             ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => ExpDesc::Boolean(false),
-            desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_any(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_any(desc)),
         }
     }
     fn unop_bitnot(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(!i),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Float(_) | ExpDesc::String(_) => panic!("invalid ~ operator"),
-            desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_any(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_any(desc)),
         }
     }
     fn unop_len(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
             ExpDesc::Nil | ExpDesc::Boolean(_) | ExpDesc::Integer(_) | ExpDesc::Float(_) => panic!("invalid ~ operator"),
-            desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_any(desc))
+            desc => ExpDesc::UnaryOp(ByteCode::Len, self.discharge_any(desc)),
         }
     }
 
@@ -1092,8 +1092,9 @@ impl<R: Read> ParseProto<R> {
                     let desc = self.exp();
                     self.discharge(sp0, desc);
 
-                    if self.sp - (table + 1) > 50 { // too many, reset it
-                        self.byte_codes.push(ByteCode::SetList(table as u8, (self.sp - (table + 1)) as u8));
+                    let num = self.sp - (table + 1);
+                    if num > 50 { // too many, reset it
+                        self.byte_codes.push(ByteCode::SetList(table as u8, num as u8));
                         self.sp = table + 1;
                     }
                 }
@@ -1150,7 +1151,8 @@ fn binop_pri(binop: &Token) -> (i32, i32) {
         Token::BitAnd => (6, 6),
         Token::BitNot => (5, 5),
         Token::BitOr => (4, 4),
-        Token::Equal | Token::NotEq | Token::Less | Token::Greater | Token::LesEq | Token::GreEq => (3, 3),
+        Token::Equal | Token::NotEq | Token::Less |
+            Token::Greater | Token::LesEq | Token::GreEq => (3, 3),
         Token::And => (2, 2),
         Token::Or => (1, 1),
         _ => (-1, -1)
@@ -1191,10 +1193,10 @@ fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc>
 
 fn do_fold_const(left: &ExpDesc, right: &ExpDesc, arith_i: fn(i64,i64)->i64, arith_f: fn(f64,f64)->f64) -> Option<ExpDesc> {
     match (left, right) {
-        (ExpDesc::Integer(i1), ExpDesc::Integer(i2)) => Some(ExpDesc::Integer(arith_i(*i1, *i2))),
-        (ExpDesc::Float(f1), ExpDesc::Float(f2)) => Some(ExpDesc::Float(arith_f(*f1, *f2))),
-        (ExpDesc::Float(f1), ExpDesc::Integer(i2)) => Some(ExpDesc::Float(arith_f(*f1, *i2 as f64))),
-        (ExpDesc::Integer(i1), ExpDesc::Float(f2)) => Some(ExpDesc::Float(arith_f(*i1 as f64, *f2))),
+        (&ExpDesc::Integer(i1), &ExpDesc::Integer(i2)) => Some(ExpDesc::Integer(arith_i(i1, i2))),
+        (&ExpDesc::Float(f1), &ExpDesc::Float(f2)) => Some(ExpDesc::Float(arith_f(f1, f2))),
+        (&ExpDesc::Float(f1), &ExpDesc::Integer(i2)) => Some(ExpDesc::Float(arith_f(f1, i2 as f64))),
+        (&ExpDesc::Integer(i1), &ExpDesc::Float(f2)) => Some(ExpDesc::Float(arith_f(i1 as f64, f2))),
         (_, _) => None,
     }
 }
