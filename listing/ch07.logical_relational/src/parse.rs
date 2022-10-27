@@ -798,6 +798,11 @@ impl<R: Read> ParseProto<R> {
             Token::Concat => self.do_binop(left, right, ByteCode::Concat, ByteCode::ConcatInt, ByteCode::ConcatConst),
 
             Token::Equal => self.do_compare(left, right, ByteCode::Equal, ByteCode::EqualInt, ByteCode::EqualConst),
+            Token::NotEq => self.do_compare(left, right, ByteCode::NotEq, ByteCode::NotEqInt, ByteCode::NotEqConst),
+            Token::LesEq => self.do_compare(left, right, ByteCode::LesEq, ByteCode::LesEqInt, ByteCode::LesEqConst),
+            Token::GreEq => self.do_compare(left, right, ByteCode::GreEq, ByteCode::GreEqInt, ByteCode::GreEqConst),
+            Token::Less => self.do_compare(left, right, ByteCode::Less, ByteCode::LessInt, ByteCode::LessConst),
+            Token::Greater => self.do_compare(left, right, ByteCode::Greater, ByteCode::GreaterInt, ByteCode::GreaterConst),
 
             Token::And | Token::Or => {
                 // left operand has been made into ExpDesc::Test in preprocess_binop_left()
@@ -854,7 +859,7 @@ impl<R: Read> ParseProto<R> {
     fn do_compare(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,bool)->ByteCode,
             opi: fn(u8,u8,bool)->ByteCode, opk: fn(u8,u8,bool)->ByteCode) -> ExpDesc {
 
-        if opr == ByteCode::Equal { // || opr == ByteCode::NotEq { // commutative
+        if opr == ByteCode::Equal || opr == ByteCode::NotEq { // commutative
             if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
                 // swap the left-const-operand to right, in order to use opi/opk
                 (left, right) = (right, left);

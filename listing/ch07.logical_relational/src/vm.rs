@@ -438,6 +438,111 @@ impl ExeState {
                         }
                     }
                 }
+                ByteCode::NotEq(a, b, r) => {
+                    if (&self.stack[a as usize] != &self.stack[b as usize]) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::NotEqConst(a, b, r) => {
+                    if (&self.stack[a as usize] != &proto.constants[b as usize]) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::NotEqInt(a, i, r) => {
+                    if let &Value::Integer(ii) = &self.stack[a as usize] {
+                        if (ii != i as i64) == r {
+                            pc += 1;
+                        }
+                    }
+                }
+                ByteCode::LesEq(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&self.stack[b as usize]).unwrap();
+                    if !matches!(cmp, Ordering::Greater) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::LesEqConst(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&proto.constants[b as usize]).unwrap();
+                    if !matches!(cmp, Ordering::Greater) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::LesEqInt(a, i, r) => {
+                    let a = match &self.stack[a as usize] {
+                        &Value::Integer(i) => i,
+                        &Value::Float(f) => f as i64,
+                        _ => panic!("invalid compare"),
+                    };
+                    if (a <= i as i64) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::GreEq(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&self.stack[b as usize]).unwrap();
+                    if !matches!(cmp, Ordering::Less) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::GreEqConst(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&proto.constants[b as usize]).unwrap();
+                    if !matches!(cmp, Ordering::Less) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::GreEqInt(a, i, r) => {
+                    let a = match &self.stack[a as usize] {
+                        &Value::Integer(i) => i,
+                        &Value::Float(f) => f as i64,
+                        _ => panic!("invalid compare"),
+                    };
+                    if (a >= i as i64) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::Less(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&self.stack[b as usize]).unwrap();
+                    if matches!(cmp, Ordering::Less) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::LessConst(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&proto.constants[b as usize]).unwrap();
+                    if matches!(cmp, Ordering::Less) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::LessInt(a, i, r) => {
+                    let a = match &self.stack[a as usize] {
+                        &Value::Integer(i) => i,
+                        &Value::Float(f) => f as i64,
+                        _ => panic!("invalid compare"),
+                    };
+                    if (a < i as i64) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::Greater(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&self.stack[b as usize]).unwrap();
+                    if matches!(cmp, Ordering::Greater) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::GreaterConst(a, b, r) => {
+                    let cmp = &self.stack[a as usize].partial_cmp(&proto.constants[b as usize]).unwrap();
+                    if matches!(cmp, Ordering::Greater) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::GreaterInt(a, i, r) => {
+                    let a = match &self.stack[a as usize] {
+                        &Value::Integer(i) => i,
+                        &Value::Float(f) => f as i64,
+                        _ => panic!("invalid compare"),
+                    };
+                    if (a > i as i64) == r {
+                        pc += 1;
+                    }
+                }
 
                 ByteCode::SetFalseSkip(dst) => {
                     self.set_stack(dst, Value::Boolean(false));
