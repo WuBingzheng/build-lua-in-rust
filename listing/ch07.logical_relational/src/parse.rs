@@ -889,6 +889,10 @@ impl<R: Read> ParseProto<R> {
     // Return false-list to be fixed later in fix_test_list()
     fn test_or_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
         let (code, true_list, mut false_list) = match condition {
+            ExpDesc::Boolean(true) | ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) => {
+                // always true, no need to test or jump, e.g. `while true do ... end`
+                return Vec::new();
+            }
             ExpDesc::Compare(op, left, right, true_list, false_list) => {
                 self.byte_codes.push(op(left as u8, right as u8, true));
                 (ByteCode::Jump(0), Some(true_list), false_list)
@@ -918,6 +922,10 @@ impl<R: Read> ParseProto<R> {
     // see test_or_jump()
     fn test_and_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
         let (code, mut true_list, false_list) = match condition {
+            ExpDesc::Boolean(false) | ExpDesc::Nil => {
+                // always false, no need to test or jump, but I don't know any useful case
+                return Vec::new();
+            }
             ExpDesc::Compare(op, left, right, true_list, false_list) => {
                 self.byte_codes.push(op(left as u8, right as u8, false));
                 (ByteCode::Jump(0), true_list, Some(false_list))
