@@ -26,12 +26,15 @@ enum ExpDesc {
     // function call
     Call,
 
-    // operators
+    // arithmetic operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
     BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
 
-    // test
+    // binaray logical operators: 'and', 'or'
     Test(Box<ExpDesc>, Vec<usize>, Vec<usize>), // (condition, true-list, false-list)
+
+    // relational operators, e.g. '==', '<='
+    Compare(fn(u8,u8,bool)->ByteCode, usize, usize, Vec<usize>, Vec<usize>),
 }
 
 enum ConstStack {
@@ -793,18 +796,25 @@ impl<R: Read> ParseProto<R> {
             Token::ShiftL => self.do_binop(left, right, ByteCode::ShiftL, ByteCode::ShiftLInt, ByteCode::ShiftLConst),
             Token::ShiftR => self.do_binop(left, right, ByteCode::ShiftR, ByteCode::ShiftRInt, ByteCode::ShiftRConst),
             Token::Concat => self.do_binop(left, right, ByteCode::Concat, ByteCode::ConcatInt, ByteCode::ConcatConst),
+
+            Token::Equal => self.do_compare(left, right, ByteCode::Equal, ByteCode::EqualInt, ByteCode::EqualConst),
+
             Token::And | Token::Or => {
                 // left operand has been made into ExpDesc::Test in preprocess_binop_left()
                 if let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left {
-                    let condition = match right {
+                    match right {
+                        ExpDesc::Compare(op, l, r, mut right_true_list, mut right_false_list) => {
+                            left_true_list.append(&mut right_true_list);
+                            left_false_list.append(&mut right_false_list);
+                            ExpDesc::Compare(op, l, r, left_true_list, left_false_list)
+                        }
                         ExpDesc::Test(condition, mut right_true_list, mut right_false_list) => {
                             left_true_list.append(&mut right_true_list);
                             left_false_list.append(&mut right_false_list);
-                            condition
+                            ExpDesc::Test(condition, left_true_list, left_false_list)
                         }
-                        _ => Box::new(right),
-                    };
-                    ExpDesc::Test(condition, left_true_list, left_false_list)
+                        _ => ExpDesc::Test(Box::new(right), left_true_list, left_false_list),
+                    }
                 } else {
                     panic!("impossible");
                 }
@@ -841,19 +851,54 @@ impl<R: Read> ParseProto<R> {
     }
 // ANCHOR_END: do_binop
 
+    fn do_compare(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,bool)->ByteCode,
+            opi: fn(u8,u8,bool)->ByteCode, opk: fn(u8,u8,bool)->ByteCode) -> ExpDesc {
+
+        if opr == ByteCode::Equal { // || opr == ByteCode::NotEq { // commutative
+            if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
+                // swap the left-const-operand to right, in order to use opi/opk
+                (left, right) = (right, left);
+            }
+        }
+
+        let left = self.discharge_any(left);
+
+        let (op, right) = match right {
+            ExpDesc::Integer(i) =>
+                if let Ok(i) = u8::try_from(i) {
+                    (opi, i as usize)
+                } else {
+                    (opk, self.add_const(i))
+                }
+            ExpDesc::Float(f) => (opk, self.add_const(f)),
+            ExpDesc::String(s) => (opk, self.add_const(s)),
+            _ => (opr, self.discharge_any(right)),
+        };
+
+        ExpDesc::Compare(op, left, right, Vec::new(), Vec::new())
+    }
+
     // Generate a TestOrJump: test @condition or jump to somewhere unknown.
     // Link the new code to previous false-list if any.
     // Close true-list if any.
     // Return false-list to be fixed later in fix_test_list()
     fn test_or_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
-        let (condition, true_list, mut false_list) = match condition {
-            ExpDesc::Test(condition, true_list, false_list) =>
-                (*condition, Some(true_list), false_list),
-            _ => (condition, None, Vec::new()),
+        let (code, true_list, mut false_list) = match condition {
+            ExpDesc::Compare(op, left, right, true_list, false_list) => {
+                self.byte_codes.push(op(left as u8, right as u8, true));
+                (ByteCode::Jump(0), Some(true_list), false_list)
+            }
+            ExpDesc::Test(condition, true_list, false_list) => {
+                let icondition = self.discharge_any(*condition);
+                (ByteCode::TestOrJump(icondition as u8, 0), Some(true_list), false_list)
+            }
+            _ => {
+                let icondition = self.discharge_any(condition);
+                (ByteCode::TestOrJump(icondition as u8, 0), None, Vec::new())
+            }
         };
 
-        let icondition = self.discharge_any(condition);
-        self.byte_codes.push(ByteCode::TestOrJump(icondition as u8, 0));
+        self.byte_codes.push(code);
 
         false_list.push(self.byte_codes.len() - 1);
 
@@ -867,14 +912,22 @@ impl<R: Read> ParseProto<R> {
 
     // see test_or_jump()
     fn test_and_jump(&mut self, condition: ExpDesc) -> Vec<usize> {
-        let (condition, mut true_list, false_list) = match condition {
-            ExpDesc::Test(condition, true_list, false_list) =>
-                (*condition, true_list, Some(false_list)),
-            _ => (condition, Vec::new(), None),
+        let (code, mut true_list, false_list) = match condition {
+            ExpDesc::Compare(op, left, right, true_list, false_list) => {
+                self.byte_codes.push(op(left as u8, right as u8, false));
+                (ByteCode::Jump(0), true_list, Some(false_list))
+            }
+            ExpDesc::Test(condition, true_list, false_list) => {
+                let icondition = self.discharge_any(*condition);
+                (ByteCode::TestAndJump(icondition as u8, 0), true_list, Some(false_list))
+            }
+            _ => {
+                let icondition = self.discharge_any(condition);
+                (ByteCode::TestAndJump(icondition as u8, 0), Vec::new(), None)
+            }
         };
 
-        let icondition = self.discharge_any(condition);
-        self.byte_codes.push(ByteCode::TestAndJump(icondition as u8, 0));
+        self.byte_codes.push(code);
 
         true_list.push(self.byte_codes.len() - 1);
 
@@ -897,6 +950,7 @@ impl<R: Read> ParseProto<R> {
         for i in list.into_iter() {
             let jmp = (to as isize - i as isize - 1) as i16;
             let code = match self.byte_codes[i] {
+                ByteCode::Jump(0) => ByteCode::Jump(jmp),
                 ByteCode::TestOrJump(icondition, 0) => ByteCode::TestOrJump(icondition, jmp),
                 ByteCode::TestAndJump(icondition, 0) => ByteCode::TestAndJump(icondition, jmp),
                 _ => panic!("invalid Test"),
@@ -912,6 +966,7 @@ impl<R: Read> ParseProto<R> {
         for i in list.into_iter() {
             let jmp = here - i - 1; // should not be negative
             let code = match self.byte_codes[i] {
+                ByteCode::Jump(0) => ByteCode::Jump(jmp as i16),
                 ByteCode::TestOrJump(icondition, 0) =>
                     if icondition == dst {
                         ByteCode::TestOrJump(icondition, jmp as i16)
@@ -1007,6 +1062,15 @@ impl<R: Read> ParseProto<R> {
                 self.discharge(dst, *condition);
                 self.fix_test_set_list(true_list, dst);
                 self.fix_test_set_list(false_list, dst);
+                return;
+            }
+            ExpDesc::Compare(op, left, right, true_list, false_list) => {
+                self.byte_codes.push(op(left as u8, right as u8, false));
+                self.byte_codes.push(ByteCode::Jump(1));
+                self.fix_test_set_list(false_list, dst);
+                self.byte_codes.push(ByteCode::SetFalseSkip(dst as u8));
+                self.fix_test_set_list(true_list, dst);
+                self.byte_codes.push(ByteCode::LoadBool(dst as u8, true));
                 return;
             }
         };
@@ -1186,6 +1250,8 @@ fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc>
         }
 
         Token::And | Token::Or => None,
+        Token::Equal | Token::NotEq | Token::Less |
+            Token::Greater | Token::LesEq | Token::GreEq => None,
 
         _ => panic!("impossible"),
     }

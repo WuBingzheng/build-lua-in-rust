@@ -421,6 +421,29 @@ impl ExeState {
                     self.set_stack(dst, r);
                 }
 
+                ByteCode::Equal(a, b, r) => {
+                    if (&self.stack[a as usize] == &self.stack[b as usize]) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::EqualConst(a, b, r) => {
+                    if (&self.stack[a as usize] == &proto.constants[b as usize]) == r {
+                        pc += 1;
+                    }
+                }
+                ByteCode::EqualInt(a, i, r) => {
+                    if let &Value::Integer(ii) = &self.stack[a as usize] {
+                        if (ii == i as i64) == r {
+                            pc += 1;
+                        }
+                    }
+                }
+
+                ByteCode::SetFalseSkip(dst) => {
+                    self.set_stack(dst, Value::Boolean(false));
+                    pc += 1;
+                }
+
                 ByteCode::Concat(dst, a, b) => {
                     let r = exe_concat(&self.stack[a as usize], &self.stack[b as usize]);
                     self.set_stack(dst, r);

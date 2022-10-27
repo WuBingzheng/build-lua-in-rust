@@ -83,6 +83,11 @@ pub enum ByteCode {
     ShiftRInt(u8, u8, u8),
     ShiftRConst(u8, u8, u8),
 
+    Equal(u8, u8, bool),
+    EqualInt(u8, u8, bool),
+    EqualConst(u8, u8, bool),
+    SetFalseSkip(u8),
+
     Concat(u8, u8, u8),
     ConcatInt(u8, u8, u8),
     ConcatConst(u8, u8, u8),
