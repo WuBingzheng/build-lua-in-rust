@@ -37,3 +37,8 @@
   - [repeat和continue语句](./ch06-04.repeat_continue.md)
   - [数值型for语句](./ch06-05.numerical-for.md)
   - [goto语句](./ch06-06.goto.md)
+
+- [逻辑运算和关系运算](./ch07-00.logical_relational.md)
+  - [条件判断中的逻辑运算](./ch07-01.logical_condition.md)
+  - [求值中的逻辑运算](./ch07-02.logical_evalue.md)
+  
