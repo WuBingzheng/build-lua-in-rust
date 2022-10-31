@@ -99,6 +99,7 @@ impl PartialEq for Value {
 impl Eq for Value {}
 // ANCHOR_END: eq
 
+// ANCHOR: partialord
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self, other) {
@@ -113,6 +114,7 @@ impl PartialOrd for Value {
         }
     }
 }
+// ANCHOR_END: partialord
 
 impl Value {
     pub fn same(&self, other: &Self) -> bool {

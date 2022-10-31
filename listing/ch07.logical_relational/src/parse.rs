@@ -1080,11 +1080,13 @@ impl<R: Read> ParseProto<R> {
             ExpDesc::Compare(op, left, right, true_list, false_list) => {
                 self.byte_codes.push(op(left as u8, right as u8, false));
                 self.byte_codes.push(ByteCode::Jump(1));
-                self.fix_test_set_list(false_list, dst);
+
+                // terminate false-list to SetFalseSkip
+                self.fix_test_list(false_list);
                 self.byte_codes.push(ByteCode::SetFalseSkip(dst as u8));
-                self.fix_test_set_list(true_list, dst);
-                self.byte_codes.push(ByteCode::LoadBool(dst as u8, true));
-                return;
+                // terminate true-list to LoadBool(true)
+                self.fix_test_list(true_list);
+                ByteCode::LoadBool(dst as u8, true)
             }
         };
         self.byte_codes.push(code);
@@ -1262,11 +1264,7 @@ fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc>
             }
         }
 
-        Token::And | Token::Or => None,
-        Token::Equal | Token::NotEq | Token::Less |
-            Token::Greater | Token::LesEq | Token::GreEq => None,
-
-        _ => panic!("impossible"),
+        _ => None,
     }
 }
 
