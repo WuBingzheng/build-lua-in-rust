@@ -41,3 +41,5 @@
 - [逻辑运算和关系运算](./ch07-00.logical_relational.md)
   - [条件判断中的逻辑运算](./ch07-01.logical_in_condition.md)
   - [求值中的逻辑运算](./ch07-02.logical_in_evalue.md)
+  - [条件判断中的关系运算](./ch07-03.relational_in_condition.md)
+  - [求值中的关系运算](./ch07-04.relational_in_evalue.md)
