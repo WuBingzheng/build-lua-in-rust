@@ -933,68 +933,83 @@ impl<R: Read> ParseProto<R> {
         let inew = self.byte_codes.len();
         self.byte_codes.push(ByteCode::NewTable(table as u8, 0, 0));
 
+        enum TableEntry {
+            Map((fn(u8,u8,u8)->ByteCode, fn(u8,u8,u8)->ByteCode, usize)),
+            Array(ExpDesc),
+        }
+
         let mut narray = 0;
         let mut nmap = 0;
         loop {
-            match self.lex.peek() {
+            let sp0 = self.sp;
+
+            // parse entry of map or array?
+            let entry = match self.lex.peek() {
                 Token::CurlyR => { // `}`
                     self.lex.next();
                     break;
                 }
                 Token::SqurL => { // `[` exp `]` `=` exp
-                    nmap += 1;
                     self.lex.next();
-                    let sp0 = self.sp;
 
                     let key = self.exp(); // key
                     self.lex.expect(Token::SqurR); // `]`
                     self.lex.expect(Token::Assign); // `=`
-                    let value = self.exp(); // value
 
-                    let (op, opk, key): (fn(u8,u8,u8)->ByteCode, fn(u8,u8,u8)->ByteCode, usize) = match key {
+                    TableEntry::Map(match key {
                         ExpDesc::Local(i) => (ByteCode::SetTable, ByteCode::SetTableConst, i),
                         ExpDesc::String(s) => (ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(s)),
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
                         ExpDesc::Nil => panic!("nil can not be table key"),
                         ExpDesc::Float(f) if f.is_nan() => panic!("NaN can not be table key"),
-                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_any(key)),
-                    };
-                    self.new_table_entry(op, opk, table, key, value);
-                    self.sp = sp0;
+                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_top(key)),
+                    })
                 }
-                Token::Name(_) => { // Name `=` exp
-                    nmap += 1;
-                    let sp0 = self.sp;
-
-                    let key = if let Token::Name(key) = self.lex.next() {
-                        self.add_const(key)
-                    } else {
-                        panic!("impossible");
-                    };
-                    self.lex.expect(Token::Assign); // `=`
-
-                    let value = self.exp();
-
-                    self.new_table_entry(ByteCode::SetField, ByteCode::SetFieldConst, table, key, value);
-                    self.sp = sp0;
-                }
-                _ => { // exp
-                    narray += 1;
-                    let sp0 = self.sp;
-
+                Token::Name(_) => {
                     let desc = self.exp();
+                    if self.lex.peek() == &Token::Assign { // Name `=` exp
+                        if let ExpDesc::String(key) = desc {
+                            TableEntry::Map((ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(key)))
+                        } else {
+                            panic!("invalid table key");
+                        }
+                    } else { // exp
+                        TableEntry::Array(desc)
+                    }
+                },
+                _ => { // exp
+                    TableEntry::Array(self.exp())
+                }
+            };
+
+            // insert the entry into table
+            match entry {
+                TableEntry::Map((op, opk, key)) => {
+                    let value = self.exp();
+                    let code = match self.discharge_const(value) {
+                        ConstStack::Const(i) => opk(table as u8, key as u8, i as u8),
+                        ConstStack::Stack(i) => op(table as u8, key as u8, i as u8),
+                    };
+                    self.byte_codes.push(code);
+
+                    nmap += 1;
+                    self.sp = sp0;
+                }
+                TableEntry::Array(desc) => {
                     self.discharge(sp0, desc);
 
-                    if self.sp - (table + 1) > 50 { // too many, reset it
-                        self.byte_codes.push(ByteCode::SetList(table as u8, (self.sp - (table + 1)) as u8));
+                    narray += 1;
+                    if narray % 2 == 50 { // reset the array members every 50
+                        self.byte_codes.push(ByteCode::SetList(table as u8, 50));
                         self.sp = table + 1;
                     }
                 }
             }
 
+            // any more entry?
             match self.lex.next() {
-                Token::SemiColon | Token::Comma => (),
-                Token::CurlyR => break,
+                Token::SemiColon | Token::Comma => (), // yes
+                Token::CurlyR => break, // no
                 t => panic!("invalid table {t:?}"),
             }
         }
@@ -1010,18 +1025,6 @@ impl<R: Read> ParseProto<R> {
         ExpDesc::Local(table)
     }
 // ANCHOR_END: table_constructor
-
-// ANCHOR: new_table_entry
-    fn new_table_entry(&mut self, op: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode,
-            t: usize, key: usize, value: ExpDesc) {
-
-        let code = match self.discharge_const(value) {
-            ConstStack::Const(i) => opk(t as u8, key as u8, i as u8),
-            ConstStack::Stack(i) => op(t as u8, key as u8, i as u8),
-        };
-        self.byte_codes.push(code);
-    }
-// ANCHOR_END: new_table_entry
 
     fn read_name(&mut self) -> String {
         if let Token::Name(name) = self.lex.next() {
