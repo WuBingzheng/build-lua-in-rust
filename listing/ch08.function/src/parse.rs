@@ -25,6 +25,7 @@ enum ExpDesc {
     IndexInt(usize, u8),
 
     // function call
+    Function(usize),
     Call,
 
     // arithmetic operators
@@ -201,13 +202,20 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let name = self.read_name();
         println!("== function: {name}");
 
+        let i = self.funcbody();
+        self.fp.byte_codes.push(ByteCode::LoadConst(self.sp as u8, i as u16));
+        self.locals.push(name);
+    }
+
+    // BNF:
+    //   funcbody = `(` [parlist] `)` block end
+    fn funcbody(&mut self) -> usize {
+        // TODO: args
         self.lex.expect(Token::ParL);
         self.lex.expect(Token::ParR);
 
         let proto = chunk(self.lex, Token::End);
-        let i = self.add_const(Value::LuaFunction(Rc::new(proto)));
-        self.fp.byte_codes.push(ByteCode::LoadConst(self.sp as u8, i as u16));
-        self.locals.push(name);
+        self.add_const(Value::LuaFunction(Rc::new(proto)))
     }
 
 // ANCHOR: assignment
@@ -616,7 +624,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Token::String(s) => ExpDesc::String(s),
 
             Token::Dots => todo!("dots"),
-            Token::Function => todo!("Function"),
+            Token::Function => ExpDesc::Function(self.funcbody()),
             Token::CurlyL => self.table_constructor(),
 
             Token::Sub => self.unop_neg(),
@@ -1081,6 +1089,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
+            ExpDesc::Function(i) => ByteCode::LoadConst(dst as u8, i as u16),
             ExpDesc::Call => todo!("discharge Call"),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
