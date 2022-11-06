@@ -25,7 +25,7 @@ enum ExpDesc {
     IndexInt(usize, u8),
 
     // function call
-    Function(usize),
+    Function(Value),
     Call,
 
     // arithmetic operators
@@ -149,6 +149,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     } else {
                         self.local_variables()
                     }
+                Token::Function => self.function_stat(),
                 Token::If => self.if_stat(),
                 Token::While => self.while_stat(),
                 Token::Repeat => self.repeat_stat(),
@@ -202,20 +203,47 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let name = self.read_name();
         println!("== function: {name}");
 
-        let i = self.funcbody();
-        self.fp.byte_codes.push(ByteCode::LoadConst(self.sp as u8, i as u16));
+        let f = self.funcbody();
+        self.discharge(self.sp, f);
+
         self.locals.push(name);
     }
 
     // BNF:
+    //   function funcname funcbody
+    //   funcname = Name {`.` Name} [`:` Name]
+    fn function_stat(&mut self) {
+        let name = self.read_name();
+        let mut desc = self.simple_name(name);
+
+        loop {
+            match self.lex.peek() {
+                Token::Dot => { // `.` Name
+                    self.lex.next();
+                    let name = self.read_name();
+                    let t = self.discharge_any(desc);
+                    desc = ExpDesc::IndexField(t, self.add_const(name));
+                }
+                Token::Colon => { // `:` Name
+                    todo!("table function");
+                }
+                _ => break,
+            }
+        }
+
+        let f = self.funcbody();
+        self.assign_var(desc, f);
+    }
+
+    // BNF:
     //   funcbody = `(` [parlist] `)` block end
-    fn funcbody(&mut self) -> usize {
+    fn funcbody(&mut self) -> ExpDesc {
         // TODO: args
         self.lex.expect(Token::ParL);
         self.lex.expect(Token::ParR);
 
         let proto = chunk(self.lex, Token::End);
-        self.add_const(Value::LuaFunction(Rc::new(proto)))
+        ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
     }
 
 // ANCHOR: assignment
@@ -624,7 +652,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Token::String(s) => ExpDesc::String(s),
 
             Token::Dots => todo!("dots"),
-            Token::Function => ExpDesc::Function(self.funcbody()),
+            Token::Function => self.funcbody(),
             Token::CurlyL => self.table_constructor(),
 
             Token::Sub => self.unop_neg(),
@@ -1089,7 +1117,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
-            ExpDesc::Function(i) => ByteCode::LoadConst(dst as u8, i as u16),
+            ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
             ExpDesc::Call => todo!("discharge Call"),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
