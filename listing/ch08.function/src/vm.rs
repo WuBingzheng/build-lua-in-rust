@@ -1,11 +1,11 @@
-use std::io::{Read, Write};
+use std::io::Write;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
-use crate::parse::ParseProto;
+use crate::parse::FuncProto;
 use crate::utils::ftoi;
 
 // ANCHOR: print
@@ -40,7 +40,7 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute<R: Read>(&mut self, proto: &ParseProto<R>) {
+    pub fn execute(&mut self, proto: &FuncProto) {
         let mut pc = 0;
         while pc < proto.byte_codes.len() {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);

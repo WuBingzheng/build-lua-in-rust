@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use crate::vm::ExeState;
+use crate::parse::FuncProto;
 use crate::utils::ftoi;
 
 const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
@@ -21,6 +22,7 @@ pub enum Value {
     LongStr(Rc<Vec<u8>>),
     Table(Rc<RefCell<Table>>),
     Function(fn (&mut ExeState) -> i32),
+    LuaFunction(Rc<FuncProto>),
 }
 
 // ANCHOR: table
@@ -51,6 +53,7 @@ impl fmt::Display for Value {
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(s)),
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
             Value::Function(_) => write!(f, "function"),
+            Value::LuaFunction(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
         }
     }
 }
@@ -70,6 +73,7 @@ impl fmt::Debug for Value {
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
             }
             Value::Function(_) => write!(f, "function"),
+            Value::LuaFunction(_) => write!(f, "Lua function"),
         }
     }
 }
@@ -89,6 +93,7 @@ impl PartialEq for Value {
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
             (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
             (Value::Function(f1), Value::Function(f2)) => std::ptr::eq(f1, f2),
+            (Value::LuaFunction(f1), Value::LuaFunction(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (_, _) => false,
         }
     }
@@ -153,6 +158,7 @@ impl Hash for Value {
             Value::LongStr(s) => s.hash(state),
             Value::Table(t) => Rc::as_ptr(t).hash(state),
             Value::Function(f) => (*f as *const usize).hash(state),
+            Value::LuaFunction(f) => Rc::as_ptr(f).hash(state),
         }
     }
 }
