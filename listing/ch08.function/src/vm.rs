@@ -232,11 +232,15 @@ impl ExeState {
                 // function call
                 ByteCode::Call(func, _) => {
                     self.func_index = func as usize;
-                    let func = &self.stack[self.func_index];
-                    if let Value::Function(f) = func {
-                        f(self);
-                    } else {
-                        panic!("invalid function: {func:?}");
+                    match &self.stack[self.func_index] {
+                        Value::Function(f) => {
+                            f(self);
+                        }
+                        Value::LuaFunction(f) => {
+                            let f = f.clone();
+                            self.execute(&f);
+                        }
+                        f => panic!("invalid function: {f:?}"),
                     }
                 }
 
