@@ -21,7 +21,7 @@ pub enum Value {
     MidStr(Rc<(u8, [u8; MID_STR_MAX])>),
     LongStr(Rc<Vec<u8>>),
     Table(Rc<RefCell<Table>>),
-    Function(fn (&mut ExeState) -> i32),
+    RustFunction(fn (&mut ExeState) -> i32),
     LuaFunction(Rc<FuncProto>),
 }
 
@@ -52,7 +52,7 @@ impl fmt::Display for Value {
             Value::MidStr(s) => write!(f, "{}", String::from_utf8_lossy(&s.1[..s.0 as usize])),
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(s)),
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
-            Value::Function(_) => write!(f, "function"),
+            Value::RustFunction(_) => write!(f, "function"),
             Value::LuaFunction(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
         }
     }
@@ -72,7 +72,7 @@ impl fmt::Debug for Value {
                 let t = t.borrow();
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
             }
-            Value::Function(_) => write!(f, "function"),
+            Value::RustFunction(_) => write!(f, "function"),
             Value::LuaFunction(_) => write!(f, "Lua function"),
         }
     }
@@ -92,7 +92,7 @@ impl PartialEq for Value {
             (Value::MidStr(s1), Value::MidStr(s2)) => s1.1[..s1.0 as usize] == s2.1[..s2.0 as usize],
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
             (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
-            (Value::Function(f1), Value::Function(f2)) => std::ptr::eq(f1, f2),
+            (Value::RustFunction(f1), Value::RustFunction(f2)) => std::ptr::eq(f1, f2),
             (Value::LuaFunction(f1), Value::LuaFunction(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (_, _) => false,
         }
@@ -157,7 +157,7 @@ impl Hash for Value {
             Value::MidStr(s) => s.1[..s.0 as usize].hash(state),
             Value::LongStr(s) => s.hash(state),
             Value::Table(t) => Rc::as_ptr(t).hash(state),
-            Value::Function(f) => (*f as *const usize).hash(state),
+            Value::RustFunction(f) => (*f as *const usize).hash(state),
             Value::LuaFunction(f) => Rc::as_ptr(f).hash(state),
         }
     }

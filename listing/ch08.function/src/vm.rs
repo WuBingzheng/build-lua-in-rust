@@ -29,7 +29,7 @@ pub struct ExeState {
 impl ExeState {
     pub fn new() -> Self {
         let mut globals = HashMap::new();
-        globals.insert("print".into(), Value::Function(lib_print));
+        globals.insert("print".into(), Value::RustFunction(lib_print));
 
         ExeState {
             globals,
@@ -234,7 +234,7 @@ impl ExeState {
                     self.base += func as usize + 1;
 
                     match &self.stack[self.base - 1] {
-                        Value::Function(f) => {
+                        Value::RustFunction(f) => {
                             f(self);
                         }
                         Value::LuaFunction(f) => {
