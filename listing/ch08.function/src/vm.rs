@@ -230,7 +230,7 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, _) => {
+                ByteCode::Call(func, narg) => {
                     self.base += func as usize + 1;
 
                     match &self.stack[self.base - 1] {
@@ -238,7 +238,13 @@ impl ExeState {
                             f(self);
                         }
                         Value::LuaFunction(f) => {
-                            self.execute(&f.clone());
+                            let narg = narg as usize;
+                            let f = f.clone();
+                            if narg < f.nparam {
+                                // fill missing arguments, but no need to truncate extras
+                                self.fill_stack(narg, f.nparam - narg);
+                            }
+                            self.execute(&f);
                         }
                         v => panic!("invalid function: {v:?}"),
                     }
@@ -583,7 +589,8 @@ impl ExeState {
     }
 // ANCHOR_END: set_stack
     fn fill_stack(&mut self, begin: usize, num: usize) {
-        let end = self.base + begin + num;
+        let begin = self.base + begin;
+        let end = begin + num;
         let len = self.stack.len();
         if begin < len {
             self.stack[begin .. len].fill(Value::Nil);

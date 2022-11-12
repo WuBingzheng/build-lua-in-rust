@@ -54,6 +54,7 @@ struct GotoLabel {
 // ANCHOR: proto
 #[derive(Debug)]
 pub struct FuncProto {
+    pub nparam: usize,
     pub constants: Vec<Value>,
     pub byte_codes: Vec<ByteCode>,
 }
@@ -75,14 +76,15 @@ struct ParseProto<'a, R: Read> {
 // ANCHOR_END: proto
 
 impl<'a, R: Read> ParseProto<'a, R> {
-    fn new(lex: &'a mut Lex<R>) -> Self {
+    fn new(lex: &'a mut Lex<R>, params: Vec<String>) -> Self {
         ParseProto {
             fp: FuncProto {
+                nparam: params.len(),
                 constants: Vec::new(),
                 byte_codes: Vec::new(),
             },
             sp: 0,
-            locals: Vec::new(),
+            locals: params,
             break_blocks: Vec::new(),
             continue_blocks: Vec::new(),
             gotos: Vec::new(),
@@ -236,13 +238,33 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     // BNF:
-    //   funcbody = `(` [parlist] `)` block end
+    //   funcbody ::= `(` [parlist] `)` block end
+    //   parlist ::= namelist [`,` `...`] | `...`
+    //   namelist ::= Name {`,` Name}
     fn funcbody(&mut self) -> ExpDesc {
-        // TODO: args
+        // parameter list
+        let mut params = Vec::new();
         self.lex.expect(Token::ParL);
-        self.lex.expect(Token::ParR);
+        loop {
+            match self.lex.next() {
+                Token::Name(name) => {
+                    params.push(name);
+                    match self.lex.next() {
+                        Token::Comma => (),
+                        Token::ParR => break,
+                        t => panic!("invalid parameter {t:?}"),
+                    }
+                }
+                Token::Dots => {
+                    self.lex.expect(Token::ParR);
+                    break;
+                },
+                Token::ParR => break,
+                t => panic!("invalid parameter {t:?}"),
+            }
+        }
 
-        let proto = chunk(self.lex, Token::End);
+        let proto = chunk(self.lex, params, Token::End);
         ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
     }
 
@@ -1274,11 +1296,11 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
 pub fn load(input: impl Read) -> FuncProto {
     let mut lex = Lex::new(input);
-    chunk(&mut lex, Token::Eos)
+    chunk(&mut lex, Vec::new(), Token::Eos)
 }
 
-fn chunk(lex: &mut Lex<impl Read>, end_token: Token) -> FuncProto {
-    let mut proto = ParseProto::new(lex);
+fn chunk(lex: &mut Lex<impl Read>, args: Vec<String>, end_token: Token) -> FuncProto {
+    let mut proto = ParseProto::new(lex, args);
     assert_eq!(proto.block(), end_token);
     if let Some(goto) = proto.gotos.first() {
         panic!("goto {} no destination", &goto.name);
