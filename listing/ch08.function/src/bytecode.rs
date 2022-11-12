@@ -38,6 +38,7 @@ pub enum ByteCode {
 
     // function call
     Call(u8, u8),
+    Return(u8, u8),
 
     // unops
     Neg(u8, u8),

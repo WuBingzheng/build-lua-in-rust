@@ -26,7 +26,7 @@ enum ExpDesc {
 
     // function call
     Function(Value),
-    Call,
+    Call(usize),
 
     // arithmetic operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
@@ -135,7 +135,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // functioncall and var-assignment both begin with
                     // `prefixexp` which begins with `Name` or `(`.
                     let desc = self.prefixexp(t);
-                    if desc == ExpDesc::Call {
+                    if let ExpDesc::Call(_) = desc {
                         // prefixexp() matches the whole functioncall
                         // statement, so nothing more to do
                     } else {
@@ -160,6 +160,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 Token::Do => self.do_stat(),
                 Token::DoubColon => self.label_stat(),
                 Token::Goto => self.goto_stat(),
+                Token::Return => self.ret_stat(),
                 t => {
                     self.close_goto_labels(igoto, ilabel);
                     break t;
@@ -556,6 +557,31 @@ impl<'a, R: Read> ParseProto<'a, R> {
             icode: self.fp.byte_codes.len() - 1,
             nvar: self.locals.len(),
         });
+    }
+
+    // BNF:
+    //   retstat ::= return [explist] [‘;’]
+    fn ret_stat(&mut self) {
+        let iret = self.sp;
+
+        let nret = match self.lex.peek() {
+            Token::SemiColon => {
+                self.lex.next();
+                0
+            }
+            t if is_block_end(t) => 0,
+            _ => { // return values
+                let nret = self.explist();
+                if self.lex.peek() == &Token::SemiColon {
+                    self.lex.next();
+                }
+                if !is_block_end(self.lex.peek()) {
+                    panic!("'end' expected");
+                }
+                nret
+            }
+        };
+        self.fp.byte_codes.push(ByteCode::Return(iret as u8, nret as u8));
     }
 
     // match the gotos and labels, and close the labels at the end of block
@@ -1096,7 +1122,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         };
 
         self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, argn as u8));
-        ExpDesc::Call
+        ExpDesc::Call(ifunc)
     }
 
 // ANCHOR: discharge_helper
@@ -1140,7 +1166,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
-            ExpDesc::Call => todo!("discharge Call"),
+            ExpDesc::Call(ifunc) => ByteCode::Move(dst as u8, ifunc as u8), // TODO
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
             ExpDesc::Test(condition, true_list, false_list) => {
@@ -1334,6 +1360,10 @@ fn binop_pri(binop: &Token) -> (i32, i32) {
     }
 }
 // ANCHOR_END: binop_pri
+
+fn is_block_end(t: &Token) -> bool {
+    matches!(t, Token::End | Token::Elseif | Token::Else | Token::Until | Token::Eos)
+}
 
 fn fold_const(binop: &Token, left: &ExpDesc, right: &ExpDesc) -> Option<ExpDesc> {
     match binop {

@@ -244,12 +244,20 @@ impl ExeState {
                                 // fill missing arguments, but no need to truncate extras
                                 self.fill_stack(narg, f.nparam - narg);
                             }
+
                             self.execute(&f);
                         }
                         v => panic!("invalid function: {v:?}"),
                     }
 
                     self.base -= func as usize + 1;
+                }
+                ByteCode::Return(iret, nret) => {
+                    let iret = self.base + iret as usize;
+                    // move return values to function index
+                    self.stack.truncate(iret + nret as usize);
+                    self.stack.drain(self.base-1 .. iret);
+                    return;
                 }
 
                 // unops
