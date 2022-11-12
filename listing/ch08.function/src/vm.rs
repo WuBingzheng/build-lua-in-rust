@@ -34,7 +34,7 @@ impl ExeState {
         ExeState {
             globals,
             stack: Vec::new(),
-            base: 0,
+            base: 1, // for entry function
         }
     }
 // ANCHOR_END: new
@@ -42,7 +42,7 @@ impl ExeState {
 // ANCHOR: execute
     pub fn execute(&mut self, proto: &FuncProto) {
         let mut pc = 0;
-        while pc < proto.byte_codes.len() {
+        loop {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
             match proto.byte_codes[pc] {
 // ANCHOR: vm_global

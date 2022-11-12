@@ -1327,10 +1327,14 @@ pub fn load(input: impl Read) -> FuncProto {
 
 fn chunk(lex: &mut Lex<impl Read>, args: Vec<String>, end_token: Token) -> FuncProto {
     let mut proto = ParseProto::new(lex, args);
+
     assert_eq!(proto.block(), end_token);
+
     if let Some(goto) = proto.gotos.first() {
         panic!("goto {} no destination", &goto.name);
     }
+
+    proto.fp.byte_codes.push(ByteCode::Return(0, 0));
 
     println!("constants: {:?}", &proto.fp.constants);
     println!("byte_codes:");
