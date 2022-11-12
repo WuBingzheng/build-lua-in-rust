@@ -39,6 +39,8 @@ enum ExpDesc {
     Compare(fn(u8,u8,bool)->ByteCode, usize, usize, Vec<usize>, Vec<usize>),
 }
 
+pub const MULTRET: u8 = u8::MAX;
+
 enum ConstStack {
     Const(usize),
     Stack(usize),
@@ -691,12 +693,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn explist_all(&mut self) -> usize {
         let (nexp, last_exp) = self.explist();
         match last_exp {
-            /*
-            ExpDesc::Call(_, _) => {
+            ExpDesc::Call(ifunc, narg) => {
                 self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, MULTRET));
-                 (nexp, true)
+                 MULTRET as usize
             }
-            */
             _ => {
                 self.discharge(self.sp, last_exp);
                 nexp + 1
@@ -1293,6 +1293,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     })
                 }
                 Token::Name(_) => {
+                    // XXX wrong!
                     let desc = self.exp();
                     if self.lex.peek() == &Token::Assign { // Name `=` exp
                         if let ExpDesc::String(key) = desc {

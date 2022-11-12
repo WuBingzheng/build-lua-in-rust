@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
-use crate::parse::FuncProto;
+use crate::parse::{FuncProto, MULTRET};
 use crate::utils::ftoi;
 
 // ANCHOR: print
@@ -233,12 +233,18 @@ impl ExeState {
                 ByteCode::Call(func, narg, want_nret) => {
                     self.base += func as usize + 1;
 
+                    let narg = if narg == MULTRET {
+                        // self.stack signals all arguments
+                        self.stack.len() - self.base
+                    } else {
+                        narg as usize
+                    };
+
                     match &self.stack[self.base - 1] {
                         Value::RustFunction(f) => {
                             f(self);
                         }
                         Value::LuaFunction(f) => {
-                            let narg = narg as usize;
                             let f = f.clone();
                             if narg < f.nparam {
                                 // fill missing arguments, but no need to truncate extras
@@ -247,9 +253,11 @@ impl ExeState {
 
                             let nret = self.execute(&f);
 
-                            let want_nret = want_nret as usize;
-                            if nret < want_nret {
-                                self.fill_stack(nret, want_nret - nret);
+                            if want_nret != MULTRET {
+                                let want_nret = want_nret as usize;
+                                if nret < want_nret {
+                                    self.fill_stack(nret, want_nret - nret);
+                                }
                             }
                         }
                         v => panic!("invalid function: {v:?}"),
@@ -260,7 +268,11 @@ impl ExeState {
                 ByteCode::Return(iret, nret) => {
                     let iret = self.base + iret as usize;
                     // move return values to function index
-                    self.stack.truncate(iret + nret as usize);
+                    // self.stack signals all return values for MULTRET,
+                    // so do not need truncate().
+                    if nret != MULTRET {
+                        self.stack.truncate(iret + nret as usize);
+                    }
                     self.stack.drain(self.base-1 .. iret);
                     return nret as usize;
                 }
