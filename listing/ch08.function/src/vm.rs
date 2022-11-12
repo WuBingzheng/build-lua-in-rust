@@ -40,7 +40,7 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute(&mut self, proto: &FuncProto) {
+    pub fn execute(&mut self, proto: &FuncProto) -> usize {
         let mut pc = 0;
         loop {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
@@ -230,7 +230,7 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, narg) => {
+                ByteCode::Call(func, narg, want_nret) => {
                     self.base += func as usize + 1;
 
                     match &self.stack[self.base - 1] {
@@ -245,7 +245,12 @@ impl ExeState {
                                 self.fill_stack(narg, f.nparam - narg);
                             }
 
-                            self.execute(&f);
+                            let nret = self.execute(&f);
+
+                            let want_nret = want_nret as usize;
+                            if nret < want_nret {
+                                self.fill_stack(nret, want_nret - nret);
+                            }
                         }
                         v => panic!("invalid function: {v:?}"),
                     }
@@ -257,7 +262,7 @@ impl ExeState {
                     // move return values to function index
                     self.stack.truncate(iret + nret as usize);
                     self.stack.drain(self.base-1 .. iret);
-                    return;
+                    return nret as usize;
                 }
 
                 // unops

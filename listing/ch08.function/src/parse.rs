@@ -26,7 +26,7 @@ enum ExpDesc {
 
     // function call
     Function(Value),
-    Call(usize),
+    Call(usize, usize),
 
     // arithmetic operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
@@ -135,9 +135,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // functioncall and var-assignment both begin with
                     // `prefixexp` which begins with `Name` or `(`.
                     let desc = self.prefixexp(t);
-                    if let ExpDesc::Call(_) = desc {
-                        // prefixexp() matches the whole functioncall
-                        // statement, so nothing more to do
+                    if let ExpDesc::Call(ifunc, narg) = desc {
+                        // prefixexp() matches the whole functioncall statement
+                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, 0));
                     } else {
                         // prefixexp() matches only the first variable, so we
                         // continue the statement
@@ -174,7 +174,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //   attnamelist ::=  Name attrib {`,` Name attrib}
     fn local_variables(&mut self) {
         let mut vars = Vec::new();
-        let nexp = loop {
+        loop {
             vars.push(self.read_name());
 
             match self.lex.peek() {
@@ -183,16 +183,14 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 }
                 Token::Assign => {
                     self.lex.next();
-                    break self.explist();
+                    self.explist_want(vars.len());
+                    break;
                 }
-                _ => break 0, // no explist
+                _ => {
+                    self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, vars.len() as u8));
+                    break;
+                }
             }
-        };
-
-        if nexp < vars.len() {
-            let ivar = self.locals.len() + nexp;
-            let nnil = vars.len() - nexp;
-            self.fp.byte_codes.push(ByteCode::LoadNil(ivar as u8, nnil as u8));
         }
 
         // append vars into self.locals after evaluating explist
@@ -287,42 +285,31 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
 
-        // simlar to explist(), except that does not discharge the last exp.
-        let exp_sp0 = self.sp;  // discharge front exps starts at here
-        let mut nfexp = 0;  // number of discharged exps, excluding the last one
-        let last_exp = loop {
-            let desc = self.exp();
-
-            if self.lex.peek() == &Token::Comma {
-                // there are more exps, so discharge the previous one
-                self.lex.next();
-                self.discharge(exp_sp0 + nfexp, desc);
-                nfexp += 1;
-            } else { // the last exp
-                break desc;
-            }
-        };
+        let sp0 = self.sp;
+        let (mut nexp, last_exp) = self.explist();
 
         // assignment last variable
-        match (nfexp + 1).cmp(&vars.len()) {
+        match (nexp + 1).cmp(&vars.len()) {
             Ordering::Equal => {
                 // assign last variable directly to avoid potential discharging
                 let last_var = vars.pop().unwrap();
                 self.assign_var(last_var, last_exp);
             }
             Ordering::Less => {
-                todo!("expand last exps");
+                // expand last expressions
+                self.expand_exp(last_exp, vars.len() - nexp);
+                nexp = vars.len();
             }
             Ordering::Greater => {
                 // drop extra exps
-                nfexp = vars.len();
+                nexp = vars.len();
             }
         }
 
         // assign previous variables from tmp registers, in reverse order
         while let Some(var) = vars.pop() {
-            nfexp -= 1;
-            self.assign_from_stack(var, exp_sp0 + nfexp);
+            nexp -= 1;
+            self.assign_from_stack(var, sp0 + nexp);
         }
     }
 // ANCHOR_END: assignment
@@ -438,7 +425,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn for_numerical(&mut self, name: String) {
         self.lex.next(); // skip `=`
 
-        match self.explist() {
+        let (nexp, last_exp) = self.explist();
+        self.discharge(self.sp, last_exp);
+
+        match nexp + 1 {
             2 => self.discharge(self.sp, ExpDesc::Integer(1)),
             3 => (),
             _ => panic!("invalid numerical for exp"),
@@ -571,7 +561,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
             t if is_block_end(t) => 0,
             _ => { // return values
-                let nret = self.explist();
+                let nret = self.explist_all();
                 if self.lex.peek() == &Token::SemiColon {
                     self.lex.next();
                 }
@@ -661,18 +651,68 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     // explist ::= exp {`,` exp}
-    fn explist(&mut self) -> usize {
-        let mut n = 0;
+    //
+    // Read expressions, discharge front ones, and keep last one.
+    // Return the number of front expressions and the last expression.
+    fn explist(&mut self) -> (usize, ExpDesc) {
         let sp0 = self.sp;
+        let mut n = 0;
         loop {
             let desc = self.exp();
-            self.discharge(sp0 + n, desc);
-
-            n += 1;
             if self.lex.peek() != &Token::Comma {
-                return n;
+                return (n, desc);
             }
             self.lex.next();
+
+            self.discharge(sp0 + n, desc);
+            n += 1;
+        }
+    }
+
+    // Read expressions and make sure @want
+    fn explist_want(&mut self, want: usize) {
+        let (nexp, last_exp) = self.explist();
+        match (nexp + 1).cmp(&want) {
+            Ordering::Equal => {
+                self.discharge(self.sp, last_exp);
+            }
+            Ordering::Less => {
+                // expand last expressions
+                self.expand_exp(last_exp, want - nexp);
+            }
+            Ordering::Greater => {
+                // drop extra exps
+                self.sp -= nexp - want;
+            }
+        }
+    }
+
+    // Read expressions and ...
+    fn explist_all(&mut self) -> usize {
+        let (nexp, last_exp) = self.explist();
+        match last_exp {
+            /*
+            ExpDesc::Call(_, _) => {
+                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, MULTRET));
+                 (nexp, true)
+            }
+            */
+            _ => {
+                self.discharge(self.sp, last_exp);
+                nexp + 1
+            }
+        }
+    }
+
+    fn expand_exp(&mut self, desc: ExpDesc, want: usize) {
+        match desc {
+            ExpDesc::Call(ifunc, narg) => {
+                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, want as u8));
+            }
+            _ => {
+                self.discharge(self.sp, desc);
+                self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, want as u8 - 1));
+            }
         }
     }
 
@@ -1099,10 +1139,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
     fn args(&mut self) -> ExpDesc {
         let ifunc = self.sp - 1;
-        let argn = match self.lex.next() {
+        let narg = match self.lex.next() {
             Token::ParL => {
                 if self.lex.peek() != &Token::ParR {
-                    let argn = self.explist();
+                    let argn = self.explist_all();
                     self.lex.expect(Token::ParR);
                     argn
                 } else {
@@ -1121,8 +1161,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             t => panic!("invalid args {t:?}"),
         };
 
-        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, argn as u8));
-        ExpDesc::Call(ifunc)
+        ExpDesc::Call(ifunc, narg)
     }
 
 // ANCHOR: discharge_helper
@@ -1166,7 +1205,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
-            ExpDesc::Call(ifunc) => ByteCode::Move(dst as u8, ifunc as u8), // TODO
+            ExpDesc::Call(ifunc, narg) => {
+                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, 1));
+                ByteCode::Move(dst as u8, ifunc as u8) // TODO
+                }
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
             ExpDesc::Test(condition, true_list, false_list) => {
