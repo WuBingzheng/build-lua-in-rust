@@ -39,6 +39,8 @@ pub enum ByteCode {
     // function call
     CallSet(u8, u8, u8),
     Call(u8, u8, u8),
+    TailCall(u8, u8),
+    Return0,
     Return(u8, u8),
     VarArgs(u8, u8),
 

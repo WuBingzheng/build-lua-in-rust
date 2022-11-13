@@ -263,15 +263,22 @@ impl ExeState {
                         self.stack.swap_remove(self.base + dst as usize);
                     }
                 }
+                ByteCode::TailCall(func, narg) => {
+                    let fv = self.get_stack(func).clone();
+                    self.stack.drain(self.base-1 .. self.base+func as usize);
+                    return self.do_call_function(fv, narg);
+                }
                 ByteCode::Return(iret, nret) => {
                     let iret = self.base + iret as usize;
-                    // move return values to function index
                     // self.stack signals all return values for MULTRET,
                     // so do not need truncate().
                     if nret != MULTRET {
                         self.stack.truncate(iret + nret as usize);
                     }
                     return nret as usize;
+                }
+                ByteCode::Return0 => {
+                    return 0;
                 }
                 ByteCode::VarArgs(dst, want) => {
                     let (ncopy, need_fill) = if want == MULTRET {
@@ -694,10 +701,13 @@ impl ExeState {
     // return the number of return values which are at the stack end
     fn call_function(&mut self, func: u8, narg: u8) -> usize {
         let fv = self.get_stack(func).clone();
+        self.base += func as usize + 1; // get into new world
+        let nret = self.do_call_function(fv, narg);
+        self.base -= func as usize + 1; // come back
+        nret
+    }
 
-        // get into new world, remember come back
-        self.base += func as usize + 1;
-
+    fn do_call_function(&mut self, fv: Value, narg: u8) -> usize {
         let narg = if narg == MULTRET {
             // self.stack signals all arguments
             self.stack.len() - self.base
@@ -705,7 +715,7 @@ impl ExeState {
             narg as usize
         };
 
-        let nret = match fv {
+        match fv {
             Value::RustFunction(f) => {
                 // drop potential temprary stack usage, to make sure get_top() works
                 self.stack.truncate(self.base + narg);
@@ -721,11 +731,7 @@ impl ExeState {
                 self.execute(&f)
             }
             v => panic!("invalid function: {v:?}"),
-        };
-
-        // come back
-        self.base -= func as usize + 1;
-        nret
+        }
     }
 
     fn make_float(&mut self, dst: u8) -> f64 {

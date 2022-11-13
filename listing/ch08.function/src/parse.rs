@@ -559,26 +559,42 @@ impl<'a, R: Read> ParseProto<'a, R> {
     // BNF:
     //   retstat ::= return [explist] [‘;’]
     fn ret_stat(&mut self) {
-        let iret = self.sp;
-
-        let nret = match self.lex.peek() {
+        let code = match self.lex.peek() {
             Token::SemiColon => {
                 self.lex.next();
-                0
+                ByteCode::Return0
             }
-            t if is_block_end(t) => 0,
+            t if is_block_end(t) => {
+                ByteCode::Return0
+            }
             _ => { // return values
-                let nret = self.explist_all();
-                if self.lex.peek() == &Token::SemiColon {
-                    self.lex.next();
+                let iret = self.sp;
+                let (nexp, last_exp) = self.explist();
+
+                if let (0, &ExpDesc::Call(func, narg)) = (nexp, &last_exp) {
+                    // special case: tail call
+                    ByteCode::TailCall(func as u8, narg as u8)
+
+                } else {
+                    // normal case
+                    let nret = if self.try_discharge_expand(&last_exp, MULTRET as usize) {
+                        MULTRET as usize
+                    } else {
+                        self.discharge(self.sp, last_exp);
+                        nexp + 1
+                    };
+
+                    if self.lex.peek() == &Token::SemiColon {
+                        self.lex.next();
+                    }
+                    if !is_block_end(self.lex.peek()) {
+                        panic!("'end' expected");
+                    }
+                    ByteCode::Return(iret as u8, nret as u8)
                 }
-                if !is_block_end(self.lex.peek()) {
-                    panic!("'end' expected");
-                }
-                nret
             }
         };
-        self.fp.byte_codes.push(ByteCode::Return(iret as u8, nret as u8));
+        self.fp.byte_codes.push(code);
     }
 
     // match the gotos and labels, and close the labels at the end of block
