@@ -1208,10 +1208,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
-            ExpDesc::Call(ifunc, narg) => {
-                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, 1));
-                ByteCode::Move(dst as u8, ifunc as u8) // TODO
-                }
+            ExpDesc::Call(ifunc, narg) => ByteCode::CallSet(dst as u8, ifunc as u8, narg as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
             ExpDesc::Test(condition, true_list, false_list) => {

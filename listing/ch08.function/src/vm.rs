@@ -10,9 +10,12 @@ use crate::utils::ftoi;
 
 // ANCHOR: print
 // "print" function in Lua's std-lib.
-// It supports only 1 argument and assumes the argument is at index:1 on stack.
 fn lib_print(state: &mut ExeState) -> i32 {
-    println!("{}", state.stack[state.base]);
+    let mut values = Vec::with_capacity(state.get_top());
+    for i in 1 ..= state.get_top() {
+        values.push(state.get_value(i).to_string());
+    }
+    println!("{}", values.join("\t"));
     0
 }
 // ANCHOR_END: print
@@ -237,39 +240,28 @@ impl ExeState {
 
                 // function call
                 ByteCode::Call(func, narg, want_nret) => {
-                    self.base += func as usize + 1;
+                    let nret = self.call_function(func, narg);
 
-                    let narg = if narg == MULTRET {
-                        // self.stack signals all arguments
-                        self.stack.len() - self.base
-                    } else {
-                        narg as usize
-                    };
+                    // move return values to @func
+                    self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
 
-                    match &self.stack[self.base - 1] {
-                        Value::RustFunction(f) => {
-                            f(self);
-                        }
-                        Value::LuaFunction(f) => {
-                            let f = f.clone();
-                            if narg < f.nparam {
-                                // fill missing arguments, but no need to truncate extras
-                                self.fill_stack(narg, f.nparam - narg);
-                            }
-
-                            let nret = self.execute(&f);
-
-                            if want_nret != MULTRET {
-                                let want_nret = want_nret as usize;
-                                if nret < want_nret {
-                                    self.fill_stack(nret, want_nret - nret);
-                                }
-                            }
-                        }
-                        v => panic!("invalid function: {v:?}"),
+                    // fill if need
+                    if want_nret != MULTRET && nret < want_nret as usize {
+                        self.fill_stack(nret, want_nret as usize - nret);
                     }
+                }
+                ByteCode::CallSet(dst, func, narg) => {
+                    let nret = self.call_function(func, narg);
 
-                    self.base -= func as usize + 1;
+                    if nret == 0 {
+                        self.set_stack(dst, Value::Nil);
+                    } else {
+                        if nret > 1 {
+                            self.stack.truncate(self.stack.len() + 1 - nret);
+                        }
+                        // return value is at the last
+                        self.stack.swap_remove(self.base + dst as usize);
+                    }
                 }
                 ByteCode::Return(iret, nret) => {
                     let iret = self.base + iret as usize;
@@ -279,7 +271,6 @@ impl ExeState {
                     if nret != MULTRET {
                         self.stack.truncate(iret + nret as usize);
                     }
-                    self.stack.drain(self.base-1 .. iret);
                     return nret as usize;
                 }
                 ByteCode::VarArgs(dst, want) => {
@@ -699,6 +690,44 @@ impl ExeState {
         }
     }
 
+    // call function
+    // return the number of return values which are at the stack end
+    fn call_function(&mut self, func: u8, narg: u8) -> usize {
+        let fv = self.get_stack(func).clone();
+
+        // get into new world, remember come back
+        self.base += func as usize + 1;
+
+        let narg = if narg == MULTRET {
+            // self.stack signals all arguments
+            self.stack.len() - self.base
+        } else {
+            narg as usize
+        };
+
+        let nret = match fv {
+            Value::RustFunction(f) => {
+                // drop potential temprary stack usage, to make sure get_top() works
+                self.stack.truncate(self.base + narg);
+
+                f(self) as usize
+            }
+            Value::LuaFunction(f) => {
+                // fill missing arguments, but no need to truncate extras
+                if narg < f.nparam {
+                    self.fill_stack(narg, f.nparam - narg);
+                }
+
+                self.execute(&f)
+            }
+            v => panic!("invalid function: {v:?}"),
+        };
+
+        // come back
+        self.base -= func as usize + 1;
+        nret
+    }
+
     fn make_float(&mut self, dst: u8) -> f64 {
         match self.get_stack(dst) {
             &Value::Float(f) => f,
@@ -724,6 +753,19 @@ impl ExeState {
         } else {
             panic!("invalid integer");
         }
+    }
+}
+
+// API
+impl<'a> ExeState {
+    pub fn get_top(&self) -> usize {
+        self.stack.len() - self.base
+    }
+    pub fn get_value(&self, i: usize) -> &Value {
+        &self.stack[self.base + i - 1]
+    }
+    pub fn get<T>(&'a self, i: usize) -> T where T: From<&'a Value> {
+        (&self.stack[self.base + i - 1]).into()
     }
 }
 
