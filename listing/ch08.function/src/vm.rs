@@ -41,6 +41,12 @@ impl ExeState {
 
 // ANCHOR: execute
     pub fn execute(&mut self, proto: &FuncProto) -> usize {
+        let varargs = if proto.has_varargs {
+            self.stack.drain(self.base + proto.nparam ..).collect()
+        } else {
+            Vec::new()
+        };
+
         let mut pc = 0;
         loop {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
@@ -275,6 +281,22 @@ impl ExeState {
                     }
                     self.stack.drain(self.base-1 .. iret);
                     return nret as usize;
+                }
+                ByteCode::VarArgs(dst, want) => {
+                    let (ncopy, need_fill) = if want == MULTRET {
+                        (varargs.len(), 0)
+                    } else if want as usize > varargs.len() {
+                        (varargs.len(), want as usize - varargs.len())
+                    } else {
+                        (want as usize, 0)
+                    };
+
+                    for i in 0..ncopy {
+                        self.set_stack(dst + i as u8, varargs[i].clone());
+                    }
+                    if need_fill > 0 {
+                        self.fill_stack(dst as usize + ncopy, need_fill);
+                    }
                 }
 
                 // unops

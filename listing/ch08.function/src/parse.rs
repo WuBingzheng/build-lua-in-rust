@@ -27,6 +27,7 @@ enum ExpDesc {
     // function call
     Function(Value),
     Call(usize, usize),
+    VarArgs,
 
     // arithmetic operators
     UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
@@ -56,6 +57,7 @@ struct GotoLabel {
 // ANCHOR: proto
 #[derive(Debug)]
 pub struct FuncProto {
+    pub has_varargs: bool,
     pub nparam: usize,
     pub constants: Vec<Value>,
     pub byte_codes: Vec<ByteCode>,
@@ -78,9 +80,10 @@ struct ParseProto<'a, R: Read> {
 // ANCHOR_END: proto
 
 impl<'a, R: Read> ParseProto<'a, R> {
-    fn new(lex: &'a mut Lex<R>, params: Vec<String>) -> Self {
+    fn new(lex: &'a mut Lex<R>, has_varargs: bool, params: Vec<String>) -> Self {
         ParseProto {
             fp: FuncProto {
+                has_varargs: has_varargs,
                 nparam: params.len(),
                 constants: Vec::new(),
                 byte_codes: Vec::new(),
@@ -244,6 +247,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //   namelist ::= Name {`,` Name}
     fn funcbody(&mut self) -> ExpDesc {
         // parameter list
+        let mut has_varargs = false;
         let mut params = Vec::new();
         self.lex.expect(Token::ParL);
         loop {
@@ -257,6 +261,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     }
                 }
                 Token::Dots => {
+                    has_varargs = true;
                     self.lex.expect(Token::ParR);
                     break;
                 },
@@ -265,7 +270,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
 
-        let proto = chunk(self.lex, params, Token::End);
+        let proto = chunk(self.lex, has_varargs, params, Token::End);
         ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
     }
 
@@ -692,27 +697,19 @@ impl<'a, R: Read> ParseProto<'a, R> {
     // Read expressions and ...
     fn explist_all(&mut self) -> usize {
         let (nexp, last_exp) = self.explist();
-        match last_exp {
-            ExpDesc::Call(ifunc, narg) => {
-                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, MULTRET));
-                 MULTRET as usize
-            }
-            _ => {
-                self.discharge(self.sp, last_exp);
-                nexp + 1
-            }
+
+        if self.try_discharge_expand(&last_exp, MULTRET as usize) {
+            MULTRET as usize
+        } else {
+            self.discharge(self.sp, last_exp);
+            nexp + 1
         }
     }
 
     fn expand_exp(&mut self, desc: ExpDesc, want: usize) {
-        match desc {
-            ExpDesc::Call(ifunc, narg) => {
-                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, want as u8));
-            }
-            _ => {
-                self.discharge(self.sp, desc);
-                self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, want as u8 - 1));
-            }
+        if !self.try_discharge_expand(&desc, want) {
+            self.discharge(self.sp, desc);
+            self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, want as u8 - 1));
         }
     }
 
@@ -739,7 +736,12 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Token::Float(f) => ExpDesc::Float(f),
             Token::String(s) => ExpDesc::String(s),
 
-            Token::Dots => todo!("dots"),
+            Token::Dots => {
+                if !self.fp.has_varargs {
+                    panic!("no varargs");
+                }
+                ExpDesc::VarArgs
+            }
             Token::Function => self.funcbody(),
             Token::CurlyL => self.table_constructor(),
 
@@ -1204,6 +1206,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
+            ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
             ExpDesc::Call(ifunc, narg) => {
                 self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, 1));
@@ -1251,6 +1254,20 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
     }
 // ANCHOR_END: discharge_const
+
+    fn try_discharge_expand(&mut self, desc: &ExpDesc, want: usize) -> bool {
+        match desc {
+            &ExpDesc::Call(ifunc, narg) => {
+                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, want as u8));
+                true
+            }
+            &ExpDesc::VarArgs => {
+                self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8, want as u8));
+                true
+            }
+            _ => false,
+        }
+    }
 
 // ANCHOR: table_constructor
     fn table_constructor(&mut self) -> ExpDesc {
@@ -1365,11 +1382,11 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
 pub fn load(input: impl Read) -> FuncProto {
     let mut lex = Lex::new(input);
-    chunk(&mut lex, Vec::new(), Token::Eos)
+    chunk(&mut lex, false, Vec::new(), Token::Eos) // XXX has_varargs->true
 }
 
-fn chunk(lex: &mut Lex<impl Read>, args: Vec<String>, end_token: Token) -> FuncProto {
-    let mut proto = ParseProto::new(lex, args);
+fn chunk(lex: &mut Lex<impl Read>, has_varargs: bool, params: Vec<String>, end_token: Token) -> FuncProto {
+    let mut proto = ParseProto::new(lex, has_varargs, params);
 
     assert_eq!(proto.block(), end_token);
 
