@@ -577,10 +577,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
                 } else {
                     // normal case
-                    let nret = if self.try_discharge_expand(&last_exp, MULTRET as usize) {
+                    let nret = if self.try_discharge_expand(last_exp, MULTRET as usize) {
                         MULTRET as usize
                     } else {
-                        self.discharge(self.sp, last_exp);
                         nexp + 1
                     };
 
@@ -713,18 +712,15 @@ impl<'a, R: Read> ParseProto<'a, R> {
     // Read expressions and ...
     fn explist_all(&mut self) -> usize {
         let (nexp, last_exp) = self.explist();
-
-        if self.try_discharge_expand(&last_exp, MULTRET as usize) {
+        if self.try_discharge_expand(last_exp, MULTRET as usize) {
             MULTRET as usize
         } else {
-            self.discharge(self.sp, last_exp);
             nexp + 1
         }
     }
 
     fn expand_exp(&mut self, desc: ExpDesc, want: usize) {
-        if !self.try_discharge_expand(&desc, want) {
-            self.discharge(self.sp, desc);
+        if !self.try_discharge_expand(desc, want) {
             self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, want as u8 - 1));
         }
     }
@@ -1160,9 +1156,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let narg = match self.lex.next() {
             Token::ParL => {
                 if self.lex.peek() != &Token::ParR {
-                    let argn = self.explist_all();
+                    let narg = self.explist_all();
                     self.lex.expect(Token::ParR);
-                    argn
+                    narg
                 } else {
                     self.lex.next();
                     0
@@ -1268,17 +1264,20 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 // ANCHOR_END: discharge_const
 
-    fn try_discharge_expand(&mut self, desc: &ExpDesc, want: usize) -> bool {
+    fn try_discharge_expand(&mut self, desc: ExpDesc, want: usize) -> bool {
         match desc {
-            &ExpDesc::Call(ifunc, narg) => {
+            ExpDesc::Call(ifunc, narg) => {
                 self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, want as u8));
                 true
             }
-            &ExpDesc::VarArgs => {
+            ExpDesc::VarArgs => {
                 self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8, want as u8));
                 true
             }
-            _ => false,
+            _ => {
+                self.discharge(self.sp, desc);
+                false
+            }
         }
     }
 
