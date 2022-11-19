@@ -18,6 +18,11 @@ fn lib_print(state: &mut ExeState) -> i32 {
     println!("{}", values.join("\t"));
     0
 }
+fn lib_type(state: &mut ExeState) -> i32 {
+    let ty = state.get_value(1).ty();
+    state.push(ty);
+    1
+}
 // ANCHOR_END: print
 
 // ANCHOR: state
@@ -33,6 +38,7 @@ impl ExeState {
     pub fn new() -> Self {
         let mut globals = HashMap::new();
         globals.insert("print".into(), Value::RustFunction(lib_print));
+        globals.insert("type".into(), Value::RustFunction(lib_type));
 
         ExeState {
             globals,
@@ -772,6 +778,9 @@ impl<'a> ExeState {
     }
     pub fn get<T>(&'a self, i: usize) -> T where T: From<&'a Value> {
         (&self.stack[self.base + i - 1]).into()
+    }
+    pub fn push(&mut self, v: impl Into<Value>) {
+        self.stack.push(v.into());
     }
 }
 

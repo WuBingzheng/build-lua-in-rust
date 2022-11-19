@@ -138,6 +138,20 @@ impl Value {
         // eliminate Integer and Float with same number value
         mem::discriminant(self) == mem::discriminant(other) && self == other
     }
+    pub fn ty(&self) -> &'static str {
+        match self {
+            &Value::Nil => "nil",
+            &Value::Boolean(_) => "boolean",
+            &Value::Integer(_) => "number",
+            &Value::Float(_) => "number",
+            &Value::ShortStr(_, _) => "string",
+            &Value::MidStr(_) => "string",
+            &Value::LongStr(_) => "string",
+            &Value::Table(_) => "table",
+            &Value::RustFunction(_) => "function",
+            &Value::LuaFunction(_) => "function",
+        }
+    }
 }
 
 // ANCHOR: hash

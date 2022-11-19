@@ -1,0 +1,6 @@
+print(type(123))
+print(type(123.123))
+print(type("123"))
+print(type({}))
+print(type(print))
+print(type(function()end))
