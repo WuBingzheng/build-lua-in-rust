@@ -43,3 +43,7 @@
   - [求值中的逻辑运算](./ch07-02.logical_in_evalue.md)
   - [条件判断中的关系运算](./ch07-03.relational_in_condition.md)
   - [求值中的关系运算](./ch07-04.relational_in_evalue.md)
+
+- [函数](./ch08-00.function.md)
+  - [定义和调用](./ch08-01.define_and_call.md)
+  - [参数和返回值](./ch08-02.arguments_and_returns.md)
