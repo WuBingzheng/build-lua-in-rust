@@ -273,8 +273,7 @@ impl ExeState {
                         let iret = self.stack.len() - nret as usize;
                         self.stack.swap(self.base+dst as usize, iret);
                     }
-                    // TODO truncate stack
-                    //self.stack.truncate(self.base + func as usize + 1);
+                    self.stack.truncate(self.base + func as usize + 1);
                 }
 
                 ByteCode::TailCall(func, narg) => {

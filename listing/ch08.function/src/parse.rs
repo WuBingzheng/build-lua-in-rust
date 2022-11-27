@@ -1176,7 +1176,12 @@ impl<'a, R: Read> ParseProto<'a, R> {
 // ANCHOR: discharge_helper
     // discharge @desc into the top of stack, if need
     fn discharge_any(&mut self, desc: ExpDesc) -> usize {
-        self.discharge_if_need(self.sp, desc)
+        let dst = if let &ExpDesc::Call(ifunc, _) = &desc {
+            ifunc
+        } else {
+            self.sp
+        };
+        self.discharge_if_need(dst, desc)
     }
 
     // discharge @desc into @dst, if need
