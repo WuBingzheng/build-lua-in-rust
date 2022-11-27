@@ -688,6 +688,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         loop {
             let desc = self.exp();
             if self.lex.peek() != &Token::Comma {
+                self.sp = sp0 + n;
                 return (n, desc);
             }
             self.lex.next();
