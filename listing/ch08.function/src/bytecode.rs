@@ -41,6 +41,7 @@ pub enum ByteCode {
     Call(u8, u8, u8),
     TailCall(u8, u8),
     Return0,
+    ReturnMulti(u8),
     Return(u8, u8),
     VarArgs(u8, u8),
 

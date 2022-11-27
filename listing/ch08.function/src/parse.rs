@@ -571,25 +571,31 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 let iret = self.sp;
                 let (nexp, last_exp) = self.explist();
 
-                if let (0, &ExpDesc::Call(func, narg)) = (nexp, &last_exp) {
-                    // special case: tail call
+                // check optional ';'
+                if self.lex.peek() == &Token::SemiColon {
+                    self.lex.next();
+                }
+                // check block end
+                if !is_block_end(self.lex.peek()) {
+                    panic!("'end' expected");
+                }
+
+                if let (0, &ExpDesc::Local(i)) = (nexp, &last_exp) {
+                    // only 1 return value, so NOT need discharging all values to
+                    // stack top for continuity
+                    ByteCode::Return(i as u8, 1)
+
+                } else if let (0, &ExpDesc::Call(func, narg)) = (nexp, &last_exp) {
+                    // tail call
                     ByteCode::TailCall(func as u8, narg as u8)
 
-                } else {
-                    // normal case
-                    let nret = if self.try_discharge_expand(last_exp, MULTRET as usize) {
-                        MULTRET as usize
-                    } else {
-                        nexp + 1
-                    };
+                } else if self.try_discharge_expand(last_exp, MULTRET as usize) {
+                    // return variable values
+                    ByteCode::ReturnMulti(iret as u8)
 
-                    if self.lex.peek() == &Token::SemiColon {
-                        self.lex.next();
-                    }
-                    if !is_block_end(self.lex.peek()) {
-                        panic!("'end' expected");
-                    }
-                    ByteCode::Return(iret as u8, nret as u8)
+                } else {
+                    // return fixed values
+                    ByteCode::Return(iret as u8, nexp as u8 + 1)
                 }
             }
         };
@@ -1406,7 +1412,7 @@ fn chunk(lex: &mut Lex<impl Read>, has_varargs: bool, params: Vec<String>, end_t
         panic!("goto {} no destination", &goto.name);
     }
 
-    proto.fp.byte_codes.push(ByteCode::Return(0, 0));
+    proto.fp.byte_codes.push(ByteCode::Return0);
 
     println!("constants: {:?}", &proto.fp.constants);
     println!("byte_codes:");

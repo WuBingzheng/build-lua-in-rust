@@ -276,12 +276,12 @@ impl ExeState {
                 }
                 ByteCode::Return(iret, nret) => {
                     let iret = self.base + iret as usize;
-                    // self.stack signals all return values for MULTRET,
-                    // so do not need truncate().
-                    if nret != MULTRET {
-                        self.stack.truncate(iret + nret as usize);
-                    }
+                    self.stack.truncate(iret + nret as usize);
                     return nret as usize;
+                }
+                ByteCode::ReturnMulti(iret) => {
+                    let iret = self.base + iret as usize;
+                    return self.stack.len() - iret;
                 }
                 ByteCode::Return0 => {
                     return 0;
