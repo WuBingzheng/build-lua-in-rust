@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
-use crate::parse::{FuncProto, MULTRET};
+use crate::parse::{FuncProto, VARARGS};
 use crate::utils::ftoi;
 
 // ANCHOR: print
@@ -245,61 +245,81 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, narg, want_nret) => {
+                ByteCode::Call(func, narg) => {
+                    let nret = self.call_function(func, narg);
+
+                    // move return values to @func
+                    self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
+                }
+                ByteCode::CallWant(func, narg, want_nret) => {
                     let nret = self.call_function(func, narg);
 
                     // move return values to @func
                     self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
 
                     // fill if need
-                    if want_nret != MULTRET && nret < want_nret as usize {
+                    if nret < want_nret as usize {
                         self.fill_stack(nret, want_nret as usize - nret);
                     }
                 }
                 ByteCode::CallSet(dst, func, narg) => {
                     let nret = self.call_function(func, narg);
 
+                    // set first return value to @dst directly
                     if nret == 0 {
                         self.set_stack(dst, Value::Nil);
                     } else {
-                        if nret > 1 {
-                            self.stack.truncate(self.stack.len() + 1 - nret);
-                        }
-                        // return value is at the last
-                        self.stack.swap_remove(self.base + dst as usize);
+                        // use swap() to avoid clone()
+                        let iret = self.stack.len() - nret as usize;
+                        self.stack.swap(self.base+dst as usize, iret);
                     }
+                    // TODO truncate stack
+                    //self.stack.truncate(self.base + func as usize + 1);
                 }
+
                 ByteCode::TailCall(func, narg) => {
                     let fv = self.get_stack(func).clone();
                     self.stack.drain(self.base-1 .. self.base+func as usize);
                     return self.do_call_function(fv, narg);
                 }
+
                 ByteCode::Return(iret, nret) => {
+                    // return stack[iret .. iret+nret]
                     let iret = self.base + iret as usize;
                     self.stack.truncate(iret + nret as usize);
                     return nret as usize;
                 }
                 ByteCode::ReturnMulti(iret) => {
+                    // return stack[iret .. ]
                     let iret = self.base + iret as usize;
                     return self.stack.len() - iret;
                 }
                 ByteCode::Return0 => {
                     return 0;
                 }
-                ByteCode::VarArgs(dst, want) => {
-                    let (ncopy, need_fill) = if want == MULTRET {
-                        (varargs.len(), 0)
-                    } else if want as usize > varargs.len() {
-                        (varargs.len(), want as usize - varargs.len())
-                    } else {
-                        (want as usize, 0)
-                    };
 
-                    for i in 0..ncopy {
-                        self.set_stack(dst + i as u8, varargs[i].clone());
-                    }
-                    if need_fill > 0 {
-                        self.fill_stack(dst as usize + ncopy, need_fill);
+                ByteCode::VarArgs(dst) => {
+                    // truncate the stack to make sure there is no more
+                    // extra temprary values
+                    self.stack.truncate(self.base + dst as usize);
+                    self.stack.extend_from_slice(&varargs);
+                }
+                ByteCode::VarArgsSet(dst) => {
+                    // set first argument to @dst directly
+                    let value = varargs.first().unwrap_or(&Value::Nil).clone();
+                    self.set_stack(dst, value);
+                }
+                ByteCode::VarArgsWant(dst, want) => {
+                    // set @want values
+                    self.stack.truncate(self.base + dst as usize);
+
+                    let len = varargs.len();
+                    let want = want as usize;
+                    if want > len {
+                        self.stack.extend_from_slice(&varargs);
+                        self.fill_stack(dst as usize + len, want - len);
+                    } else {
+                        self.stack.extend_from_slice(&varargs[..want]);
                     }
                 }
 
@@ -714,7 +734,7 @@ impl ExeState {
     }
 
     fn do_call_function(&mut self, fv: Value, narg: u8) -> usize {
-        let narg = if narg == MULTRET {
+        let narg = if narg == VARARGS {
             // self.stack signals all arguments
             self.stack.len() - self.base
         } else {
@@ -729,9 +749,11 @@ impl ExeState {
                 f(self) as usize
             }
             Value::LuaFunction(f) => {
-                // fill missing arguments, but no need to truncate extras
                 if narg < f.nparam {
                     self.fill_stack(narg, f.nparam - narg);
+                }
+                if f.has_varargs {
+                    self.stack.truncate(self.base + narg);
                 }
 
                 self.execute(&f)

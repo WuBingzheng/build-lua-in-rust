@@ -40,7 +40,7 @@ enum ExpDesc {
     Compare(fn(u8,u8,bool)->ByteCode, usize, usize, Vec<usize>, Vec<usize>),
 }
 
-pub const MULTRET: u8 = u8::MAX;
+pub const VARARGS: u8 = u8::MAX;
 
 enum ConstStack {
     Const(usize),
@@ -142,7 +142,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     let desc = self.prefixexp(t);
                     if let ExpDesc::Call(ifunc, narg) = desc {
                         // prefixexp() matches the whole functioncall statement
-                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, 0));
+                        self.fp.byte_codes.push(ByteCode::CallWant(ifunc as u8, narg as u8, 0));
                     } else {
                         // prefixexp() matches only the first variable, so we
                         // continue the statement
@@ -304,7 +304,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
             Ordering::Less => {
                 // expand last expressions
-                self.expand_exp(last_exp, vars.len() - nexp);
+                self.discharge_expand_want(last_exp, vars.len() - nexp);
                 nexp = vars.len();
             }
             Ordering::Greater => {
@@ -589,7 +589,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // tail call
                     ByteCode::TailCall(func as u8, narg as u8)
 
-                } else if self.try_discharge_expand(last_exp, MULTRET as usize) {
+                } else if self.discharge_expand(last_exp) {
                     // return variable values
                     ByteCode::ReturnMulti(iret as u8)
 
@@ -706,28 +706,12 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
             Ordering::Less => {
                 // expand last expressions
-                self.expand_exp(last_exp, want - nexp);
+                self.discharge_expand_want(last_exp, want - nexp);
             }
             Ordering::Greater => {
                 // drop extra exps
                 self.sp -= nexp - want;
             }
-        }
-    }
-
-    // Read expressions and ...
-    fn explist_all(&mut self) -> usize {
-        let (nexp, last_exp) = self.explist();
-        if self.try_discharge_expand(last_exp, MULTRET as usize) {
-            MULTRET as usize
-        } else {
-            nexp + 1
-        }
-    }
-
-    fn expand_exp(&mut self, desc: ExpDesc, want: usize) {
-        if !self.try_discharge_expand(desc, want) {
-            self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, want as u8 - 1));
         }
     }
 
@@ -1162,9 +1146,13 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let narg = match self.lex.next() {
             Token::ParL => {
                 if self.lex.peek() != &Token::ParR {
-                    let narg = self.explist_all();
+                    let (nexp, last_exp) = self.explist();
                     self.lex.expect(Token::ParR);
-                    narg
+                    if self.discharge_expand(last_exp) {
+                        VARARGS as usize
+                    } else {
+                        nexp + 1
+                    }
                 } else {
                     self.lex.next();
                     0
@@ -1224,7 +1212,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
-            ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
+            ExpDesc::VarArgs => ByteCode::VarArgsSet(dst as u8),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
             ExpDesc::Call(ifunc, narg) => ByteCode::CallSet(dst as u8, ifunc as u8, narg as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
@@ -1270,14 +1258,30 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 // ANCHOR_END: discharge_const
 
-    fn try_discharge_expand(&mut self, desc: ExpDesc, want: usize) -> bool {
+    fn discharge_expand_want(&mut self, desc: ExpDesc, want: usize) {
+        let code = match desc {
+            ExpDesc::Call(ifunc, narg) => {
+                ByteCode::CallWant(ifunc as u8, narg as u8, want as u8)
+            }
+            ExpDesc::VarArgs => {
+                ByteCode::VarArgsWant(self.sp as u8, want as u8)
+            }
+            _ => {
+                self.discharge(self.sp, desc);
+                ByteCode::LoadNil(self.sp as u8, want as u8 - 1)
+            }
+        };
+        self.fp.byte_codes.push(code);
+    }
+
+    fn discharge_expand(&mut self, desc: ExpDesc) -> bool {
         match desc {
             ExpDesc::Call(ifunc, narg) => {
-                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8, want as u8));
+                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8));
                 true
             }
             ExpDesc::VarArgs => {
-                self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8, want as u8));
+                self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8));
                 true
             }
             _ => {
