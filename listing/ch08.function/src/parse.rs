@@ -178,24 +178,35 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //   local attnamelist [`=` explist]
     //   attnamelist ::=  Name attrib {`,` Name attrib}
     fn local_variables(&mut self) {
-        let mut vars = Vec::new();
-        loop {
+        // variable names
+        let mut vars = vec![self.read_name()];
+        while self.lex.peek() == &Token::Comma {
+            self.lex.next();
             vars.push(self.read_name());
+        }
 
-            match self.lex.peek() {
-                Token::Comma => {
-                    self.lex.next(); // more var
+        if self.lex.peek() == &Token::Assign {
+            // explist
+            self.lex.next();
+
+            let want = vars.len();
+            let (nexp, last_exp) = self.explist();
+            match (nexp + 1).cmp(&want) {
+                Ordering::Equal => {
+                    self.discharge(self.sp, last_exp);
                 }
-                Token::Assign => {
-                    self.lex.next();
-                    self.explist_want(vars.len());
-                    break;
+                Ordering::Less => {
+                    // expand last expressions
+                    self.discharge_expand_want(last_exp, want - nexp);
                 }
-                _ => {
-                    self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, vars.len() as u8));
-                    break;
+                Ordering::Greater => {
+                    // drop extra expressions
+                    self.sp -= nexp - want;
                 }
             }
+        } else {
+            // no exp, load nils
+            self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, vars.len() as u8));
         }
 
         // append vars into self.locals after evaluating explist
@@ -695,24 +706,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
             self.discharge(sp0 + n, desc);
             n += 1;
-        }
-    }
-
-    // Read expressions and make sure @want
-    fn explist_want(&mut self, want: usize) {
-        let (nexp, last_exp) = self.explist();
-        match (nexp + 1).cmp(&want) {
-            Ordering::Equal => {
-                self.discharge(self.sp, last_exp);
-            }
-            Ordering::Less => {
-                // expand last expressions
-                self.discharge_expand_want(last_exp, want - nexp);
-            }
-            Ordering::Greater => {
-                // drop extra exps
-                self.sp -= nexp - want;
-            }
         }
     }
 
