@@ -128,7 +128,7 @@ impl ExeState {
                     self.set_table(t, key, value);
                 }
                 ByteCode::SetList(table, n) => {
-                    let ivalue = table as usize + 1;
+                    let ivalue = self.base + table as usize + 1;
                     if let Value::Table(table) = self.get_stack(table).clone() {
                         let values = self.stack.drain(ivalue .. ivalue + n as usize);
                         table.borrow_mut().array.extend(values);
@@ -704,13 +704,13 @@ impl ExeState {
         }
     }
     fn get_table_int(&self, t: u8, i: i64) -> Value {
-        if let Value::Table(table) = &self.get_stack(t) {
+        if let Value::Table(table) = self.get_stack(t) {
             let table = table.borrow();
             table.array.get(i as usize - 1)
                 .unwrap_or_else(|| table.map.get(&Value::Integer(i))
                     .unwrap_or(&Value::Nil)).clone()
         } else {
-            panic!("set invalid table");
+            panic!("get invalid table: {:?}", t);
         }
     }
     fn do_get_table(&self, t: u8, key: &Value) -> Value {
