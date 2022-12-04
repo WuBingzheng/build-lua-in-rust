@@ -46,4 +46,5 @@
 
 - [函数](./ch08-00.function.md)
   - [定义和调用](./ch08-01.define_and_call.md)
-  - [参数和返回值](./ch08-02.arguments_and_returns.md)
+  - [参数](./ch08-02.arguments.md)
+  - [返回值](./ch08-03.results.md)
