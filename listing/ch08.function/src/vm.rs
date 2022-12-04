@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
-use crate::parse::{FuncProto, VARARGS};
+use crate::parse::FuncProto;
 use crate::utils::ftoi;
 
 // ANCHOR: print
@@ -245,14 +245,14 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, narg) => {
-                    let nret = self.call_function(func, narg);
+                ByteCode::Call(func, narg_plus) => {
+                    let nret = self.call_function(func, narg_plus);
 
                     // move return values to @func
                     self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
                 }
-                ByteCode::CallWant(func, narg, want_nret) => {
-                    let nret = self.call_function(func, narg);
+                ByteCode::CallWant(func, narg_plus, want_nret) => {
+                    let nret = self.call_function(func, narg_plus);
 
                     // move return values to @func
                     self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
@@ -262,8 +262,8 @@ impl ExeState {
                         self.fill_stack(nret, want_nret as usize - nret);
                     }
                 }
-                ByteCode::CallSet(dst, func, narg) => {
-                    let nret = self.call_function(func, narg);
+                ByteCode::CallSet(dst, func, narg_plus) => {
+                    let nret = self.call_function(func, narg_plus);
 
                     // set first return value to @dst directly
                     if nret == 0 {
@@ -276,10 +276,10 @@ impl ExeState {
                     self.stack.truncate(self.base + func as usize + 1);
                 }
 
-                ByteCode::TailCall(func, narg) => {
+                ByteCode::TailCall(func, narg_plus) => {
                     let fv = self.get_stack(func).clone();
                     self.stack.drain(self.base-1 .. self.base+func as usize);
-                    return self.do_call_function(fv, narg);
+                    return self.do_call_function(fv, narg_plus);
                 }
 
                 ByteCode::Return(iret, nret) => {
@@ -724,20 +724,20 @@ impl ExeState {
 
     // call function
     // return the number of return values which are at the stack end
-    fn call_function(&mut self, func: u8, narg: u8) -> usize {
+    fn call_function(&mut self, func: u8, narg_plus: u8) -> usize {
         let fv = self.get_stack(func).clone();
         self.base += func as usize + 1; // get into new world
-        let nret = self.do_call_function(fv, narg);
+        let nret = self.do_call_function(fv, narg_plus);
         self.base -= func as usize + 1; // come back
         nret
     }
 
-    fn do_call_function(&mut self, fv: Value, narg: u8) -> usize {
-        let narg = if narg == VARARGS {
+    fn do_call_function(&mut self, fv: Value, narg_plus: u8) -> usize {
+        let narg = if narg_plus == 0 {
             // self.stack signals all arguments
             self.stack.len() - self.base
         } else {
-            narg as usize
+            narg_plus as usize - 1
         };
 
         match fv {

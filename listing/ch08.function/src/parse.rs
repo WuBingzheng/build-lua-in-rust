@@ -40,8 +40,6 @@ enum ExpDesc {
     Compare(fn(u8,u8,bool)->ByteCode, usize, usize, Vec<usize>, Vec<usize>),
 }
 
-pub const VARARGS: u8 = u8::MAX;
-
 enum ConstStack {
     Const(usize),
     Stack(usize),
@@ -1143,27 +1141,31 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     let (nexp, last_exp) = self.explist();
                     self.lex.expect(Token::ParR);
                     if self.discharge_expand(last_exp) {
-                        VARARGS as usize
+                        None // variable arguments
                     } else {
-                        nexp + 1
+                        Some(nexp + 1)
                     }
                 } else {
                     self.lex.next();
-                    0
+                    Some(0)
                 }
             }
             Token::CurlyL => {
                 self.table_constructor();
-                1
+                Some(1)
             }
             Token::String(s) => {
                 self.discharge(ifunc+1, ExpDesc::String(s));
-                1
+                Some(1)
             }
             t => panic!("invalid args {t:?}"),
         };
 
-        ExpDesc::Call(ifunc, narg)
+        // n+1: for fixed #n arguments
+        //   0: for variable arguments
+        let narg_plus = if let Some(n) = narg { n + 1 } else { 0 };
+
+        ExpDesc::Call(ifunc, narg_plus)
     }
 
 // ANCHOR: discharge_helper
