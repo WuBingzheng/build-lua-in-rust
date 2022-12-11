@@ -1213,7 +1213,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
-            ExpDesc::VarArgs => ByteCode::VarArgsSet(dst as u8),
+            ExpDesc::VarArgs => ByteCode::VarArgsWant(dst as u8, 1),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
             ExpDesc::Call(ifunc, narg) => ByteCode::CallSet(dst as u8, ifunc as u8, narg as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),

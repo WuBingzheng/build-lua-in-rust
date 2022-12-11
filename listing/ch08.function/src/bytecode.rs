@@ -45,7 +45,6 @@ pub enum ByteCode {
     ReturnMulti(u8),
     Return(u8, u8),
     VarArgs(u8),
-    VarArgsSet(u8),
     VarArgsWant(u8, u8),
 
     // unops

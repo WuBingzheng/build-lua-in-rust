@@ -309,11 +309,6 @@ impl ExeState {
                     self.stack.truncate(self.base + dst as usize);
                     self.stack.extend_from_slice(&varargs);
                 }
-                ByteCode::VarArgsSet(dst) => {
-                    // set first argument to @dst directly
-                    let value = varargs.first().unwrap_or(&Value::Nil).clone();
-                    self.set_stack(dst, value);
-                }
                 ByteCode::VarArgsWant(dst, want) => {
                     // set @want values
                     self.stack.truncate(self.base + dst as usize);
