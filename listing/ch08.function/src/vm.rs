@@ -251,21 +251,15 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, narg_plus) => {
-                    let nret = self.call_function(func, narg_plus);
-
-                    // move return values to @func
-                    self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
-                }
-                ByteCode::CallWant(func, narg_plus, want_nret) => {
+                ByteCode::Call(func, narg_plus, want_nret_plus) => {
                     let nret = self.call_function(func, narg_plus);
 
                     // move return values to @func
                     self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
 
                     // fill if need
-                    if nret < want_nret as usize {
-                        self.fill_stack(nret, want_nret as usize - nret);
+                    if want_nret_plus != 0 && nret < want_nret_plus as usize - 1 {
+                        self.fill_stack(nret, want_nret_plus as usize - 1 - nret);
                     }
                 }
                 ByteCode::CallSet(dst, func, narg_plus) => {
@@ -290,8 +284,18 @@ impl ExeState {
 
                 ByteCode::Return(iret, nret) => {
                     // return stack[iret .. iret+nret]
+
+                    // truncate the stack to make sure there is no more
+                    // extra temprary values, so:
+                    // - we can return @nret only (but no need @iret) to
+                    //   indicate the return values, so we get the same
+                    //   return type with RustFunction;
+                    // - the following byte code, including ReturnMulti,
+                    //   Call(_,_,0) or SetList(_,0), can get the
+                    //   #return-values by stack top.
                     let iret = self.base + iret as usize;
                     self.stack.truncate(iret + nret as usize);
+
                     return nret as usize;
                 }
                 ByteCode::ReturnMulti(iret) => {
@@ -303,19 +307,18 @@ impl ExeState {
                     return 0;
                 }
 
-                ByteCode::VarArgs(dst) => {
+                ByteCode::VarArgs(dst, want) => {
                     // truncate the stack to make sure there is no more
-                    // extra temprary values
-                    self.stack.truncate(self.base + dst as usize);
-                    self.stack.extend_from_slice(&varargs);
-                }
-                ByteCode::VarArgsWant(dst, want) => {
-                    // set @want values
+                    // extra temprary values, so the following byte code,
+                    // including ReturnMulti, Call(_,_,0) or SetList(_,0),
+                    // can get the #varargs by stack top.
                     self.stack.truncate(self.base + dst as usize);
 
                     let len = varargs.len();
                     let want = want as usize;
-                    if want > len {
+                    if want == 0 { // 0 means all
+                        self.stack.extend_from_slice(&varargs);
+                    } else if want > len {
                         self.stack.extend_from_slice(&varargs);
                         self.fill_stack(dst as usize + len, want - len);
                     } else {

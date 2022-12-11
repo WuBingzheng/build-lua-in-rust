@@ -138,9 +138,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // functioncall and var-assignment both begin with
                     // `prefixexp` which begins with `Name` or `(`.
                     let desc = self.prefixexp(t);
-                    if let ExpDesc::Call(ifunc, narg) = desc {
-                        // prefixexp() matches the whole functioncall statement
-                        self.fp.byte_codes.push(ByteCode::CallWant(ifunc as u8, narg as u8, 0));
+                    if let ExpDesc::Call(ifunc, narg_plus) = desc {
+                        // prefixexp() matches the whole functioncall statement.
+                        // the 1 means want 0 return value.
+                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg_plus as u8, 1));
                     } else {
                         // prefixexp() matches only the first variable, so we
                         // continue the statement
@@ -594,9 +595,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // stack top for continuity
                     ByteCode::Return(i as u8, 1)
 
-                } else if let (0, &ExpDesc::Call(func, narg)) = (nexp, &last_exp) {
+                } else if let (0, &ExpDesc::Call(func, narg_plus)) = (nexp, &last_exp) {
                     // tail call
-                    ByteCode::TailCall(func as u8, narg as u8)
+                    ByteCode::TailCall(func as u8, narg_plus as u8)
 
                 } else if self.discharge_expand(last_exp) {
                     // return variable values
@@ -1213,9 +1214,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
-            ExpDesc::VarArgs => ByteCode::VarArgsWant(dst as u8, 1),
+            ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
             ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
-            ExpDesc::Call(ifunc, narg) => ByteCode::CallSet(dst as u8, ifunc as u8, narg as u8),
+            ExpDesc::Call(ifunc, narg_plus) => ByteCode::CallSet(dst as u8, ifunc as u8, narg_plus as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
             ExpDesc::Test(condition, true_list, false_list) => {
@@ -1260,12 +1261,13 @@ impl<'a, R: Read> ParseProto<'a, R> {
 // ANCHOR_END: discharge_const
 
     fn discharge_expand_want(&mut self, desc: ExpDesc, want: usize) {
+        debug_assert!(want > 1);
         let code = match desc {
-            ExpDesc::Call(ifunc, narg) => {
-                ByteCode::CallWant(ifunc as u8, narg as u8, want as u8)
+            ExpDesc::Call(ifunc, narg_plus) => {
+                ByteCode::Call(ifunc as u8, narg_plus as u8, want as u8 + 1)
             }
             ExpDesc::VarArgs => {
-                ByteCode::VarArgsWant(self.sp as u8, want as u8)
+                ByteCode::VarArgs(self.sp as u8, want as u8)
             }
             _ => {
                 self.discharge(self.sp, desc);
@@ -1276,20 +1278,20 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     fn discharge_expand(&mut self, desc: ExpDesc) -> bool {
-        match desc {
-            ExpDesc::Call(ifunc, narg) => {
-                self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg as u8));
-                true
+        let code = match desc {
+            ExpDesc::Call(ifunc, narg_plus) => {
+                ByteCode::Call(ifunc as u8, narg_plus as u8, 0)
             }
             ExpDesc::VarArgs => {
-                self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8));
-                true
+                ByteCode::VarArgs(self.sp as u8, 0)
             }
             _ => {
                 self.discharge(self.sp, desc);
-                false
+                return false
             }
-        }
+        };
+        self.fp.byte_codes.push(code);
+        true
     }
 
 // ANCHOR: table_constructor

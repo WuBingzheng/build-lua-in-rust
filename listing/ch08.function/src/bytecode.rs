@@ -37,15 +37,13 @@ pub enum ByteCode {
     ForLoop(u8, u16),
 
     // function call
-    Call(u8, u8),
+    Call(u8, u8, u8),
     CallSet(u8, u8, u8),
-    CallWant(u8, u8, u8),
     TailCall(u8, u8),
     Return0,
     ReturnMulti(u8),
     Return(u8, u8),
-    VarArgs(u8),
-    VarArgsWant(u8, u8),
+    VarArgs(u8, u8),
 
     // unops
     Neg(u8, u8),
