@@ -130,7 +130,13 @@ impl ExeState {
                 ByteCode::SetList(table, n) => {
                     let ivalue = self.base + table as usize + 1;
                     if let Value::Table(table) = self.get_stack(table).clone() {
-                        let values = self.stack.drain(ivalue .. ivalue + n as usize);
+                        let end = if n == 0 {
+                            // 0 is special, means all following values in stack
+                            self.stack.len()
+                        } else {
+                            ivalue + n as usize
+                        };
+                        let values = self.stack.drain(ivalue .. end);
                         table.borrow_mut().array.extend(values);
                     } else {
                         panic!("not table");
@@ -750,8 +756,7 @@ impl ExeState {
             Value::LuaFunction(f) => {
                 if narg < f.nparam {
                     self.fill_stack(narg, f.nparam - narg);
-                }
-                if f.has_varargs {
+                } else if f.has_varargs {
                     self.stack.truncate(self.base + narg);
                 }
 

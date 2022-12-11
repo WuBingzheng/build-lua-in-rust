@@ -1305,6 +1305,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Array(ExpDesc),
         }
 
+        // record the last array entry and do not discharge it immediately,
+        // because it may be expanded as varargs or function call.
+        let mut last_array_entry = None;
+
         let mut narray = 0;
         let mut nmap = 0;
         loop {
@@ -1364,12 +1368,14 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     self.sp = sp0;
                 }
                 TableEntry::Array(desc) => {
-                    self.discharge(sp0, desc);
+                    if let Some(last) = last_array_entry.replace(desc) {
+                        self.discharge(sp0, last);
 
-                    narray += 1;
-                    if narray % 2 == 50 { // reset the array members every 50
-                        self.fp.byte_codes.push(ByteCode::SetList(table as u8, 50));
-                        self.sp = table + 1;
+                        narray += 1;
+                        if narray % 2 == 50 { // reset the array members every 50
+                            self.fp.byte_codes.push(ByteCode::SetList(table as u8, 50));
+                            self.sp = table + 1;
+                        }
                     }
                 }
             }
@@ -1382,8 +1388,15 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
 
-        if self.sp > table + 1 {
-            self.fp.byte_codes.push(ByteCode::SetList(table as u8, (self.sp - (table + 1)) as u8));
+        if let Some(last) = last_array_entry {
+            let num = if self.discharge_expand(last) {
+                // do not update @narray
+                0 // 0 is special, means all following values in stack
+            } else {
+                narray += 1;
+                (self.sp - (table + 1)) as u8
+            };
+            self.fp.byte_codes.push(ByteCode::SetList(table as u8, num));
         }
 
         // reset narray and nmap
