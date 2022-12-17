@@ -251,15 +251,19 @@ impl ExeState {
                 }
 
                 // function call
-                ByteCode::Call(func, narg_plus, want_nret_plus) => {
+                ByteCode::Call(func, narg_plus, want_nret) => {
                     let nret = self.call_function(func, narg_plus);
 
                     // move return values to @func
                     self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
 
-                    // fill if need
-                    if want_nret_plus != 0 && nret < want_nret_plus as usize - 1 {
-                        self.fill_stack(nret, want_nret_plus as usize - 1 - nret);
+                    // want_nret==0 means 1.want all return values or 2.want no
+                    // return values, while we do not need handle in both cases;
+                    // otherwise, means @want_nret return values are need, and
+                    // we need to fill nil if necessary.
+                    let want_nret = want_nret as usize;
+                    if nret < want_nret {
+                        self.fill_stack(nret, want_nret - nret);
                     }
                 }
                 ByteCode::CallSet(dst, func, narg_plus) => {
@@ -736,25 +740,37 @@ impl ExeState {
         nret
     }
 
+    // Before calling, arguments lay after function entry @fv:
+    // - narg_plus==0 means variable arguments, and all stack values
+    //   following the function entry are arguments;
+    // - otherwise means (narg_plus-1) fixed arguments, and there may
+    //   be temprary values following which need be truncated sometime.
+    //
+    // After calling, the return values lay at the top of stack.
+    //
+    // Return the number of return values.
     fn do_call_function(&mut self, fv: Value, narg_plus: u8) -> usize {
-        let narg = if narg_plus == 0 {
-            // self.stack signals all arguments
-            self.stack.len() - self.base
-        } else {
-            narg_plus as usize - 1
-        };
-
         match fv {
             Value::RustFunction(f) => {
-                // drop potential temprary stack usage, to make sure get_top() works
-                self.stack.truncate(self.base + narg);
+                // drop potential temprary stack usage, for get_top()
+                if narg_plus != 0 {
+                    self.stack.truncate(self.base + narg_plus as usize - 1);
+                }
 
                 f(self) as usize
             }
             Value::LuaFunction(f) => {
+                let narg = if narg_plus == 0 {
+                    self.stack.len() - self.base
+                } else {
+                    narg_plus as usize - 1
+                };
+
                 if narg < f.nparam {
+                    // fill nil to meet f.nparam
                     self.fill_stack(narg, f.nparam - narg);
-                } else if f.has_varargs {
+                } else if f.has_varargs && narg_plus != 0 {
+                    // drop potential temprary stack usage for VarArgs
                     self.stack.truncate(self.base + narg);
                 }
 

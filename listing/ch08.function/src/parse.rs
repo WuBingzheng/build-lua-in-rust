@@ -140,8 +140,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     let desc = self.prefixexp(t);
                     if let ExpDesc::Call(ifunc, narg_plus) = desc {
                         // prefixexp() matches the whole functioncall statement.
-                        // the 1 means want 0 return value.
-                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg_plus as u8, 1));
+                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg_plus as u8, 0));
                     } else {
                         // prefixexp() matches only the first variable, so we
                         // continue the statement
@@ -1264,7 +1263,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         debug_assert!(want > 1);
         let code = match desc {
             ExpDesc::Call(ifunc, narg_plus) => {
-                ByteCode::Call(ifunc as u8, narg_plus as u8, want as u8 + 1)
+                ByteCode::Call(ifunc as u8, narg_plus as u8, want as u8)
             }
             ExpDesc::VarArgs => {
                 ByteCode::VarArgs(self.sp as u8, want as u8)
