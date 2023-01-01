@@ -11,15 +11,17 @@ use crate::utils::ftoi;
 // ANCHOR: print
 // "print" function in Lua's std-lib.
 fn lib_print(state: &mut ExeState) -> i32 {
-    let mut values = Vec::with_capacity(state.get_top());
     for i in 1 ..= state.get_top() {
-        values.push(state.get_value(i).to_string());
+        if i != 1 {
+            print!("\t");
+        }
+        print!("{}", state.get::<&Value>(i).to_string());
     }
-    println!("{}", values.join("\t"));
+    println!("");
     0
 }
 fn lib_type(state: &mut ExeState) -> i32 {
-    let ty = state.get_value(1).ty();
+    let ty = state.get::<&Value>(1).ty();
     state.push(ty);
     1
 }
@@ -811,9 +813,6 @@ impl ExeState {
 impl<'a> ExeState {
     pub fn get_top(&self) -> usize {
         self.stack.len() - self.base
-    }
-    pub fn get_value(&self, i: usize) -> &Value {
-        &self.stack[self.base + i - 1]
     }
     pub fn get<T>(&'a self, i: usize) -> T where T: From<&'a Value> {
         (&self.stack[self.base + i - 1]).into()
