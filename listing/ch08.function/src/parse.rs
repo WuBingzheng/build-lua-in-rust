@@ -600,7 +600,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
                 } else if self.discharge_expand(last_exp) {
                     // return variable values
-                    ByteCode::ReturnMulti(iret as u8)
+                    ByteCode::Return(iret as u8, 0)
 
                 } else {
                     // return fixed values
