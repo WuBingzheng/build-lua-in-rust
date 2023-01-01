@@ -291,9 +291,11 @@ impl ExeState {
                 }
 
                 ByteCode::TailCall(func, narg_plus) => {
-                    let fv = self.get_stack(func).clone();
+                    // clear current call-frame, and move new function entry and
+                    // arguments (self.stack[@func ..]) into current call-frame
                     self.stack.drain(self.base-1 .. self.base+func as usize);
-                    return self.do_call_function(fv, narg_plus);
+
+                    return self.do_call_function(narg_plus);
                 }
 
                 ByteCode::Return(iret, nret) => {
@@ -741,14 +743,14 @@ impl ExeState {
     // call function
     // return the number of return values which are at the stack end
     fn call_function(&mut self, func: u8, narg_plus: u8) -> usize {
-        let fv = self.get_stack(func).clone();
         self.base += func as usize + 1; // get into new world
-        let nret = self.do_call_function(fv, narg_plus);
+        let nret = self.do_call_function(narg_plus);
         self.base -= func as usize + 1; // come back
         nret
     }
 
-    // Before calling, arguments lay after function entry @fv:
+    // Before calling, the function entry is at @self.base-1, and the
+    // arguments follows with:
     // - narg_plus==0 means variable arguments, and all stack values
     //   following the function entry are arguments;
     // - otherwise means (narg_plus-1) fixed arguments, and there may
@@ -757,8 +759,8 @@ impl ExeState {
     // After calling, the return values lay at the top of stack.
     //
     // Return the number of return values.
-    fn do_call_function(&mut self, fv: Value, narg_plus: u8) -> usize {
-        match fv {
+    fn do_call_function(&mut self, narg_plus: u8) -> usize {
+        match self.stack[self.base - 1].clone() {
             Value::RustFunction(f) => {
                 // drop potential temprary stack usage, for get_top()
                 if narg_plus != 0 {
