@@ -153,6 +153,13 @@ impl ExeState {
                     let value = self.get_table(t, key);
                     self.set_stack(dst, value);
                 }
+                ByteCode::GetFieldSelf(dst, t, k) => {
+                    let table = self.get_stack(t).clone();
+                    let key = &proto.constants[k as usize];
+                    let value = self.get_table(t, key);
+                    self.set_stack(dst, value);
+                    self.set_stack(dst+1, table);
+                }
                 ByteCode::GetTable(dst, t, k) => {
                     let key = self.get_stack(k);
                     let value = self.get_table(t, key);

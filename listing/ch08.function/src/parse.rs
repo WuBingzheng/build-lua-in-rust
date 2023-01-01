@@ -218,7 +218,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let name = self.read_name();
         println!("== function: {name}");
 
-        let f = self.funcbody();
+        let f = self.funcbody(false);
         self.discharge(self.sp, f);
 
         self.locals.push(name);
@@ -231,7 +231,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let name = self.read_name();
         let mut desc = self.simple_name(name);
 
-        loop {
+        let with_self = loop {
             match self.lex.peek() {
                 Token::Dot => { // `.` Name
                     self.lex.next();
@@ -240,24 +240,34 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     desc = ExpDesc::IndexField(t, self.add_const(name));
                 }
                 Token::Colon => { // `:` Name
-                    todo!("table function");
-                }
-                _ => break,
-            }
-        }
+                    self.lex.next();
+                    let name = self.read_name();
+                    let t = self.discharge_any(desc);
+                    desc = ExpDesc::IndexField(t, self.add_const(name));
 
-        let f = self.funcbody();
-        self.assign_var(desc, f);
+                    break true;
+                }
+                _ => {
+                    break false;
+                }
+            }
+        };
+
+        let body = self.funcbody(with_self);
+        self.assign_var(desc, body);
     }
 
     // BNF:
     //   funcbody ::= `(` [parlist] `)` block end
     //   parlist ::= namelist [`,` `...`] | `...`
     //   namelist ::= Name {`,` Name}
-    fn funcbody(&mut self) -> ExpDesc {
+    fn funcbody(&mut self, with_self: bool) -> ExpDesc {
         // parameter list
         let mut has_varargs = false;
         let mut params = Vec::new();
+        if with_self {
+            params.push(String::from("self"));
+        }
         self.lex.expect(Token::ParL);
         loop {
             match self.lex.next() {
@@ -736,7 +746,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 }
                 ExpDesc::VarArgs
             }
-            Token::Function => self.funcbody(),
+            Token::Function => self.funcbody(false),
             Token::CurlyL => self.table_constructor(),
 
             Token::Sub => self.unop_neg(),
@@ -835,10 +845,26 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     let itable = self.discharge_if_need(sp0, desc);
                     desc = ExpDesc::IndexField(itable, self.add_const(name));
                 }
-                Token::Colon => todo!("args"), // :Name args
+                Token::Colon => { // :Name args
+                    self.lex.next();
+                    let name = self.read_name();
+                    let ikey = self.add_const(name);
+                    let itable = self.discharge_if_need(sp0, desc);
+
+                    // GetFieldSelf:
+                    //   stack[sp0] := itable[ikey]  # load function
+                    //   stack[sp0+1] := itable      # load table as first argument
+                    self.fp.byte_codes.push(
+                        ByteCode::GetFieldSelf(sp0 as u8, itable as u8, ikey as u8));
+
+                    // discharge following arguments begin at sp0+2
+                    self.sp = sp0 + 2;
+
+                    desc = self.args(1);
+                }
                 Token::ParL | Token::CurlyL | Token::String(_) => { // args
                     self.discharge(sp0, desc);
-                    desc = self.args();
+                    desc = self.args(0);
                 }
                 _ => return desc, // Epsilon
             }
@@ -1133,8 +1159,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     // args ::= `(` [explist] `)` | tableconstructor | LiteralString
-    fn args(&mut self) -> ExpDesc {
-        let ifunc = self.sp - 1;
+    fn args(&mut self, implicit_argn: usize) -> ExpDesc {
+        let ifunc = self.sp - 1 - implicit_argn;
         let narg = match self.lex.next() {
             Token::ParL => {
                 if self.lex.peek() != &Token::ParR {
@@ -1163,7 +1189,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         // n+1: for fixed #n arguments
         //   0: for variable arguments
-        let narg_plus = if let Some(n) = narg { n + 1 } else { 0 };
+        let narg_plus = if let Some(n) = narg { n + implicit_argn + 1 } else { 0 };
 
         ExpDesc::Call(ifunc, narg_plus)
     }

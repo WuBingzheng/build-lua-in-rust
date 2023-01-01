@@ -24,6 +24,7 @@ pub enum ByteCode {
     GetTable(u8, u8, u8),
     GetField(u8, u8, u8),
     GetInt(u8, u8, u8),
+    GetFieldSelf(u8, u8, u8),
 
     // condition structures
     Jump(i16),
