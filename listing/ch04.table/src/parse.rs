@@ -271,8 +271,12 @@ impl<R: Read> ParseProto<R> {
     // where:
     //   A' ::= binop exp A' | Epsilon
     fn exp(&mut self) -> ExpDesc {
+        let ahead = self.lex.next();
+        self.exp_with_ahead(ahead)
+    }
+    fn exp_with_ahead(&mut self, ahead: Token) -> ExpDesc {
         // beta
-        match self.lex.next() {
+        match ahead {
             Token::Nil => ExpDesc::Nil,
             Token::True => ExpDesc::Boolean(true),
             Token::False => ExpDesc::Boolean(false),
@@ -509,15 +513,12 @@ impl<R: Read> ParseProto<R> {
                     })
                 }
                 Token::Name(_) => {
-                    let desc = self.exp();
+                    let name = self.read_name();
                     if self.lex.peek() == &Token::Assign { // Name `=` exp
-                        if let ExpDesc::String(key) = desc {
-                            TableEntry::Map((ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(key)))
-                        } else {
-                            panic!("invalid table key");
-                        }
-                    } else { // exp
-                        TableEntry::Array(desc)
+                        self.lex.next();
+                        TableEntry::Map((ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(name)))
+                    } else { // Name
+                        TableEntry::Array(self.exp_with_ahead(Token::Name(name)))
                     }
                 },
                 _ => { // exp

@@ -603,8 +603,15 @@ impl<R: Read> ParseProto<R> {
         self.exp_limit(0)
     }
     fn exp_limit(&mut self, limit: i32) -> ExpDesc {
+        let ahead = self.lex.next();
+        self.do_exp(limit, ahead)
+    }
+    fn exp_with_ahead(&mut self, ahead: Token) -> ExpDesc {
+        self.do_exp(0, ahead)
+    }
+    fn do_exp(&mut self, limit: i32, ahead: Token) -> ExpDesc {
         // beta
-        let mut desc = match self.lex.next() {
+        let mut desc = match ahead {
             Token::Nil => ExpDesc::Nil,
             Token::True => ExpDesc::Boolean(true),
             Token::False => ExpDesc::Boolean(false),
@@ -962,21 +969,18 @@ impl<R: Read> ParseProto<R> {
                         ExpDesc::Integer(i) if u8::try_from(i).is_ok() => (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
                         ExpDesc::Nil => panic!("nil can not be table key"),
                         ExpDesc::Float(f) if f.is_nan() => panic!("NaN can not be table key"),
-                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_top(key)),
+                        _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_any(key)),
                     })
                 }
                 Token::Name(_) => {
-                    let desc = self.exp();
+                    let name = self.read_name();
                     if self.lex.peek() == &Token::Assign { // Name `=` exp
-                        if let ExpDesc::String(key) = desc {
-                            TableEntry::Map((ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(key)))
-                        } else {
-                            panic!("invalid table key");
-                        }
-                    } else { // exp
-                        TableEntry::Array(desc)
+                        self.lex.next();
+                        TableEntry::Map((ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(name)))
+                    } else { // Name
+                        TableEntry::Array(self.exp_with_ahead(Token::Name(name)))
                     }
-                },
+                }
                 _ => { // exp
                     TableEntry::Array(self.exp())
                 }
