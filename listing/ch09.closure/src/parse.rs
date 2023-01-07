@@ -17,6 +17,7 @@ enum ExpDesc {
 
     // variables
     Local(usize), // including temprary variables on stack
+    Upvalue(usize),
     Global(usize),
 
     // table index
@@ -881,11 +882,39 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     fn simple_name(&mut self, name: String) -> ExpDesc {
-        // search reversely, so new variable covers old one with same name
-        if let Some(ilocal) = self.locals().iter().rposition(|v| v == &name) {
-            ExpDesc::Local(ilocal)
-        } else {
-            ExpDesc::Global(self.add_const(name))
+        let ctx = &mut self.ctx;
+
+        // search from current level up to top level
+        let mut level = ctx.all_locals.len() - 1;
+        let mut upidx = loop {
+            // - locals. search reversely, so new variable covers old one with same name
+            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
+                break UpIndex::Local(i);
+            }
+            // - upvalues
+            if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
+                break UpIndex::Upvalue(i);
+            }
+
+            // run out levels, so global variable
+            if level == 0 {
+                return ExpDesc::Global(self.add_const(name));
+            }
+            level -= 1; // continue upper level
+        };
+
+        // fill upvalues from previous level down to current level, if any
+        for upvalues in ctx.all_upvalues[level+1 .. ].iter_mut() {
+            upvalues.push((name.clone(), upidx));
+            upidx = UpIndex::Upvalue(upvalues.len() - 1);
+        }
+
+        // ok, now return Local or Upvalue
+        match upidx {
+            // hit locals in current level
+            UpIndex::Local(i) => ExpDesc::Local(i),
+            // hit upvalues in current level, or new upvalue for upper levels
+            UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
         }
     }
 
@@ -1243,6 +1272,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 } else {
                     return;
                 }
+            ExpDesc::Upvalue(_) => todo!("discharging upvalue"),
             ExpDesc::Global(iname) => ByteCode::GetGlobal(dst as u8, iname as u8),
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
