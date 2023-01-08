@@ -12,6 +12,11 @@ pub enum ByteCode {
     LoadInt(u8, i16),
     Move(u8, u8),
 
+    // upvalues
+    GetUpvalue(u8, u8),
+    SetUpvalue(u8, u8),
+    SetUpvalueConst(u8, u8),
+
     // table
     NewTable(u8, u8, u8),
     SetTable(u8, u8, u8),

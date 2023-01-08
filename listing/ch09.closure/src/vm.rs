@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
-use crate::parse::FuncProto;
+use crate::parse::{FuncProto, UpIndex};
 use crate::utils::ftoi;
 
 // ANCHOR: print
@@ -51,7 +51,7 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute(&mut self, proto: &FuncProto) -> usize {
+    pub fn execute(&mut self, proto: &FuncProto, upvalues: Vec<usize>) -> usize {
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
         } else {
@@ -79,6 +79,20 @@ impl ExeState {
                     let value = proto.constants[src as usize].clone();
                     self.globals.insert(name.into(), value);
                 }
+
+                ByteCode::GetUpvalue(dst, src) => {
+                    let v = self.stack[upvalues[src as usize]].clone();
+                    self.set_stack(dst, v);
+                }
+                ByteCode::SetUpvalue(dst, src) => {
+                    let v = self.get_stack(src).clone();
+                    self.stack[upvalues[dst as usize]] = v;
+                }
+                ByteCode::SetUpvalueConst(dst, src) => {
+                    let v = proto.constants[src as usize].clone();
+                    self.stack[upvalues[dst as usize]] = v;
+                }
+
                 ByteCode::LoadConst(dst, c) => {
                     let v = proto.constants[c as usize].clone();
                     self.set_stack(dst, v);
@@ -261,7 +275,7 @@ impl ExeState {
 
                 // function call
                 ByteCode::Call(func, narg_plus, want_nret) => {
-                    let nret = self.call_function(func, narg_plus);
+                    let nret = self.call_function(func, narg_plus, &upvalues);
 
                     // move return values to @func
                     let iret = self.stack.len() - nret;
@@ -277,7 +291,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::CallSet(dst, func, narg_plus) => {
-                    let nret = self.call_function(func, narg_plus);
+                    let nret = self.call_function(func, narg_plus, &upvalues);
 
                     // set first return value to @dst directly
                     if nret == 0 {
@@ -295,7 +309,7 @@ impl ExeState {
                     // arguments (self.stack[@func ..]) into current call-frame
                     self.stack.drain(self.base-1 .. self.base+func as usize);
 
-                    return self.do_call_function(narg_plus);
+                    return self.do_call_function(narg_plus, Vec::new());
                 }
 
                 ByteCode::Return(iret, nret) => {
@@ -742,9 +756,11 @@ impl ExeState {
 
     // call function
     // return the number of return values which are at the stack end
-    fn call_function(&mut self, func: u8, narg_plus: u8) -> usize {
+    fn call_function(&mut self, func: u8, narg_plus: u8, upvalues: &Vec<usize>) -> usize {
+        let new_upvalues = self.generate_upvalues(func, upvalues);
+
         self.base += func as usize + 1; // get into new world
-        let nret = self.do_call_function(narg_plus);
+        let nret = self.do_call_function(narg_plus, new_upvalues);
         self.base -= func as usize + 1; // come back
         nret
     }
@@ -759,7 +775,7 @@ impl ExeState {
     // After calling, the return values lay at the top of stack.
     //
     // Return the number of return values.
-    fn do_call_function(&mut self, narg_plus: u8) -> usize {
+    fn do_call_function(&mut self, narg_plus: u8, upvalues: Vec<usize>) -> usize {
         match self.stack[self.base - 1].clone() {
             Value::RustFunction(f) => {
                 // drop potential temprary stack usage, for get_top()
@@ -784,11 +800,27 @@ impl ExeState {
                     self.stack.truncate(self.base + narg);
                 }
 
-                self.execute(&f)
+                self.execute(&f, upvalues)
             }
             v => panic!("invalid function: {v:?}"),
         }
     }
+
+    fn generate_upvalues(&self, func: u8, upvalues: &Vec<usize>) -> Vec<usize> {
+        match self.get_stack(func) {
+            Value::RustFunction(_) => {
+                Vec::new()
+            }
+            Value::LuaFunction(f) => {
+                f.upvalues.iter().map(|up| match up {
+                    &UpIndex::Local(i) => self.base + i as usize,
+                    &UpIndex::Upvalue(i) => upvalues[i],
+                }).collect()
+            }
+            v => panic!("invalid function: {v:?}"),
+        }
+    }
+
 
     fn make_float(&mut self, dst: u8) -> f64 {
         match self.get_stack(dst) {

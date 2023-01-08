@@ -662,6 +662,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn assign_from_stack(&mut self, var: ExpDesc, value: usize) {
         let code = match var {
             ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
+            ExpDesc::Upvalue(i) => ByteCode::SetUpvalue(i as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
             ExpDesc::IndexField(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
             ExpDesc::IndexInt(t, key) => ByteCode::SetInt(t as u8, key, value as u8),
@@ -673,6 +674,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn assign_from_const(&mut self, var: ExpDesc, value: usize) {
         let code = match var {
             ExpDesc::Global(name) => ByteCode::SetGlobalConst(name as u8, value as u8),
+            ExpDesc::Upvalue(i) => ByteCode::SetUpvalueConst(i as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTableConst(t as u8, key as u8, value as u8),
             ExpDesc::IndexField(t, key) => ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
             ExpDesc::IndexInt(t, key) => ByteCode::SetIntConst(t as u8, key, value as u8),
@@ -1272,7 +1274,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 } else {
                     return;
                 }
-            ExpDesc::Upvalue(_) => todo!("discharging upvalue"),
+            ExpDesc::Upvalue(src) => ByteCode::GetUpvalue(dst as u8, src as u8),
             ExpDesc::Global(iname) => ByteCode::GetGlobal(dst as u8, iname as u8),
             ExpDesc::Index(itable, ikey) => ByteCode::GetTable(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
