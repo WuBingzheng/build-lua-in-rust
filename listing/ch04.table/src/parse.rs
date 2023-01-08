@@ -213,6 +213,7 @@ impl<R: Read> ParseProto<R> {
 
     fn assign_from_stack(&mut self, var: ExpDesc, value: usize) {
         let code = match var {
+            ExpDesc::Local(i) => ByteCode::Move(i as u8, value as u8),
             ExpDesc::Global(name) => ByteCode::SetGlobal(name as u8, value as u8),
             ExpDesc::Index(t, key) => ByteCode::SetTable(t as u8, key as u8, value as u8),
             ExpDesc::IndexField(t, key) => ByteCode::SetField(t as u8, key as u8, value as u8),
