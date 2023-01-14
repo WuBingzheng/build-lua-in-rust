@@ -27,9 +27,30 @@ fn lib_type(state: &mut ExeState) -> i32 {
 }
 // ANCHOR_END: print
 
+#[derive(Debug, PartialEq)]
+pub enum Upvalue {
+    Open(usize),
+    Closed(Value),
+}
+
+impl Upvalue {
+    fn get(&self, stack: &Vec<Value>) -> Value {
+        match self {
+            Upvalue::Open(i) => stack[*i].clone(),
+            Upvalue::Closed(v) => v.clone(),
+        }
+    }
+    fn set(&mut self, stack: &mut Vec<Value>, value: Value) {
+        match self {
+            Upvalue::Open(i) => stack[*i] = value,
+            Upvalue::Closed(v) => *v = value,
+        }
+    }
+}
+
 pub struct LuaClosure {
     proto: Rc<FuncProto>,
-    upvalues: Vec<usize>,
+    upvalues: Vec<Rc<RefCell<Upvalue>>>,
 }
 
 // ANCHOR: state
@@ -56,7 +77,11 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<usize>) -> usize {
+    pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<Rc<RefCell<Upvalue>>>) -> usize {
+
+        // brokers between local variables and upvalues
+        let mut brokers: Vec<Rc<RefCell<Upvalue>>> = Vec::new();
+
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
         } else {
@@ -86,16 +111,16 @@ impl ExeState {
                 }
 
                 ByteCode::GetUpvalue(dst, src) => {
-                    let v = self.stack[upvalues[src as usize]].clone();
+                    let v = upvalues[src as usize].borrow().get(&self.stack).clone();
                     self.set_stack(dst, v);
                 }
                 ByteCode::SetUpvalue(dst, src) => {
                     let v = self.get_stack(src).clone();
-                    self.stack[upvalues[dst as usize]] = v;
+                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
                 }
                 ByteCode::SetUpvalueConst(dst, src) => {
                     let v = proto.constants[src as usize].clone();
-                    self.stack[upvalues[dst as usize]] = v;
+                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
                 }
 
                 ByteCode::LoadConst(dst, c) => {
@@ -282,9 +307,19 @@ impl ExeState {
                 ByteCode::Closure(dst, inner) => {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
 
+                    let nb = brokers.len();
                     let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
-                        &UpIndex::Local(i) => self.base + i as usize,
-                        &UpIndex::Upvalue(i) => upvalues[i],
+                        &UpIndex::Local(i) => {
+                            let idx = Upvalue::Open(self.base + i as usize);
+                            if let Some(ibroker) = brokers[..nb].iter().find(|&i| *(i.borrow()) == idx) {
+                                ibroker.clone()
+                            } else {
+                                let up = Rc::new(RefCell::new(idx));
+                                brokers.push(up.clone());
+                                up
+                            }
+                        }
+                        &UpIndex::Upvalue(i) => upvalues[i].clone(),
                     }).collect();
 
                     let c = LuaClosure {
@@ -326,6 +361,8 @@ impl ExeState {
                 }
 
                 ByteCode::TailCall(func, narg_plus) => {
+                    self.close_brokers(brokers);
+
                     // clear current call-frame, and move new function entry and
                     // arguments (self.stack[@func ..]) into current call-frame
                     self.stack.drain(self.base-1 .. self.base+func as usize);
@@ -334,6 +371,8 @@ impl ExeState {
                 }
 
                 ByteCode::Return(iret, nret) => {
+                    self.close_brokers(brokers);
+
                     // if nret==0, return stack[iret .. ];
                     // otherwise, return stack[iret .. iret+nret] and truncate
                     // the stack to make sure there is no more extra temprary
@@ -353,6 +392,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::Return0 => {
+                    self.close_brokers(brokers);
                     return 0;
                 }
 
@@ -822,6 +862,17 @@ impl ExeState {
                 self.execute(&c.proto, &c.upvalues)
             }
             v => panic!("invalid function: {v:?}"),
+        }
+    }
+
+    fn close_brokers(&self, brokers: Vec<Rc<RefCell<Upvalue>>>) {
+        for broker in brokers.into_iter() {
+            let in_value = broker.borrow();
+            let Upvalue::Open(i) = *in_value else {
+                panic!("close downvalues");
+            };
+            drop(in_value);
+            broker.replace(Upvalue::Closed(self.stack[i].clone()));
         }
     }
 
