@@ -27,6 +27,11 @@ fn lib_type(state: &mut ExeState) -> i32 {
 }
 // ANCHOR_END: print
 
+pub struct LuaClosure {
+    proto: Rc<FuncProto>,
+    upvalues: Vec<usize>,
+}
+
 // ANCHOR: state
 pub struct ExeState {
     globals: HashMap<String, Value>,
@@ -51,7 +56,7 @@ impl ExeState {
 // ANCHOR_END: new
 
 // ANCHOR: execute
-    pub fn execute(&mut self, proto: &FuncProto, upvalues: Vec<usize>) -> usize {
+    pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<usize>) -> usize {
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
         } else {
@@ -273,9 +278,25 @@ impl ExeState {
                     }
                 }
 
+                // define closure
+                ByteCode::Closure(dst, inner) => {
+                    let inner_proto = proto.inner_funcs[inner as usize].clone();
+
+                    let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
+                        &UpIndex::Local(i) => self.base + i as usize,
+                        &UpIndex::Upvalue(i) => upvalues[i],
+                    }).collect();
+
+                    let c = LuaClosure {
+                        proto: inner_proto,
+                        upvalues: inner_upvalues,
+                    };
+                    self.set_stack(dst, Value::LuaClosure(Rc::new(c)));
+                }
+
                 // function call
                 ByteCode::Call(func, narg_plus, want_nret) => {
-                    let nret = self.call_function(func, narg_plus, &upvalues);
+                    let nret = self.call_function(func, narg_plus);
 
                     // move return values to @func
                     let iret = self.stack.len() - nret;
@@ -291,7 +312,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::CallSet(dst, func, narg_plus) => {
-                    let nret = self.call_function(func, narg_plus, &upvalues);
+                    let nret = self.call_function(func, narg_plus);
 
                     // set first return value to @dst directly
                     if nret == 0 {
@@ -309,7 +330,7 @@ impl ExeState {
                     // arguments (self.stack[@func ..]) into current call-frame
                     self.stack.drain(self.base-1 .. self.base+func as usize);
 
-                    return self.do_call_function(narg_plus, Vec::new());
+                    return self.do_call_function(narg_plus);
                 }
 
                 ByteCode::Return(iret, nret) => {
@@ -756,11 +777,9 @@ impl ExeState {
 
     // call function
     // return the number of return values which are at the stack end
-    fn call_function(&mut self, func: u8, narg_plus: u8, upvalues: &Vec<usize>) -> usize {
-        let new_upvalues = self.generate_upvalues(func, upvalues);
-
+    fn call_function(&mut self, func: u8, narg_plus: u8) -> usize {
         self.base += func as usize + 1; // get into new world
-        let nret = self.do_call_function(narg_plus, new_upvalues);
+        let nret = self.do_call_function(narg_plus);
         self.base -= func as usize + 1; // come back
         nret
     }
@@ -775,7 +794,7 @@ impl ExeState {
     // After calling, the return values lay at the top of stack.
     //
     // Return the number of return values.
-    fn do_call_function(&mut self, narg_plus: u8, upvalues: Vec<usize>) -> usize {
+    fn do_call_function(&mut self, narg_plus: u8) -> usize {
         match self.stack[self.base - 1].clone() {
             Value::RustFunction(f) => {
                 // drop potential temprary stack usage, for get_top()
@@ -785,42 +804,26 @@ impl ExeState {
 
                 f(self) as usize
             }
-            Value::LuaFunction(f) => {
+            Value::LuaClosure(c) => {
                 let narg = if narg_plus == 0 {
                     self.stack.len() - self.base
                 } else {
                     narg_plus as usize - 1
                 };
 
-                if narg < f.nparam {
-                    // fill nil to meet f.nparam
-                    self.fill_stack(narg, f.nparam - narg);
-                } else if f.has_varargs && narg_plus != 0 {
+                if narg < c.proto.nparam {
+                    // fill nil to meet parameters
+                    self.fill_stack(narg, c.proto.nparam - narg);
+                } else if c.proto.has_varargs && narg_plus != 0 {
                     // drop potential temprary stack usage for VarArgs
                     self.stack.truncate(self.base + narg);
                 }
 
-                self.execute(&f, upvalues)
+                self.execute(&c.proto, &c.upvalues)
             }
             v => panic!("invalid function: {v:?}"),
         }
     }
-
-    fn generate_upvalues(&self, func: u8, upvalues: &Vec<usize>) -> Vec<usize> {
-        match self.get_stack(func) {
-            Value::RustFunction(_) => {
-                Vec::new()
-            }
-            Value::LuaFunction(f) => {
-                f.upvalues.iter().map(|up| match up {
-                    &UpIndex::Local(i) => self.base + i as usize,
-                    &UpIndex::Upvalue(i) => upvalues[i],
-                }).collect()
-            }
-            v => panic!("invalid function: {v:?}"),
-        }
-    }
-
 
     fn make_float(&mut self, dst: u8) -> f64 {
         match self.get_stack(dst) {

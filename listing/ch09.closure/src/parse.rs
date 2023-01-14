@@ -26,7 +26,7 @@ enum ExpDesc {
     IndexInt(usize, u8),
 
     // function call
-    Function(Value),
+    Function(usize),
     Call(usize, usize),
     VarArgs,
 
@@ -64,7 +64,8 @@ pub struct FuncProto {
     pub has_varargs: bool,
     pub nparam: usize,
     pub constants: Vec<Value>,
-    pub upvalues: Vec<UpIndex>,
+    pub upindexes: Vec<UpIndex>,
+    pub inner_funcs: Vec<Rc<FuncProto>>,
     pub byte_codes: Vec<ByteCode>,
 }
 
@@ -284,7 +285,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         let proto = chunk(self.ctx, has_varargs, params, Token::End);
-        ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
+
+        self.fp.inner_funcs.push(Rc::new(proto));
+        ExpDesc::Function(self.fp.inner_funcs.len() - 1)
     }
 
 // ANCHOR: assignment
@@ -1281,7 +1284,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::IndexField(itable, ikey) => ByteCode::GetField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
-            ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
+            ExpDesc::Function(f) => ByteCode::Closure(dst as u8, f as u16),
             ExpDesc::Call(ifunc, narg_plus) => ByteCode::CallSet(dst as u8, ifunc as u8, narg_plus as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
@@ -1525,12 +1528,12 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     ctx.all_locals.pop();
 
     // collect upvalues for VM executing
-    fp.upvalues = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
+    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
 
     fp.byte_codes.push(ByteCode::Return0);
 
     println!("constants: {:?}", &fp.constants);
-    println!("upvalues: {:?}", &fp.upvalues);
+    println!("upindexes: {:?}", &fp.upindexes);
     println!("byte_codes:");
     for (i,c) in fp.byte_codes.iter().enumerate() {
         println!("  {i}\t{c:?}");

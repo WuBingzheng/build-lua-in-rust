@@ -4,8 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
-use crate::vm::ExeState;
-use crate::parse::FuncProto;
+use crate::vm::{ExeState, LuaClosure};
 use crate::utils::ftoi;
 
 const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
@@ -22,7 +21,7 @@ pub enum Value {
     LongStr(Rc<Vec<u8>>),
     Table(Rc<RefCell<Table>>),
     RustFunction(fn (&mut ExeState) -> i32),
-    LuaFunction(Rc<FuncProto>),
+    LuaClosure(Rc<LuaClosure>),
 }
 
 // ANCHOR: table
@@ -53,7 +52,7 @@ impl fmt::Display for Value {
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(s)),
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
             Value::RustFunction(_) => write!(f, "function"),
-            Value::LuaFunction(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
+            Value::LuaClosure(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
         }
     }
 }
@@ -73,7 +72,7 @@ impl fmt::Debug for Value {
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
             }
             Value::RustFunction(_) => write!(f, "function"),
-            Value::LuaFunction(_) => write!(f, "Lua function"),
+            Value::LuaClosure(_) => write!(f, "Lua function"),
         }
     }
 }
@@ -93,7 +92,7 @@ impl PartialEq for Value {
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
             (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
             (Value::RustFunction(f1), Value::RustFunction(f2)) => std::ptr::eq(f1, f2),
-            (Value::LuaFunction(f1), Value::LuaFunction(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
+            (Value::LuaClosure(f1), Value::LuaClosure(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (_, _) => false,
         }
     }
@@ -149,7 +148,7 @@ impl Value {
             &Value::LongStr(_) => "string",
             &Value::Table(_) => "table",
             &Value::RustFunction(_) => "function",
-            &Value::LuaFunction(_) => "function",
+            &Value::LuaClosure(_) => "function",
         }
     }
 }
@@ -172,7 +171,7 @@ impl Hash for Value {
             Value::LongStr(s) => s.hash(state),
             Value::Table(t) => Rc::as_ptr(t).hash(state),
             Value::RustFunction(f) => (*f as *const usize).hash(state),
-            Value::LuaFunction(f) => Rc::as_ptr(f).hash(state),
+            Value::LuaClosure(f) => Rc::as_ptr(f).hash(state),
         }
     }
 }
