@@ -59,6 +59,12 @@ pub enum UpIndex {
     Upvalue(usize), // index of upvalues in upper functions
 }
 
+#[derive(Debug, PartialEq)]
+enum Broker {
+    Open(usize),
+    Closed(usize),
+}
+
 #[derive(Debug, Default)]
 pub struct FuncProto {
     pub has_varargs: bool,
@@ -73,7 +79,7 @@ pub struct FuncProto {
 #[derive(Debug)]
 struct ParseContext<R: Read> {
     all_locals: Vec<Vec<String>>,
-    all_brokers: Vec<Vec<usize>>,
+    all_brokers: Vec<Vec<Broker>>,
     all_upvalues: Vec<Vec<(String, UpIndex)>>,
     lex: Lex<R>,
 }
@@ -112,8 +118,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
         let nvar = self.local_num();
+
         let end_token = self.block_scope();
-        self.locals().truncate(nvar); // expire internal local variables
+
+        self.clear_block_locals(nvar);
         end_token
     }
     fn block_scope(&mut self) -> Token {
@@ -431,7 +439,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         // expire internal local variables AFTER reading condition exp
         // and pop_loop_block()
-        self.locals().truncate(nvar);
+        self.clear_block_locals(nvar);
     }
 
     // * numerical: for Name `=` ...
@@ -916,10 +924,11 @@ impl<'a, R: Read> ParseProto<'a, R> {
             if let Some(ilocal) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
 
                 // broker for local variables
+                let broker = Broker::Open(ilocal);
                 let brokers = &mut ctx.all_brokers[level];
-                let ibroker = brokers.iter().rposition(|v| v == &ilocal)
+                let ibroker = brokers.iter().rposition(|v| v == &broker)
                     .unwrap_or_else(|| {
-                        brokers.push(ilocal);
+                        brokers.push(broker);
                         brokers.len() - 1
                     });
 
@@ -941,6 +950,34 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         return ExpDesc::Upvalue(ret);
+    }
+
+    fn clear_block_locals(&mut self, ilocal_from: usize) {
+        // clear brokers
+        let mut need_close = false;
+        let mut ibroker_start = 0;
+        let mut ibroker_end = 0;
+        for (ibroker, broker) in self.ctx.all_brokers.last_mut().unwrap().iter_mut().enumerate() {
+            if let &mut Broker::Open(ilocal) = broker {
+                if ilocal >= ilocal_from {
+                    *broker = Broker::Closed(ilocal);
+                    if !need_close {
+                        ibroker_start = ibroker;
+                        ibroker_end = ibroker;
+                        need_close = true;
+                    } else {
+                        ibroker_end = ibroker;
+                    }
+                }
+            }
+        }
+        if need_close {
+            self.fp.byte_codes.push(ByteCode::CloseBlock
+                (ibroker_start as u8, ibroker_end as u8, ilocal_from as u8));
+        }
+
+        // expire local variables
+        self.locals().truncate(ilocal_from);
     }
 
 // ANCHOR: unop_neg
@@ -1549,8 +1586,13 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     ctx.all_locals.pop();
 
     // collect upvalues for VM executing
-    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
-    fp.brokers = ctx.all_brokers.pop().unwrap();
+    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter()
+        .map(|u| u.1).collect();
+    fp.brokers = ctx.all_brokers.pop().unwrap().into_iter()
+        .map(|b| match b {
+            Broker::Open(i) => i,
+            Broker::Closed(i) => i,
+        }).collect();
 
     fp.byte_codes.push(ByteCode::Return0);
 

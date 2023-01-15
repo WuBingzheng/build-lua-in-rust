@@ -124,6 +124,21 @@ impl ExeState {
                     upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
                 }
 
+                ByteCode::CloseBlock(ibroker_start, ibroker_end, ilocal_from) => {
+                    let ibroker_start = ibroker_start as usize;
+                    let ibroker_end = ibroker_end as usize;
+                    let ilocal_from = self.base + ilocal_from as usize;
+                    for broker in brokers[ibroker_start..=ibroker_end].iter() {
+                        let in_value = broker.borrow();
+                        if let Upvalue::Open(ilocal) = *in_value {
+                            if ilocal >= ilocal_from {
+                                drop(in_value);
+                                broker.replace(Upvalue::Closed(self.stack[ilocal].clone()));
+                            }
+                        }
+                    }
+                }
+
                 ByteCode::LoadConst(dst, c) => {
                     let v = proto.constants[c as usize].clone();
                     self.set_stack(dst, v);
@@ -860,11 +875,10 @@ impl ExeState {
     fn close_brokers(&self, brokers: Vec<Rc<RefCell<Upvalue>>>) {
         for broker in brokers.into_iter() {
             let in_value = broker.borrow();
-            let Upvalue::Open(i) = *in_value else {
-                panic!("close downvalues");
-            };
-            drop(in_value);
-            broker.replace(Upvalue::Closed(self.stack[i].clone()));
+            if let Upvalue::Open(i) = *in_value {
+                drop(in_value);
+                broker.replace(Upvalue::Closed(self.stack[i].clone()));
+            }
         }
     }
 
