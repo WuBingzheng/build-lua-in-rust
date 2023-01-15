@@ -55,7 +55,7 @@ struct GotoLabel {
 
 #[derive(Debug)]
 pub enum UpIndex {
-    Local(usize), // index of local variables in upper functions
+    Broker(usize), // index of brokers in upper functions
     Upvalue(usize), // index of upvalues in upper functions
 }
 
@@ -64,6 +64,7 @@ pub struct FuncProto {
     pub has_varargs: bool,
     pub nparam: usize,
     pub constants: Vec<Value>,
+    pub brokers: Vec<usize>,
     pub upindexes: Vec<UpIndex>,
     pub inner_funcs: Vec<Rc<FuncProto>>,
     pub byte_codes: Vec<ByteCode>,
@@ -72,6 +73,7 @@ pub struct FuncProto {
 #[derive(Debug)]
 struct ParseContext<R: Read> {
     all_locals: Vec<Vec<String>>,
+    all_brokers: Vec<Vec<usize>>,
     all_upvalues: Vec<Vec<(String, UpIndex)>>,
     lex: Lex<R>,
 }
@@ -890,38 +892,55 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn simple_name(&mut self, name: String) -> ExpDesc {
         let ctx = &mut self.ctx;
 
-        // search from current level up to top level
+        // search from current level
         let mut level = ctx.all_locals.len() - 1;
+
+        // - locals. search reversely, so new variable covers old one with same name
+        if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
+            return ExpDesc::Local(i);
+        }
+
+        // - upvalues
+        if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
+            return ExpDesc::Upvalue(i);
+        }
+
+        // search up to top level
         let mut upidx = loop {
-            // - locals. search reversely, so new variable covers old one with same name
-            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
-                break UpIndex::Local(i);
+            if level == 0 { // run out levels, so global variable
+                return ExpDesc::Global(self.add_const(name));
             }
+            level -= 1;
+
+            // - locals
+            if let Some(ilocal) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
+
+                // broker for local variables
+                let brokers = &mut ctx.all_brokers[level];
+                let ibroker = brokers.iter().rposition(|v| v == &ilocal)
+                    .unwrap_or_else(|| {
+                        brokers.push(ilocal);
+                        brokers.len() - 1
+                    });
+
+                break UpIndex::Broker(ibroker);
+            }
+
             // - upvalues
             if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
                 break UpIndex::Upvalue(i);
             }
-
-            // run out levels, so global variable
-            if level == 0 {
-                return ExpDesc::Global(self.add_const(name));
-            }
-            level -= 1; // continue upper level
         };
 
-        // fill upvalues from previous level down to current level, if any
+        // fill upvalues from previous level down to current level
+        let mut ret = 0;
         for upvalues in ctx.all_upvalues[level+1 .. ].iter_mut() {
             upvalues.push((name.clone(), upidx));
-            upidx = UpIndex::Upvalue(upvalues.len() - 1);
+            ret = upvalues.len() - 1;
+            upidx = UpIndex::Upvalue(ret);
         }
 
-        // ok, now return Local or Upvalue
-        match upidx {
-            // hit locals in current level
-            UpIndex::Local(i) => ExpDesc::Local(i),
-            // hit upvalues in current level, or new upvalue for upper levels
-            UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
-        }
+        return ExpDesc::Upvalue(ret);
     }
 
 // ANCHOR: unop_neg
@@ -1487,6 +1506,7 @@ pub fn load(input: impl Read) -> FuncProto {
     let mut ctx = ParseContext {
         lex: Lex::new(input),
         all_locals: Vec::new(),
+        all_brokers: Vec::new(),
         all_upvalues: Vec::new(),
     };
     chunk(&mut ctx, false, Vec::new(), Token::Eos) // XXX has_varargs->true
@@ -1501,6 +1521,7 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     };
 
     ctx.all_locals.push(params);
+    ctx.all_brokers.push(Vec::new());
     ctx.all_upvalues.push(Vec::new());
 
     let mut proto = ParseProto {
@@ -1529,10 +1550,12 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
 
     // collect upvalues for VM executing
     fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
+    fp.brokers = ctx.all_brokers.pop().unwrap();
 
     fp.byte_codes.push(ByteCode::Return0);
 
     println!("constants: {:?}", &fp.constants);
+    println!("brokers: {:?}", &fp.brokers);
     println!("upindexes: {:?}", &fp.upindexes);
     println!("byte_codes:");
     for (i,c) in fp.byte_codes.iter().enumerate() {

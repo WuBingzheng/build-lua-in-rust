@@ -80,7 +80,8 @@ impl ExeState {
     pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<Rc<RefCell<Upvalue>>>) -> usize {
 
         // brokers between local variables and upvalues
-        let mut brokers: Vec<Rc<RefCell<Upvalue>>> = Vec::new();
+        let brokers: Vec<Rc<RefCell<Upvalue>>> = proto.brokers.iter()
+            .map(|i| Rc::new(RefCell::new(Upvalue::Open(self.base + *i)))).collect();
 
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
@@ -308,18 +309,8 @@ impl ExeState {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
 
                     // generate upvalues
-                    let nb = brokers.len();
                     let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
-                        &UpIndex::Local(i) => {
-                            let openi = Upvalue::Open(self.base + i as usize);
-                            if let Some(exist) = brokers[..nb].iter().find(|&i| *(i.borrow()) == openi) {
-                                exist.clone()
-                            } else {
-                                let broker = Rc::new(RefCell::new(openi));
-                                brokers.push(broker.clone());
-                                broker
-                            }
-                        }
+                        &UpIndex::Broker(i) => brokers[i].clone(),
                         &UpIndex::Upvalue(i) => upvalues[i].clone(),
                     }).collect();
 
