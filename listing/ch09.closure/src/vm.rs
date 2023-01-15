@@ -307,16 +307,17 @@ impl ExeState {
                 ByteCode::Closure(dst, inner) => {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
 
+                    // generate upvalues
                     let nb = brokers.len();
                     let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
                         &UpIndex::Local(i) => {
-                            let idx = Upvalue::Open(self.base + i as usize);
-                            if let Some(ibroker) = brokers[..nb].iter().find(|&i| *(i.borrow()) == idx) {
-                                ibroker.clone()
+                            let openi = Upvalue::Open(self.base + i as usize);
+                            if let Some(exist) = brokers[..nb].iter().find(|&i| *(i.borrow()) == openi) {
+                                exist.clone()
                             } else {
-                                let up = Rc::new(RefCell::new(idx));
-                                brokers.push(up.clone());
-                                up
+                                let broker = Rc::new(RefCell::new(openi));
+                                brokers.push(broker.clone());
+                                broker
                             }
                         }
                         &UpIndex::Upvalue(i) => upvalues[i].clone(),
