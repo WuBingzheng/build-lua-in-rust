@@ -166,11 +166,11 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 Token::For => self.for_stat(),
                 Token::Break => self.break_stat(),
                 Token::Do => self.do_stat(),
-                Token::DoubColon => self.label_stat(),
+                Token::DoubColon => self.label_stat(igoto),
                 Token::Goto => self.goto_stat(),
                 Token::Return => self.ret_stat(),
                 t => {
-                    self.close_goto_labels(igoto, ilabel);
+                    self.labels.truncate(ilabel);
                     break t;
                 }
             }
@@ -554,19 +554,51 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
     // BNF:
     //   label ::= `::` Name `::`
-    fn label_stat(&mut self) {
+    fn label_stat(&mut self, igoto: usize) {
         let name = self.read_name();
         self.ctx.lex.expect(Token::DoubColon);
 
+        // check if this label is at the end of block.
+        // ignore void statments: `;` and label.
+        let is_last = loop {
+            match self.ctx.lex.peek() {
+                Token::SemiColon => {
+                    self.ctx.lex.next();
+                }
+                Token::DoubColon => {
+                    self.ctx.lex.next();
+                    self.label_stat(igoto);
+                }
+                t => break is_block_end(t),
+            }
+        };
+
+        // check duplicate
         if self.labels.iter().any(|l|l.name == name) {
             panic!("duplicate label {name}");
         }
 
-        self.labels.push(GotoLabel {
-            name,
-            icode: self.fp.byte_codes.len(),
-            nvar: self.local_num(),
-        });
+        let icode = self.fp.byte_codes.len();
+        let nvar = self.local_num();
+
+        // match previous gotos
+        let mut no_dsts = Vec::new();
+        for goto in self.gotos.drain(igoto..) {
+            if goto.name == name {
+                if !is_last && goto.nvar < nvar {
+                    panic!("goto jump into scope {}", goto.name);
+                }
+                let dist = icode - goto.icode;
+                self.fp.byte_codes[goto.icode] = ByteCode::Jump(dist as i16 - 1);
+            } else {
+                // no matched label
+                no_dsts.push(goto);
+            }
+        }
+        self.gotos.append(&mut no_dsts);
+
+        // save the label for following gotos
+        self.labels.push(GotoLabel { name, icode, nvar });
     }
 
     // BNF:
@@ -574,13 +606,22 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn goto_stat(&mut self) {
         let name = self.read_name();
 
-        self.fp.byte_codes.push(ByteCode::Jump(0));
+        // match previous label
+        if let Some(label) = self.labels.iter().rev().find(|l|l.name == name) {
+            // find label
+            let dist = self.fp.byte_codes.len() - label.icode;
+            self.fp.byte_codes.push(ByteCode::Jump(-(dist as i16) - 1));
 
-        self.gotos.push(GotoLabel {
-            name,
-            icode: self.fp.byte_codes.len() - 1,
-            nvar: self.local_num(),
-        });
+        } else {
+            // not find label, push a fake byte code and save the goto
+            self.fp.byte_codes.push(ByteCode::Jump(0));
+
+            self.gotos.push(GotoLabel {
+                name,
+                icode: self.fp.byte_codes.len() - 1,
+                nvar: self.local_num(),
+            });
+        }
     }
 
     // BNF:
@@ -627,33 +668,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         };
         self.fp.byte_codes.push(code);
-    }
-
-    // match the gotos and labels, and close the labels at the end of block
-    fn close_goto_labels(&mut self, igoto: usize, ilabel: usize) {
-        // try to match gotos defined in this block between all labels
-        let mut no_dsts = Vec::new();
-        for goto in self.gotos.drain(igoto..) {
-            if let Some(label) = self.labels.iter().rev().find(|l|l.name == goto.name) {
-                if label.icode != self.fp.byte_codes.len() && label.nvar > goto.nvar {
-                    // check if jump into local variables' scope:
-                    // 1. label's byte-code is not the last one, meaning there
-                    //    are non-void expressions following;
-                    // 2. label's #vars is more than goto's, meaning there are
-                    //    new local variables defined between the goto and label.
-                    panic!("goto jump into scope {}", goto.name);
-                }
-                let d = (label.icode as isize - goto.icode as isize) as i16;
-                self.fp.byte_codes[goto.icode] = ByteCode::Jump(d - 1);
-            } else {
-                // no matched label
-                no_dsts.push(goto);
-            }
-        }
-        self.gotos.append(&mut no_dsts);
-
-        // close the labels defined in this block
-        self.labels.truncate(ilabel);
     }
 
 // ANCHOR: assign_helper
