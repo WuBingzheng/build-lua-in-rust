@@ -121,7 +121,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         let end_token = self.block_scope();
 
-        self.clear_block_locals(nvar);
+        self.clear_brokers(nvar);
+        self.locals().truncate(nvar); // expire local variables
+
         end_token
     }
     fn block_scope(&mut self) -> Token {
@@ -437,9 +439,10 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         self.pop_loop_block(iend);
 
-        // expire internal local variables AFTER reading condition exp
-        // and pop_loop_block()
-        self.clear_block_locals(nvar);
+        // clear brokers and expire internal local variables AFTER reading
+        // condition exp and pop_loop_block()
+        self.clear_brokers(nvar);
+        self.locals().truncate(nvar);
     }
 
     // * numerical: for Name `=` ...
@@ -610,6 +613,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         if let Some(label) = self.labels.iter().rev().find(|l|l.name == name) {
             // find label
             let dist = self.fp.byte_codes.len() - label.icode;
+            self.clear_brokers(label.nvar);
             self.fp.byte_codes.push(ByteCode::Jump(-(dist as i16) - 1));
 
         } else {
@@ -966,7 +970,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         return ExpDesc::Upvalue(ret);
     }
 
-    fn clear_block_locals(&mut self, ilocal_from: usize) {
+    fn clear_brokers(&mut self, ilocal_from: usize) {
         // clear brokers
         let mut need_close = false;
         let mut ibroker_start = 0;
@@ -989,9 +993,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             self.fp.byte_codes.push(ByteCode::CloseBlock
                 (ibroker_start as u8, ibroker_end as u8, ilocal_from as u8));
         }
-
-        // expire local variables
-        self.locals().truncate(ilocal_from);
     }
 
 // ANCHOR: unop_neg
