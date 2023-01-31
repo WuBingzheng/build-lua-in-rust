@@ -85,6 +85,7 @@ struct ParseProto<'a, R: Read> {
     sp: usize,
     break_blocks: Vec<Vec<usize>>,
     continue_blocks: Vec<Vec<(usize, usize)>>,
+    upvalue_blocks: Vec<(usize, bool)>, // (number-of-locals, any-local-referred-as-upvalue)
     gotos: Vec<GotoLabel>,
     labels: Vec<GotoLabel>,
     ctx: &'a mut ParseContext<R>,
@@ -109,14 +110,14 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //     local function Name funcbody |
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
-        let nvar = self.local_num();
         let end_token = self.block_scope();
-        self.locals().truncate(nvar); // expire internal local variables
+        self.close_block();
         end_token
     }
     fn block_scope(&mut self) -> Token {
         let igoto = self.gotos.len();
         let ilabel = self.labels.len();
+        self.upvalue_blocks.push((self.local_num(), false));
         loop {
             // reset sp before each statement
             self.sp = self.local_num();
@@ -165,6 +166,18 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 }
             }
         }
+    }
+
+    fn close_block(&mut self) {
+        // close upvalues referring internal local variables
+        let block = self.upvalue_blocks.pop().unwrap();
+        let nvar = block.0;
+        if block.1 { // set in mark_block_upvalues()
+            self.fp.byte_codes.push(ByteCode::Close(nvar as u8));
+        }
+
+        // expire internal local variables
+        self.locals().truncate(nvar);
     }
 
     // BNF:
@@ -285,6 +298,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         let proto = chunk(self.ctx, has_varargs, params, Token::End);
+
+        self.mark_block_upvalues(&proto.upindexes);
 
         self.fp.inner_funcs.push(Rc::new(proto));
         ExpDesc::Function(self.fp.inner_funcs.len() - 1)
@@ -416,8 +431,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         self.push_loop_block();
 
-        let nvar = self.local_num();
-
         assert_eq!(self.block_scope(), Token::Until);
         let iend = self.fp.byte_codes.len();
 
@@ -429,7 +442,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         // expire internal local variables AFTER reading condition exp
         // and pop_loop_block()
-        self.locals().truncate(nvar);
+        self.close_block();
     }
 
     // * numerical: for Name `=` ...
@@ -921,6 +934,25 @@ impl<'a, R: Read> ParseProto<'a, R> {
             UpIndex::Local(i) => ExpDesc::Local(i),
             // hit upvalues in current level, or new upvalue for upper levels
             UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
+        }
+    }
+
+    fn mark_block_upvalues(&mut self, upindexes: &Vec<UpIndex>) {
+        // do not mark the outermost block, because the `Return` bytecode
+        // will close upvalues, no need to generate `Close`.
+        if self.upvalue_blocks.len() == 1 {
+            return;
+        }
+
+        for upindex in upindexes.iter() {
+            if let &UpIndex::Local(ilocal) = upindex {
+                for block in self.upvalue_blocks.iter_mut().rev() {
+                    if ilocal >= block.0 {
+                        block.1 = true;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -1507,6 +1539,7 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
         sp: 0,
         break_blocks: Vec::new(),
         continue_blocks: Vec::new(),
+        upvalue_blocks: Vec::new(),
         gotos: Vec::new(),
         labels: Vec::new(),
 
