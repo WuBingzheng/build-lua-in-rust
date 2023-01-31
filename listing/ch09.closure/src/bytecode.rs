@@ -16,7 +16,6 @@ pub enum ByteCode {
     GetUpvalue(u8, u8),
     SetUpvalue(u8, u8),
     SetUpvalueConst(u8, u8),
-    CloseBlock(u8, u8, u8),
 
     // table
     NewTable(u8, u8, u8),

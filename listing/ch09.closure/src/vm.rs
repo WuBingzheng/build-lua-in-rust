@@ -80,8 +80,7 @@ impl ExeState {
     pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<Rc<RefCell<Upvalue>>>) -> usize {
 
         // brokers between local variables and upvalues
-        let brokers: Vec<Rc<RefCell<Upvalue>>> = proto.brokers.iter()
-            .map(|i| Rc::new(RefCell::new(Upvalue::Open(self.base + *i)))).collect();
+        let mut brokers: Vec<Rc<RefCell<Upvalue>>> = Vec::new();
 
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
@@ -122,13 +121,6 @@ impl ExeState {
                 ByteCode::SetUpvalueConst(dst, src) => {
                     let v = proto.constants[src as usize].clone();
                     upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
-                }
-
-                ByteCode::CloseBlock(ibroker_start, ibroker_end, ilocal_from) => {
-                    let ibroker_start = ibroker_start as usize;
-                    let ibroker_end = ibroker_end as usize;
-                    let ilocal_from = self.base + ilocal_from as usize;
-                    self.close_brokers(&brokers[ibroker_start..=ibroker_end], ilocal_from);
                 }
 
                 ByteCode::LoadConst(dst, c) => {
@@ -316,8 +308,18 @@ impl ExeState {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
 
                     // generate upvalues
+                    let nb = brokers.len();
                     let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
-                        &UpIndex::Broker(i) => brokers[i].clone(),
+                        &UpIndex::Local(i) => {
+                            let openi = Upvalue::Open(self.base + i as usize);
+                            if let Some(exist) = brokers[..nb].iter().find(|&i| *(i.borrow()) == openi) {
+                                exist.clone()
+                            } else {
+                                let broker = Rc::new(RefCell::new(openi));
+                                brokers.push(broker.clone());
+                                broker
+                            }
+                        }
                         &UpIndex::Upvalue(i) => upvalues[i].clone(),
                     }).collect();
 
@@ -360,7 +362,7 @@ impl ExeState {
                 }
 
                 ByteCode::TailCall(func, narg_plus) => {
-                    self.drop_brokers(brokers);
+                    self.close_brokers(brokers);
 
                     // clear current call-frame, and move new function entry and
                     // arguments (self.stack[@func ..]) into current call-frame
@@ -370,7 +372,7 @@ impl ExeState {
                 }
 
                 ByteCode::Return(iret, nret) => {
-                    self.drop_brokers(brokers);
+                    self.close_brokers(brokers);
 
                     // if nret==0, return stack[iret .. ];
                     // otherwise, return stack[iret .. iret+nret] and truncate
@@ -391,7 +393,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::Return0 => {
-                    self.drop_brokers(brokers);
+                    self.close_brokers(brokers);
                     return 0;
                 }
 
@@ -864,26 +866,14 @@ impl ExeState {
         }
     }
 
-    // close brokers: make Upvalue::Open(index) into Upvalue::Close(value)
-    fn close_brokers(&self, brokers: &[Rc<RefCell<Upvalue>>], ilocal_from: usize) {
-        for broker in brokers.iter() {
-            let in_value = broker.borrow();
-            if let Upvalue::Open(ilocal) = *in_value {
-                if ilocal >= ilocal_from {
-                    drop(in_value);
-                    broker.replace(Upvalue::Closed(self.stack[ilocal].clone()));
-                }
-            }
-        }
-    }
-    // close brokers and drop the vector
-    fn drop_brokers(&self, brokers: Vec<Rc<RefCell<Upvalue>>>) {
+    fn close_brokers(&self, brokers: Vec<Rc<RefCell<Upvalue>>>) {
         for broker in brokers.into_iter() {
             let in_value = broker.borrow();
-            if let Upvalue::Open(ilocal) = *in_value {
-                drop(in_value);
-                broker.replace(Upvalue::Closed(self.stack[ilocal].clone()));
-            }
+            let Upvalue::Open(i) = *in_value else {
+                panic!("close downvalues");
+            };
+            drop(in_value);
+            broker.replace(Upvalue::Closed(self.stack[i].clone()));
         }
     }
 

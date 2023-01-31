@@ -55,14 +55,8 @@ struct GotoLabel {
 
 #[derive(Debug)]
 pub enum UpIndex {
-    Broker(usize), // index of brokers in upper functions
+    Local(usize), // index of local variables in upper functions
     Upvalue(usize), // index of upvalues in upper functions
-}
-
-#[derive(Debug, PartialEq)]
-enum Broker {
-    Open(usize),
-    Closed(usize),
 }
 
 #[derive(Debug, Default)]
@@ -70,7 +64,6 @@ pub struct FuncProto {
     pub has_varargs: bool,
     pub nparam: usize,
     pub constants: Vec<Value>,
-    pub brokers: Vec<usize>,
     pub upindexes: Vec<UpIndex>,
     pub inner_funcs: Vec<Rc<FuncProto>>,
     pub byte_codes: Vec<ByteCode>,
@@ -79,7 +72,6 @@ pub struct FuncProto {
 #[derive(Debug)]
 struct ParseContext<R: Read> {
     all_locals: Vec<Vec<String>>,
-    all_brokers: Vec<Vec<Broker>>,
     all_upvalues: Vec<Vec<(String, UpIndex)>>,
     lex: Lex<R>,
 }
@@ -118,12 +110,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
         let nvar = self.local_num();
-
         let end_token = self.block_scope();
-
-        self.clear_brokers(nvar);
-        self.locals().truncate(nvar); // expire local variables
-
+        self.locals().truncate(nvar); // expire internal local variables
         end_token
     }
     fn block_scope(&mut self) -> Token {
@@ -168,11 +156,11 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 Token::For => self.for_stat(),
                 Token::Break => self.break_stat(),
                 Token::Do => self.do_stat(),
-                Token::DoubColon => self.label_stat(igoto),
+                Token::DoubColon => self.label_stat(),
                 Token::Goto => self.goto_stat(),
                 Token::Return => self.ret_stat(),
                 t => {
-                    self.labels.truncate(ilabel);
+                    self.close_goto_labels(igoto, ilabel);
                     break t;
                 }
             }
@@ -439,9 +427,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         self.pop_loop_block(iend);
 
-        // clear brokers and expire internal local variables AFTER reading
-        // condition exp and pop_loop_block()
-        self.clear_brokers(nvar);
+        // expire internal local variables AFTER reading condition exp
+        // and pop_loop_block()
         self.locals().truncate(nvar);
     }
 
@@ -557,51 +544,19 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
     // BNF:
     //   label ::= `::` Name `::`
-    fn label_stat(&mut self, igoto: usize) {
+    fn label_stat(&mut self) {
         let name = self.read_name();
         self.ctx.lex.expect(Token::DoubColon);
 
-        // check if this label is at the end of block.
-        // ignore void statments: `;` and label.
-        let is_last = loop {
-            match self.ctx.lex.peek() {
-                Token::SemiColon => {
-                    self.ctx.lex.next();
-                }
-                Token::DoubColon => {
-                    self.ctx.lex.next();
-                    self.label_stat(igoto);
-                }
-                t => break is_block_end(t),
-            }
-        };
-
-        // check duplicate
         if self.labels.iter().any(|l|l.name == name) {
             panic!("duplicate label {name}");
         }
 
-        let icode = self.fp.byte_codes.len();
-        let nvar = self.local_num();
-
-        // match previous gotos
-        let mut no_dsts = Vec::new();
-        for goto in self.gotos.drain(igoto..) {
-            if goto.name == name {
-                if !is_last && goto.nvar < nvar {
-                    panic!("goto jump into scope {}", goto.name);
-                }
-                let dist = icode - goto.icode;
-                self.fp.byte_codes[goto.icode] = ByteCode::Jump(dist as i16 - 1);
-            } else {
-                // no matched label
-                no_dsts.push(goto);
-            }
-        }
-        self.gotos.append(&mut no_dsts);
-
-        // save the label for following gotos
-        self.labels.push(GotoLabel { name, icode, nvar });
+        self.labels.push(GotoLabel {
+            name,
+            icode: self.fp.byte_codes.len(),
+            nvar: self.local_num(),
+        });
     }
 
     // BNF:
@@ -609,23 +564,13 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn goto_stat(&mut self) {
         let name = self.read_name();
 
-        // match previous label
-        if let Some(label) = self.labels.iter().rev().find(|l|l.name == name) {
-            // find label
-            let dist = self.fp.byte_codes.len() - label.icode;
-            self.clear_brokers(label.nvar);
-            self.fp.byte_codes.push(ByteCode::Jump(-(dist as i16) - 1));
+        self.fp.byte_codes.push(ByteCode::Jump(0));
 
-        } else {
-            // not find label, push a fake byte code and save the goto
-            self.fp.byte_codes.push(ByteCode::Jump(0));
-
-            self.gotos.push(GotoLabel {
-                name,
-                icode: self.fp.byte_codes.len() - 1,
-                nvar: self.local_num(),
-            });
-        }
+        self.gotos.push(GotoLabel {
+            name,
+            icode: self.fp.byte_codes.len() - 1,
+            nvar: self.local_num(),
+        });
     }
 
     // BNF:
@@ -672,6 +617,33 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         };
         self.fp.byte_codes.push(code);
+    }
+
+    // match the gotos and labels, and close the labels at the end of block
+    fn close_goto_labels(&mut self, igoto: usize, ilabel: usize) {
+        // try to match gotos defined in this block between all labels
+        let mut no_dsts = Vec::new();
+        for goto in self.gotos.drain(igoto..) {
+            if let Some(label) = self.labels.iter().rev().find(|l|l.name == goto.name) {
+                if label.icode != self.fp.byte_codes.len() && label.nvar > goto.nvar {
+                    // check if jump into local variables' scope:
+                    // 1. label's byte-code is not the last one, meaning there
+                    //    are non-void expressions following;
+                    // 2. label's #vars is more than goto's, meaning there are
+                    //    new local variables defined between the goto and label.
+                    panic!("goto jump into scope {}", goto.name);
+                }
+                let d = (label.icode as isize - goto.icode as isize) as i16;
+                self.fp.byte_codes[goto.icode] = ByteCode::Jump(d - 1);
+            } else {
+                // no matched label
+                no_dsts.push(goto);
+            }
+        }
+        self.gotos.append(&mut no_dsts);
+
+        // close the labels defined in this block
+        self.labels.truncate(ilabel);
     }
 
 // ANCHOR: assign_helper
@@ -918,80 +890,37 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn simple_name(&mut self, name: String) -> ExpDesc {
         let ctx = &mut self.ctx;
 
-        // search from current level
+        // search from current level up to top level
         let mut level = ctx.all_locals.len() - 1;
-
-        // - locals. search reversely, so new variable covers old one with same name
-        if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
-            return ExpDesc::Local(i);
-        }
-
-        // - upvalues
-        if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
-            return ExpDesc::Upvalue(i);
-        }
-
-        // search up to top level
         let mut upidx = loop {
-            if level == 0 { // run out levels, so global variable
-                return ExpDesc::Global(self.add_const(name));
+            // - locals. search reversely, so new variable covers old one with same name
+            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
+                break UpIndex::Local(i);
             }
-            level -= 1;
-
-            // - locals
-            if let Some(ilocal) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
-
-                // broker for local variables
-                let broker = Broker::Open(ilocal);
-                let brokers = &mut ctx.all_brokers[level];
-                let ibroker = brokers.iter().rposition(|v| v == &broker)
-                    .unwrap_or_else(|| {
-                        brokers.push(broker);
-                        brokers.len() - 1
-                    });
-
-                break UpIndex::Broker(ibroker);
-            }
-
             // - upvalues
             if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
                 break UpIndex::Upvalue(i);
             }
+
+            // run out levels, so global variable
+            if level == 0 {
+                return ExpDesc::Global(self.add_const(name));
+            }
+            level -= 1; // continue upper level
         };
 
-        // fill upvalues from previous level down to current level
-        let mut ret = 0;
+        // fill upvalues from previous level down to current level, if any
         for upvalues in ctx.all_upvalues[level+1 .. ].iter_mut() {
             upvalues.push((name.clone(), upidx));
-            ret = upvalues.len() - 1;
-            upidx = UpIndex::Upvalue(ret);
+            upidx = UpIndex::Upvalue(upvalues.len() - 1);
         }
 
-        return ExpDesc::Upvalue(ret);
-    }
-
-    fn clear_brokers(&mut self, ilocal_from: usize) {
-        // clear brokers
-        let mut need_close = false;
-        let mut ibroker_start = 0;
-        let mut ibroker_end = 0;
-        for (ibroker, broker) in self.ctx.all_brokers.last_mut().unwrap().iter_mut().enumerate() {
-            if let &mut Broker::Open(ilocal) = broker {
-                if ilocal >= ilocal_from {
-                    *broker = Broker::Closed(ilocal);
-                    if !need_close {
-                        ibroker_start = ibroker;
-                        ibroker_end = ibroker;
-                        need_close = true;
-                    } else {
-                        ibroker_end = ibroker;
-                    }
-                }
-            }
-        }
-        if need_close {
-            self.fp.byte_codes.push(ByteCode::CloseBlock
-                (ibroker_start as u8, ibroker_end as u8, ilocal_from as u8));
+        // ok, now return Local or Upvalue
+        match upidx {
+            // hit locals in current level
+            UpIndex::Local(i) => ExpDesc::Local(i),
+            // hit upvalues in current level, or new upvalue for upper levels
+            UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
         }
     }
 
@@ -1558,7 +1487,6 @@ pub fn load(input: impl Read) -> FuncProto {
     let mut ctx = ParseContext {
         lex: Lex::new(input),
         all_locals: Vec::new(),
-        all_brokers: Vec::new(),
         all_upvalues: Vec::new(),
     };
     chunk(&mut ctx, false, Vec::new(), Token::Eos) // XXX has_varargs->true
@@ -1573,7 +1501,6 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     };
 
     ctx.all_locals.push(params);
-    ctx.all_brokers.push(Vec::new());
     ctx.all_upvalues.push(Vec::new());
 
     let mut proto = ParseProto {
@@ -1601,18 +1528,11 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     ctx.all_locals.pop();
 
     // collect upvalues for VM executing
-    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter()
-        .map(|u| u.1).collect();
-    fp.brokers = ctx.all_brokers.pop().unwrap().into_iter()
-        .map(|b| match b {
-            Broker::Open(i) => i,
-            Broker::Closed(i) => i,
-        }).collect();
+    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
 
     fp.byte_codes.push(ByteCode::Return0);
 
     println!("constants: {:?}", &fp.constants);
-    println!("brokers: {:?}", &fp.brokers);
     println!("upindexes: {:?}", &fp.upindexes);
     println!("byte_codes:");
     for (i,c) in fp.byte_codes.iter().enumerate() {
