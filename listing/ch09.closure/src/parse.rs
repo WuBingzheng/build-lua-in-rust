@@ -609,6 +609,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         if let Some(label) = self.labels.iter().rev().find(|l|l.name == name) {
             // find label
             let dist = self.fp.byte_codes.len() - label.icode;
+            self.local_check_close(label.nvar);
             self.fp.byte_codes.push(ByteCode::Jump(-(dist as i16) - 1));
 
         } else {
@@ -912,10 +913,18 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     fn local_expire(&mut self, from: usize) {
+        // drop locals
         let mut vars = self.ctx.all_locals.last_mut().unwrap().drain(from..);
 
-        // generate Close if there is any internal local variable
-        // in this block referred as upvalue
+        // generate Close if any dropped local variable referred as upvalue
+        if vars.any(|v| v.1) {
+            self.fp.byte_codes.push(ByteCode::Close(from as u8));
+        }
+    }
+
+    // generate Close if any local variable in [from..] referred as upvalue
+    fn local_check_close(&mut self, from: usize) {
+        let mut vars = self.ctx.all_locals.last().unwrap()[from..].iter();
         if vars.any(|v| v.1) {
             self.fp.byte_codes.push(ByteCode::Close(from as u8));
         }
