@@ -71,7 +71,7 @@ pub struct FuncProto {
 
 #[derive(Debug)]
 struct ParseContext<R: Read> {
-    all_locals: Vec<Vec<String>>,
+    all_locals: Vec<Vec<(String, bool)>>, // (name, referred-as-upvalue)
     all_upvalues: Vec<Vec<(String, UpIndex)>>,
     lex: Lex<R>,
 }
@@ -85,7 +85,6 @@ struct ParseProto<'a, R: Read> {
     sp: usize,
     break_blocks: Vec<Vec<usize>>,
     continue_blocks: Vec<Vec<(usize, usize)>>,
-    upvalue_blocks: Vec<(usize, bool)>, // (number-of-locals, any-local-referred-as-upvalue)
     gotos: Vec<GotoLabel>,
     labels: Vec<GotoLabel>,
     ctx: &'a mut ParseContext<R>,
@@ -110,14 +109,16 @@ impl<'a, R: Read> ParseProto<'a, R> {
     //     local function Name funcbody |
     //     local attnamelist [`=` explist]
     fn block(&mut self) -> Token {
+        let nvar = self.local_num();
         let end_token = self.block_scope();
-        self.close_block();
+        self.local_expire(nvar);
         end_token
     }
+
+    // same with block() but without expiring internal local variables
     fn block_scope(&mut self) -> Token {
         let igoto = self.gotos.len();
         let ilabel = self.labels.len();
-        self.upvalue_blocks.push((self.local_num(), false));
         loop {
             // reset sp before each statement
             self.sp = self.local_num();
@@ -168,18 +169,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
     }
 
-    fn close_block(&mut self) {
-        // close upvalues referring internal local variables
-        let block = self.upvalue_blocks.pop().unwrap();
-        let nvar = block.0;
-        if block.1 { // set in mark_block_upvalues()
-            self.fp.byte_codes.push(ByteCode::Close(nvar as u8));
-        }
-
-        // expire internal local variables
-        self.locals().truncate(nvar);
-    }
-
     // BNF:
     //   local attnamelist [`=` explist]
     //   attnamelist ::=  Name attrib {`,` Name attrib}
@@ -216,7 +205,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         // append vars into self.locals after evaluating explist
-        self.locals().append(&mut vars);
+        for var in vars.into_iter() {
+            self.local_new(var);
+        }
     }
 
     // BNF:
@@ -229,7 +220,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let f = self.funcbody(false);
         self.discharge(self.sp, f);
 
-        self.locals().push(name);
+        self.local_new(name);
     }
 
     // BNF:
@@ -298,8 +289,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         let proto = chunk(self.ctx, has_varargs, params, Token::End);
-
-        self.mark_block_upvalues(&proto.upindexes);
 
         self.fp.inner_funcs.push(Rc::new(proto));
         ExpDesc::Function(self.fp.inner_funcs.len() - 1)
@@ -431,6 +420,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         self.push_loop_block();
 
+        let nvar = self.local_num();
+
         assert_eq!(self.block_scope(), Token::Until);
         let iend = self.fp.byte_codes.len();
 
@@ -442,7 +433,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         // expire internal local variables AFTER reading condition exp
         // and pop_loop_block()
-        self.close_block();
+        self.local_expire(nvar);
     }
 
     // * numerical: for Name `=` ...
@@ -461,6 +452,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn for_numerical(&mut self, name: String) {
         self.ctx.lex.next(); // skip `=`
 
+        // 2 or 3 exps
         let (nexp, last_exp) = self.explist();
         self.discharge(self.sp, last_exp);
 
@@ -470,24 +462,28 @@ impl<'a, R: Read> ParseProto<'a, R> {
             _ => panic!("invalid numerical for exp"),
         }
 
-        self.locals().push(name);
-        self.locals().push(String::from(""));
-        self.locals().push(String::from(""));
+        // create 3 local variables: the first is iterator,
+        // and the other two to keep stack positions.
+        self.local_new(name);
+        self.local_new(String::from(""));
+        self.local_new(String::from(""));
 
         self.ctx.lex.expect(Token::Do);
 
+        // ByteCode::ForPrepare, without argument
         self.fp.byte_codes.push(ByteCode::ForPrepare(0, 0));
         let iprepare = self.fp.byte_codes.len() - 1;
         let iname = self.sp - 3;
 
         self.push_loop_block();
 
+        // parse block!
         assert_eq!(self.block(), Token::End);
 
-        self.locals().pop();
-        self.locals().pop();
-        self.locals().pop();
+        // expire 3 local variables above, before ByteCode::ForLoop
+        self.local_expire(self.local_num() - 3);
 
+        // ByteCode::ForLoop, and fix ByteCode::ForPrepare above
         let d = self.fp.byte_codes.len() - iprepare;
         self.fp.byte_codes.push(ByteCode::ForLoop(iname as u8, d as u16));
         self.fp.byte_codes[iprepare] = ByteCode::ForPrepare(iname as u8, d as u16);
@@ -896,19 +892,36 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn local_num(&self) -> usize {
         self.ctx.all_locals.last().unwrap().len()
     }
-    fn locals(&mut self) -> &mut Vec<String> {
-        self.ctx.all_locals.last_mut().unwrap()
+
+    fn local_new(&mut self, name: String) {
+        self.ctx.all_locals.last_mut().unwrap().push((name, false));
+    }
+
+    fn local_expire(&mut self, from: usize) {
+        let mut vars = self.ctx.all_locals.last_mut().unwrap().drain(from..);
+
+        // generate Close if there is any internal local variable
+        // in this block referred as upvalue
+        if vars.any(|v| v.1) {
+            self.fp.byte_codes.push(ByteCode::Close(from as u8));
+        }
     }
 
     fn simple_name(&mut self, name: String) -> ExpDesc {
         let ctx = &mut self.ctx;
 
         // search from current level up to top level
+        let mut in_current_level = true;
         let mut level = ctx.all_locals.len() - 1;
         let mut upidx = loop {
             // - locals. search reversely, so new variable covers old one with same name
-            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v == &name) {
-                break UpIndex::Local(i);
+            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v.0 == name) {
+                if in_current_level {
+                    return ExpDesc::Local(i);
+                } else {
+                    ctx.all_locals[level][i].1 = true; // mark it referred as upvalue!
+                    break UpIndex::Local(i);
+                }
             }
             // - upvalues
             if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
@@ -920,6 +933,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 return ExpDesc::Global(self.add_const(name));
             }
             level -= 1; // continue upper level
+
+            in_current_level = false;
         };
 
         // fill upvalues from previous level down to current level, if any
@@ -934,25 +949,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             UpIndex::Local(i) => ExpDesc::Local(i),
             // hit upvalues in current level, or new upvalue for upper levels
             UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
-        }
-    }
-
-    fn mark_block_upvalues(&mut self, upindexes: &Vec<UpIndex>) {
-        // do not mark the outermost block, because the `Return` bytecode
-        // will close upvalues, no need to generate `Close`.
-        if self.upvalue_blocks.len() == 1 {
-            return;
-        }
-
-        for upindex in upindexes.iter() {
-            if let &UpIndex::Local(ilocal) = upindex {
-                for block in self.upvalue_blocks.iter_mut().rev() {
-                    if ilocal >= block.0 {
-                        block.1 = true;
-                        break;
-                    }
-                }
-            }
         }
     }
 
@@ -1532,14 +1528,13 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
         ..Default::default()
     };
 
-    ctx.all_locals.push(params);
+    ctx.all_locals.push(params.into_iter().map(|p|(p, false)).collect());
     ctx.all_upvalues.push(Vec::new());
 
     let mut proto = ParseProto {
         sp: 0,
         break_blocks: Vec::new(),
         continue_blocks: Vec::new(),
-        upvalue_blocks: Vec::new(),
         gotos: Vec::new(),
         labels: Vec::new(),
 
@@ -1548,7 +1543,10 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     };
 
     // parse!
-    assert_eq!(proto.block(), end_token);
+    // use `block_scope()` because local variables will be dropped
+    // after function, and upvalues will be closed in `Return`
+    // byte code.
+    assert_eq!(proto.block_scope(), end_token);
 
     if let Some(goto) = proto.gotos.first() {
         panic!("goto {} no destination", &goto.name);
