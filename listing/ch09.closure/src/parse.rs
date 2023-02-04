@@ -217,10 +217,12 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let name = self.read_name();
         println!("== function: {name}");
 
+        // create `name` local variable before parsing funcbody(),
+        // so the function can be called in body as recursion.
+        self.local_new(name);
+
         let f = self.funcbody(false);
         self.discharge(self.sp, f);
-
-        self.local_new(name);
     }
 
     // BNF:
