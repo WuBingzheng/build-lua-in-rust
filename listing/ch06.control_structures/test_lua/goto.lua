@@ -17,5 +17,7 @@ do
   goto label
   local a = 'local var'
   ::label:: -- skip the local var but it's OK
-  ;;
+  ::another:: -- void statment
+  ;; -- void statment
+  ::another2:: -- void statment
 end
