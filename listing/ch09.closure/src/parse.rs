@@ -1433,8 +1433,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
         // because it may be expanded as varargs or function call.
         let mut last_array_entry = None;
 
-        let mut narray = 0;
-        let mut nmap = 0;
+        let mut narray: usize = 0;
+        let mut nmap: usize = 0;
         loop {
             let sp0 = self.sp;
 
@@ -1492,7 +1492,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                         self.discharge(sp0, last);
 
                         narray += 1;
-                        if narray % 2 == 50 { // reset the array members every 50
+                        if narray % 50 == 0 { // reset the array members every 50
                             self.fp.byte_codes.push(ByteCode::SetList(table as u8, 50));
                             self.sp = table + 1;
                         }
@@ -1520,7 +1520,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         // reset narray and nmap
-        self.fp.byte_codes[inew] = ByteCode::NewTable(table as u8, narray, nmap);
+        self.fp.byte_codes[inew] = ByteCode::NewTable(table as u8,
+            u8::try_from(narray).unwrap_or(255),
+            u8::try_from(nmap).unwrap_or(255));
 
         self.sp = table + 1;
         ExpDesc::Local(table)
