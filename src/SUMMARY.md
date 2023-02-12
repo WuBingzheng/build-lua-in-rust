@@ -51,3 +51,6 @@
   - [Rust函数和API](./ch08-04.rust_functions_and_api.md)
   - [尾调用](./ch08-05.tail_call.md)
   
+- [闭包](./ch09-00.closure.md)
+  - [Upvalue](./ch09-01.upvalue.md)
+  - [Upvalue的逃逸和闭包](./ch09-02.closure.md)
