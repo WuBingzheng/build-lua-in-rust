@@ -48,6 +48,20 @@ impl Upvalue {
     }
 }
 
+struct OpenBroker {
+    ilocal: usize,
+    broker: Rc<RefCell<Upvalue>>,
+}
+
+impl From<usize> for OpenBroker {
+    fn from(ilocal: usize) -> Self {
+        OpenBroker {
+            ilocal,
+            broker: Rc::new(RefCell::new(Upvalue::Open(ilocal))),
+        }
+    }
+}
+
 pub struct LuaClosure {
     proto: Rc<FuncProto>,
     upvalues: Vec<Rc<RefCell<Upvalue>>>,
@@ -79,8 +93,8 @@ impl ExeState {
 // ANCHOR: execute
     pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<Rc<RefCell<Upvalue>>>) -> usize {
 
-        // brokers between local variables and upvalues
-        let mut brokers: Vec<Rc<RefCell<Upvalue>>> = Vec::new();
+        // open brokers between local variables and upvalues
+        let mut open_brokers: Vec<OpenBroker> = Vec::new();
 
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
@@ -124,7 +138,11 @@ impl ExeState {
                 }
                 ByteCode::Close(ilocal) => {
                     let ilocal = self.base + ilocal as usize;
-                    self.close_brokers_from(&brokers, ilocal);
+                    let from = match open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal) {
+                        Ok(i) => i,
+                        Err(i) => i,
+                    };
+                    self.close_brokers(open_brokers.drain(from..));
                 }
 
                 ByteCode::LoadConst(dst, c) => {
@@ -312,19 +330,17 @@ impl ExeState {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
 
                     // generate upvalues
-                    let nb = brokers.len();
                     let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
-                        &UpIndex::Local(i) => {
-                            let openi = Upvalue::Open(self.base + i as usize);
-                            if let Some(exist) = brokers[..nb].iter().find(|&i| *(i.borrow()) == openi) {
-                                exist.clone()
-                            } else {
-                                let broker = Rc::new(RefCell::new(openi));
-                                brokers.push(broker.clone());
-                                broker
-                            }
+                        &UpIndex::Local(ilocal) => {
+                            let ilocal = self.base + ilocal;
+                            let iob = open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal)
+                                .unwrap_or_else(|i| {
+                                    open_brokers.insert(i, ilocal.into());
+                                    i
+                                });
+                            open_brokers[iob].broker.clone()
                         }
-                        &UpIndex::Upvalue(i) => upvalues[i].clone(),
+                        &UpIndex::Upvalue(iup) => upvalues[iup].clone(),
                     }).collect();
 
                     let c = LuaClosure {
@@ -366,7 +382,7 @@ impl ExeState {
                 }
 
                 ByteCode::TailCall(func, narg_plus) => {
-                    self.close_brokers(brokers);
+                    self.close_brokers(open_brokers);
 
                     // clear current call-frame, and move new function entry and
                     // arguments (self.stack[@func ..]) into current call-frame
@@ -376,7 +392,7 @@ impl ExeState {
                 }
 
                 ByteCode::Return(iret, nret) => {
-                    self.close_brokers(brokers);
+                    self.close_brokers(open_brokers);
 
                     // if nret==0, return stack[iret .. ];
                     // otherwise, return stack[iret .. iret+nret] and truncate
@@ -397,7 +413,7 @@ impl ExeState {
                     }
                 }
                 ByteCode::Return0 => {
-                    self.close_brokers(brokers);
+                    self.close_brokers(open_brokers);
                     return 0;
                 }
 
@@ -870,24 +886,10 @@ impl ExeState {
         }
     }
 
-    fn close_brokers(&self, brokers: Vec<Rc<RefCell<Upvalue>>>) {
-        for broker in brokers.into_iter() {
-            let in_value = broker.borrow();
-            if let Upvalue::Open(i) = *in_value {
-                drop(in_value);
-                broker.replace(Upvalue::Closed(self.stack[i].clone()));
-            }
-        }
-    }
-    fn close_brokers_from(&self, brokers: &[Rc<RefCell<Upvalue>>], ilocal: usize) {
-        for broker in brokers.iter() {
-            let in_value = broker.borrow();
-            if let Upvalue::Open(i) = *in_value {
-                if i >= ilocal {
-                    drop(in_value);
-                    broker.replace(Upvalue::Closed(self.stack[i].clone()));
-                }
-            }
+    fn close_brokers(&self, open_brokers: impl IntoIterator<Item = OpenBroker>) {
+        for OpenBroker { ilocal, broker } in open_brokers {
+            let openi = broker.replace(Upvalue::Closed(self.stack[ilocal].clone()));
+            debug_assert_eq!(openi, Upvalue::Open(ilocal));
         }
     }
 
