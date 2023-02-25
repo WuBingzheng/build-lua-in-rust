@@ -936,17 +936,14 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let ctx = &mut self.ctx;
 
         // search from current level up to top level
-        let mut in_current_level = true;
-        let mut level = ctx.all_locals.len() - 1;
+        let current_level = ctx.all_locals.len() - 1;
+        let mut level = current_level;
         let mut upidx = loop {
             // - locals. search reversely, so new variable covers old one with same name
-            if let Some(i) = ctx.all_locals[level].iter().rposition(|v| v.0 == name) {
-                if in_current_level {
-                    return ExpDesc::Local(i);
-                } else {
-                    ctx.all_locals[level][i].1 = true; // mark it referred as upvalue!
-                    break UpIndex::Local(i);
-                }
+            if let Some((i, var)) = ctx.all_locals[level].iter_mut().enumerate().rfind(|v| v.1.0 == name) {
+                // mark the local variable referred as upvalue, if not in current_level.
+                var.1 |= level != current_level;
+                break UpIndex::Local(i);
             }
             // - upvalues
             if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
@@ -958,8 +955,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 return ExpDesc::Global(self.add_const(name));
             }
             level -= 1; // continue upper level
-
-            in_current_level = false;
         };
 
         // fill upvalues from previous level down to current level, if any

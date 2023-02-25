@@ -34,10 +34,10 @@ pub enum Upvalue {
 }
 
 impl Upvalue {
-    fn get(&self, stack: &Vec<Value>) -> Value {
+    fn get<'a>(&'a self, stack: &'a Vec<Value>) -> &'a Value {
         match self {
-            Upvalue::Open(i) => stack[*i].clone(),
-            Upvalue::Closed(v) => v.clone(),
+            Upvalue::Open(i) => &stack[*i],
+            Upvalue::Closed(v) => &v,
         }
     }
     fn set(&mut self, stack: &mut Vec<Value>, value: Value) {
@@ -138,10 +138,8 @@ impl ExeState {
                 }
                 ByteCode::Close(ilocal) => {
                     let ilocal = self.base + ilocal as usize;
-                    let from = match open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal) {
-                        Ok(i) => i,
-                        Err(i) => i,
-                    };
+                    let from = open_brokers.binary_search_by_key(&ilocal, |b| b.ilocal)
+                        .unwrap_or_else(|i| i);
                     self.close_brokers(open_brokers.drain(from..));
                 }
 
@@ -335,7 +333,7 @@ impl ExeState {
                             let ilocal = self.base + ilocal;
                             let iob = open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal)
                                 .unwrap_or_else(|i| {
-                                    open_brokers.insert(i, ilocal.into());
+                                    open_brokers.insert(i, OpenBroker::from(ilocal));
                                     i
                                 });
                             open_brokers[iob].broker.clone()
