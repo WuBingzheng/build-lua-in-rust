@@ -25,6 +25,16 @@ fn lib_type(state: &mut ExeState) -> i32 {
     state.push(ty);
     1
 }
+fn test_new_counter(state: &mut ExeState) -> i32 {
+    let mut i = 0_i32;
+    let c = move |_: &mut ExeState| {
+        i += 1;
+        println!("counter: {i}");
+        0
+    };
+    state.push(Value::RustClosure(Rc::new(RefCell::new(Box::new(c)))));
+    1
+}
 // ANCHOR_END: print
 
 #[derive(Debug, PartialEq)]
@@ -81,6 +91,7 @@ impl ExeState {
         let mut globals = HashMap::new();
         globals.insert("print".into(), Value::RustFunction(lib_print));
         globals.insert("type".into(), Value::RustFunction(lib_type));
+        globals.insert("new_counter".into(), Value::RustFunction(test_new_counter));
 
         ExeState {
             globals,
@@ -862,6 +873,14 @@ impl ExeState {
                 }
 
                 f(self) as usize
+            }
+            Value::RustClosure(c) => {
+                // drop potential temprary stack usage, for get_top()
+                if narg_plus != 0 {
+                    self.stack.truncate(self.base + narg_plus as usize - 1);
+                }
+
+                c.borrow_mut()(self) as usize
             }
             Value::LuaClosure(c) => {
                 let narg = if narg_plus == 0 {

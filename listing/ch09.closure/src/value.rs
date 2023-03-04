@@ -21,6 +21,7 @@ pub enum Value {
     LongStr(Rc<Vec<u8>>),
     Table(Rc<RefCell<Table>>),
     RustFunction(fn (&mut ExeState) -> i32),
+    RustClosure(Rc<RefCell<Box<dyn FnMut (&mut ExeState) -> i32>>>),
     LuaClosure(Rc<LuaClosure>),
 }
 
@@ -52,6 +53,7 @@ impl fmt::Display for Value {
             Value::LongStr(s) => write!(f, "{}", String::from_utf8_lossy(s)),
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
             Value::RustFunction(_) => write!(f, "function"),
+            Value::RustClosure(_) => write!(f, "function"),
             Value::LuaClosure(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
         }
     }
@@ -71,7 +73,8 @@ impl fmt::Debug for Value {
                 let t = t.borrow();
                 write!(f, "table:{}:{}", t.array.len(), t.map.len())
             }
-            Value::RustFunction(_) => write!(f, "function"),
+            Value::RustFunction(_) => write!(f, "rust function"),
+            Value::RustClosure(_) => write!(f, "rust closure"),
             Value::LuaClosure(_) => write!(f, "Lua function"),
         }
     }
@@ -92,6 +95,7 @@ impl PartialEq for Value {
             (Value::LongStr(s1), Value::LongStr(s2)) => s1 == s2,
             (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
             (Value::RustFunction(f1), Value::RustFunction(f2)) => std::ptr::eq(f1, f2),
+            (Value::RustClosure(f1), Value::RustClosure(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (Value::LuaClosure(f1), Value::LuaClosure(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (_, _) => false,
         }
@@ -148,6 +152,7 @@ impl Value {
             &Value::LongStr(_) => "string",
             &Value::Table(_) => "table",
             &Value::RustFunction(_) => "function",
+            &Value::RustClosure(_) => "function",
             &Value::LuaClosure(_) => "function",
         }
     }
@@ -171,6 +176,7 @@ impl Hash for Value {
             Value::LongStr(s) => s.hash(state),
             Value::Table(t) => Rc::as_ptr(t).hash(state),
             Value::RustFunction(f) => (*f as *const usize).hash(state),
+            Value::RustClosure(f) => Rc::as_ptr(f).hash(state),
             Value::LuaClosure(f) => Rc::as_ptr(f).hash(state),
         }
     }
