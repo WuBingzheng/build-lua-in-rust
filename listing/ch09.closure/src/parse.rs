@@ -183,22 +183,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         if self.ctx.lex.peek() == &Token::Assign {
             // explist
             self.ctx.lex.next();
-
-            let want = vars.len();
-            let (nexp, last_exp) = self.explist();
-            match (nexp + 1).cmp(&want) {
-                Ordering::Equal => {
-                    self.discharge(self.sp, last_exp);
-                }
-                Ordering::Less => {
-                    // expand last expressions
-                    self.discharge_expand_want(last_exp, want - nexp);
-                }
-                Ordering::Greater => {
-                    // drop extra expressions
-                    self.sp -= nexp - want;
-                }
-            }
+            self.explist_want(vars.len());
         } else {
             // no exp, load nils
             self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, vars.len() as u8));
@@ -443,15 +428,15 @@ impl<'a, R: Read> ParseProto<'a, R> {
     fn for_stat(&mut self) {
         let name = self.read_name();
         if self.ctx.lex.peek() == &Token::Assign {
-            self.for_numerical(name);
+            self.numerical_for(name);
         } else {
-            todo!("generic for");
+            self.generic_for(name);
         }
     }
 
     // BNF:
     //   for Name `=` exp `,` exp [`,` exp] do block end
-    fn for_numerical(&mut self, name: String) {
+    fn numerical_for(&mut self, name: String) {
         self.ctx.lex.next(); // skip `=`
 
         // 2 or 3 exps
@@ -489,6 +474,60 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let d = self.fp.byte_codes.len() - iprepare;
         self.fp.byte_codes.push(ByteCode::ForLoop(iname as u8, d as u16));
         self.fp.byte_codes[iprepare] = ByteCode::ForPrepare(iname as u8, d as u16);
+
+        self.pop_loop_block(self.fp.byte_codes.len() - 1);
+    }
+
+    // BNF:
+    //   stat ::= for namelist in explist do block end
+    //   namelist ::= Name {`,` Name}
+    fn generic_for(&mut self, name: String) {
+        // namelist
+        let mut vars = vec![name];
+        loop {
+            match self.ctx.lex.next() {
+                Token::Comma => continue,
+                Token::In => break,
+                Token::Name(name) => vars.push(name),
+                _ => panic!("invalid generic_for namelist"),
+            }
+        }
+
+        // explist
+        let iter = self.sp;
+        self.explist_want(3);
+
+        let nvar = vars.len();
+        self.local_new(String::from("")); // iterator function
+        self.local_new(String::from("")); // immutable state
+        for var in vars.into_iter() {
+            self.local_new(var);
+        }
+
+        self.ctx.lex.expect(Token::Do);
+
+        // jump to ByteCode::ForCallLoop at end of block
+        self.fp.byte_codes.push(ByteCode::Jump(0));
+        let ijump = self.fp.byte_codes.len() - 1;
+
+        self.push_loop_block();
+
+        // parse block!
+        assert_eq!(self.block(), Token::End);
+
+        // expire local variables above, before ByteCode::Jump
+        self.local_expire(self.local_num() - 2 - nvar);
+
+        // ByteCode::ForCallLoop
+        // call the iter function and check the control variable
+        let d = self.fp.byte_codes.len() - ijump;
+        self.fp.byte_codes[ijump] = ByteCode::Jump(d as i16 - 1);
+        if let Ok(d) = u8::try_from(d) {
+            self.fp.byte_codes.push(ByteCode::ForCallLoop(iter as u8, nvar as u8, d as u8));
+        } else {
+            self.fp.byte_codes.push(ByteCode::ForCallLoop(iter as u8, nvar as u8, 0));
+            self.fp.byte_codes.push(ByteCode::Jump(-(d as i16) - 1));
+        }
 
         self.pop_loop_block(self.fp.byte_codes.len() - 1);
     }
@@ -741,6 +780,23 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
             self.discharge(sp0 + n, desc);
             n += 1;
+        }
+    }
+
+    fn explist_want(&mut self, want: usize) {
+        let (nexp, last_exp) = self.explist();
+        match (nexp + 1).cmp(&want) {
+            Ordering::Equal => {
+                self.discharge(self.sp, last_exp);
+            }
+            Ordering::Less => {
+                // expand last expressions
+                self.discharge_expand_want(last_exp, want - nexp);
+            }
+            Ordering::Greater => {
+                // drop extra expressions
+                self.sp -= nexp - want;
+            }
         }
     }
 

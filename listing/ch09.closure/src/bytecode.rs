@@ -42,6 +42,7 @@ pub enum ByteCode {
     // for-loop
     ForPrepare(u8, u16),
     ForLoop(u8, u16),
+    ForCallLoop(u8, u8, u8),
 
     // function call
     Closure(u8, u16),

@@ -334,6 +334,42 @@ impl ExeState {
                     }
                 }
 
+                ByteCode::ForCallLoop(iter, nvar, jmp) => {
+                    // before call:         after call:
+                    //   |           |        |           |
+                    //   +-----------+        +-----------+
+                    //   | iter func |entry   | iter func |
+                    //   +-----------+        +-----------+
+                    //   | state     |\       | state     |
+                    //   +-----------+ 2args  +-----------+
+                    //   | ctrl var  |/       | ctrl var  |<--\
+                    //   +-----------+        +-----------+   |move
+                    //   |           |        :           :   |
+                    //                        +-----------+   |
+                    //                        | return-   |+--/
+                    //                        | values    ||
+                    //                        |           |/
+                    let nret = self.call_function(iter, 2+1);
+                    let iret = self.stack.len() - nret;
+
+                    if nret > 0 && self.stack[iret] != Value::Nil {
+                        // continue the loop
+                        // move return values to @iter+2
+                        self.stack.drain(self.base+iter as usize+2 .. iret);
+                        let want_nret = nvar as usize;
+                        if nret < want_nret {
+                            self.fill_stack(nret, want_nret - nret);
+                        }
+
+                        // jump back to loop
+                        pc -= jmp as usize;
+
+                    } else if jmp == 0 {
+                        // skip the following Jump
+                        pc += 1;
+                    }
+                }
+
                 // define closure
                 ByteCode::Closure(dst, inner) => {
                     let inner_proto = proto.inner_funcs[inner as usize].clone();
