@@ -53,4 +53,7 @@
   
 - [闭包](./ch09-00.closure.md)
   - [Upvalue](./ch09-01.upvalue.md)
-  - [Upvalue的逃逸和闭包](./ch09-02.closure.md)
+  - [Upvalue的逃逸和闭包](./ch09-02.escape_and_closure.md)
+  - [block和goto的逃逸](./ch09-03.escape_from_block_and_goto.md)
+  - [Rust闭包](./ch09-04.rust_closure.md)
+  - [泛型for语句](./ch09-05.generic_for.md)
