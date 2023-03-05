@@ -21,10 +21,5 @@ end
 
 for i,v in my_ipairs(z) do
 	print(i, v)
-
-	-- Change the control-variable during the loop.
-	-- This is disallowed in Lua's manual
-	-- (https://www.lua.org/manual/5.4/manual.html#3.3.5).
-	-- This behaves diffrent from Lua PUC-Rio.
-	i = i+1
+	i = i+1 -- update ctrl-var during loop
 end

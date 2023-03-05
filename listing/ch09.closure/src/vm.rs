@@ -336,26 +336,31 @@ impl ExeState {
 
                 ByteCode::ForCallLoop(iter, nvar, jmp) => {
                     // before call:         after call:
-                    //   |           |        |           |
-                    //   +-----------+        +-----------+
-                    //   | iter func |entry   | iter func |
-                    //   +-----------+        +-----------+
-                    //   | state     |\       | state     |
-                    //   +-----------+ 2args  +-----------+
-                    //   | ctrl var  |/       | ctrl var  |<--\
-                    //   +-----------+        +-----------+   |move
-                    //   |           |        :           :   |
-                    //                        +-----------+   |
-                    //                        | return-   |+--/
-                    //                        | values    ||
-                    //                        |           |/
+                    //   |           |        |           |     |           |
+                    //   +-----------+        +-----------+     +-----------+
+                    //   | iter func |entry   | iter func |     | iter func |
+                    //   +-----------+        +-----------+     +-----------+
+                    //   | state     |\       | state     |     | state     |
+                    //   +-----------+ 2args  +-----------+     +-----------+
+                    //   | ctrl var  |/       | ctrl var  |     | ctrl var  |<--first return value
+                    //   +-----------+        +-----------+     +-----------+
+                    //   |           |        :           :   ->| return-   |
+                    //                        +-----------+  /  | values    |
+                    //                        | return-   +-/   |           |
+                    //                        | values    |
+                    //                        |           |
                     let nret = self.call_function(iter, 2+1);
                     let iret = self.stack.len() - nret;
 
                     if nret > 0 && self.stack[iret] != Value::Nil {
                         // continue the loop
-                        // move return values to @iter+2
-                        self.stack.drain(self.base+iter as usize+2 .. iret);
+                        // duplicate the first return value as ctrl-var,
+                        // so it could be changed during loop.
+                        let first_ret = self.stack[iret].clone();
+                        self.set_stack(iter + 2, first_ret);
+
+                        // move return values to @iter+3
+                        self.stack.drain(self.base+iter as usize+3 .. iret);
                         let want_nret = nvar as usize;
                         if nret < want_nret {
                             self.fill_stack(nret, want_nret - nret);

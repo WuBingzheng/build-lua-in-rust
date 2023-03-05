@@ -500,6 +500,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         let nvar = vars.len();
         self.local_new(String::from("")); // iterator function
         self.local_new(String::from("")); // immutable state
+        self.local_new(String::from("")); // control variable
         for var in vars.into_iter() {
             self.local_new(var);
         }
@@ -516,7 +517,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         assert_eq!(self.block(), Token::End);
 
         // expire local variables above, before ByteCode::Jump
-        self.local_expire(self.local_num() - 2 - nvar);
+        self.local_expire(self.local_num() - 3 - nvar);
 
         // ByteCode::ForCallLoop
         // call the iter function and check the control variable
