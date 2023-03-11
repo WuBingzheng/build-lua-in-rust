@@ -2,11 +2,10 @@ use std::io::Write;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use crate::bytecode::ByteCode;
 use crate::value::{Value, Table};
 use crate::parse::{FuncProto, UpIndex};
-use crate::utils::ftoi;
+use crate::utils::{ftoi, set_vec};
 
 // ANCHOR: print
 // "print" function in Lua's std-lib.
@@ -79,7 +78,6 @@ pub struct LuaClosure {
 
 // ANCHOR: state
 pub struct ExeState {
-    globals: HashMap<String, Value>,
     stack: Vec::<Value>,
     base: usize, // stack base of current function
 }
@@ -88,14 +86,13 @@ pub struct ExeState {
 // ANCHOR: new
 impl ExeState {
     pub fn new() -> Self {
-        let mut globals = HashMap::new();
-        globals.insert("print".into(), Value::RustFunction(lib_print));
-        globals.insert("type".into(), Value::RustFunction(lib_type));
-        globals.insert("new_counter".into(), Value::RustFunction(test_new_counter));
+        let mut env = Table::new(0, 0);
+        env.map.insert("print".into(), Value::RustFunction(lib_print));
+        env.map.insert("type".into(), Value::RustFunction(lib_type));
+        env.map.insert("new_counter".into(), Value::RustFunction(test_new_counter));
 
         ExeState {
-            globals,
-            stack: Vec::new(),
+            stack: vec![Value::Nil, Value::Table(Rc::new(RefCell::new(env)))],
             base: 1, // for entry function
         }
     }
@@ -117,24 +114,6 @@ impl ExeState {
         loop {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
             match proto.byte_codes[pc] {
-// ANCHOR: vm_global
-                ByteCode::GetGlobal(dst, name) => {
-                    let name: &str = (&proto.constants[name as usize]).into();
-                    let v = self.globals.get(name).unwrap_or(&Value::Nil).clone();
-                    self.set_stack(dst, v);
-                }
-                ByteCode::SetGlobal(name, src) => {
-                    let name = &proto.constants[name as usize];
-                    let value = self.get_stack(src).clone();
-                    self.globals.insert(name.into(), value);
-                }
-// ANCHOR_END: vm_global
-                ByteCode::SetGlobalConst(name, src) => {
-                    let name = &proto.constants[name as usize];
-                    let value = proto.constants[src as usize].clone();
-                    self.globals.insert(name.into(), value);
-                }
-
                 ByteCode::GetUpvalue(dst, src) => {
                     let v = upvalues[src as usize].borrow().get(&self.stack).clone();
                     self.set_stack(dst, v);
@@ -178,31 +157,31 @@ impl ExeState {
                 }
                 ByteCode::SetInt(t, i, v) => {
                     let value = self.get_stack(v).clone();
-                    self.set_table_int(t, i as i64, value);
+                    self.get_stack(t).new_index_array(i as i64, value);
                 }
                 ByteCode::SetIntConst(t, i, v) => {
                     let value = proto.constants[v as usize].clone();
-                    self.set_table_int(t, i as i64, value);
+                    self.get_stack(t).new_index_array(i as i64, value);
                 }
                 ByteCode::SetField(t, k, v) => {
                     let key = proto.constants[k as usize].clone();
                     let value = self.get_stack(v).clone();
-                    self.set_table(t, key, value);
+                    self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetFieldConst(t, k, v) => {
                     let key = proto.constants[k as usize].clone();
                     let value = proto.constants[v as usize].clone();
-                    self.set_table(t, key, value);
+                    self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetTable(t, k, v) => {
                     let key = self.get_stack(k).clone();
                     let value = self.get_stack(v).clone();
-                    self.set_table(t, key, value);
+                    self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetTableConst(t, k, v) => {
                     let key = self.get_stack(k).clone();
                     let value = proto.constants[v as usize].clone();
-                    self.set_table(t, key, value);
+                    self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetList(table, n) => {
                     let ivalue = self.base + table as usize + 1;
@@ -220,27 +199,52 @@ impl ExeState {
                     }
                 }
                 ByteCode::GetInt(dst, t, k) => {
-                    let value = self.get_table_int(t, k as i64);
+                    let value = self.get_stack(t).index_array(k as i64);
                     self.set_stack(dst, value);
                 }
                 ByteCode::GetField(dst, t, k) => {
                     let key = &proto.constants[k as usize];
-                    let value = self.get_table(t, key);
+                    let value = self.get_stack(t).index(key);
                     self.set_stack(dst, value);
                 }
                 ByteCode::GetFieldSelf(dst, t, k) => {
                     let table = self.get_stack(t).clone();
                     let key = &proto.constants[k as usize];
-                    let value = self.get_table(t, key);
+                    let value = table.index(key).clone();
                     self.set_stack(dst, value);
                     self.set_stack(dst+1, table);
                 }
                 ByteCode::GetTable(dst, t, k) => {
                     let key = self.get_stack(k);
-                    let value = self.get_table(t, key);
+                    let value = self.get_stack(t).index(key);
                     self.set_stack(dst, value);
                 }
 // ANCHOR_END: vm_table
+
+                // upvalue table
+                //
+                // The upvalue-table is get by:
+                //    `upvalues[t as usize].borrow().get(&self.stack)`
+                // I do not know how to move this piece of code into a
+                // function because of the `borrow()`.
+                ByteCode::SetUpField(t, k, v) => {
+                    let key = proto.constants[k as usize].clone();
+                    let value = self.get_stack(v).clone();
+                    upvalues[t as usize].borrow().get(&self.stack)
+                        .new_index(key, value);
+                }
+                ByteCode::SetUpFieldConst(t, k, v) => {
+                    let key = proto.constants[k as usize].clone();
+                    let value = proto.constants[v as usize].clone();
+                    upvalues[t as usize].borrow().get(&self.stack)
+                        .new_index(key, value);
+                }
+                ByteCode::GetUpField(dst, t, k) => {
+                    let key = &proto.constants[k as usize];
+                    let value = upvalues[t as usize].borrow().get(&self.stack)
+                        .index(key).clone();
+                    self.set_stack(dst, value);
+                }
 
                 // condition structures
                 ByteCode::TestAndJump(icondition, jmp) => {
@@ -834,58 +838,6 @@ impl ExeState {
         }
     }
 
-    fn set_table(&mut self, t: u8, key: Value, value: Value) {
-        match &key {
-            Value::Integer(i) => self.set_table_int(t, *i, value), // TODO Float
-            _ => self.do_set_table(t, key, value),
-        }
-    }
-    fn set_table_int(&mut self, t: u8, i: i64, value: Value) {
-        if let Value::Table(table) = &self.get_stack(t) {
-            let mut table = table.borrow_mut();
-            // this is not same with Lua's official implement
-            if i > 0 && (i < 4 || i < table.array.capacity() as i64 * 2) {
-                set_vec(&mut table.array, i as usize - 1, value);
-            } else {
-                table.map.insert(Value::Integer(i), value);
-            }
-        } else {
-            panic!("invalid table");
-        }
-    }
-    fn do_set_table(&mut self, t: u8, key: Value, value: Value) {
-        if let Value::Table(table) = &self.get_stack(t) {
-            table.borrow_mut().map.insert(key, value);
-        } else {
-            panic!("invalid table");
-        }
-    }
-
-    fn get_table(&self, t: u8, key: &Value) -> Value {
-        match key {
-            Value::Integer(i) => self.get_table_int(t, *i), // TODO Float
-            _ => self.do_get_table(t, key),
-        }
-    }
-    fn get_table_int(&self, t: u8, i: i64) -> Value {
-        if let Value::Table(table) = self.get_stack(t) {
-            let table = table.borrow();
-            table.array.get(i as usize - 1)
-                .unwrap_or_else(|| table.map.get(&Value::Integer(i))
-                    .unwrap_or(&Value::Nil)).clone()
-        } else {
-            panic!("get invalid table: {:?}", t);
-        }
-    }
-    fn do_get_table(&self, t: u8, key: &Value) -> Value {
-        if let Value::Table(table) = &self.get_stack(t) {
-            let table = table.borrow();
-            table.map.get(key).unwrap_or(&Value::Nil).clone()
-        } else {
-            panic!("set invalid table");
-        }
-    }
-
     // call function
     // return the number of return values which are at the stack end
     fn call_function(&mut self, func: u8, narg_plus: u8) -> usize {
@@ -989,17 +941,6 @@ impl<'a> ExeState {
     }
     pub fn push(&mut self, v: impl Into<Value>) {
         self.stack.push(v.into());
-    }
-}
-
-fn set_vec(vec: &mut Vec<Value>, i: usize, value: Value) {
-    match i.cmp(&vec.len()) {
-        Ordering::Less => vec[i] = value,
-        Ordering::Equal => vec.push(value),
-        Ordering::Greater => {
-            vec.resize(i, Value::Nil);
-            vec.push(value);
-        }
     }
 }
 

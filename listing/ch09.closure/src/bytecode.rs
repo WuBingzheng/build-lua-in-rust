@@ -1,10 +1,5 @@
 #[derive(Debug)]
 pub enum ByteCode {
-    // global variable
-    GetGlobal(u8, u8),
-    SetGlobal(u8, u8),
-    SetGlobalConst(u8, u8), // TODO u8?
-
     // local variable
     LoadConst(u8, u16),
     LoadNil(u8, u8),
@@ -31,6 +26,11 @@ pub enum ByteCode {
     GetField(u8, u8, u8),
     GetInt(u8, u8, u8),
     GetFieldSelf(u8, u8, u8),
+
+    // upvalue table, covers global variables
+    SetUpField(u8, u8, u8),
+    SetUpFieldConst(u8, u8, u8),
+    GetUpField(u8, u8, u8),
 
     // condition structures
     Jump(i16),

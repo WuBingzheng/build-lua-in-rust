@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use crate::vm::{ExeState, LuaClosure};
-use crate::utils::ftoi;
+use crate::utils::{ftoi, set_vec};
 
 const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
 const MID_STR_MAX: usize = 48 - 1;
@@ -37,6 +37,37 @@ impl Table {
         Table {
             array: Vec::with_capacity(narray),
             map: HashMap::with_capacity(nmap),
+        }
+    }
+
+    pub fn index(&self, key: &Value) -> &Value {
+        match key {
+            // TODO float
+            &Value::Integer(i) => self.index_array(i),
+            _ => self.map.get(key).unwrap_or(&Value::Nil),
+        }
+    }
+    pub fn index_array(&self, i: i64) -> &Value {
+        self.array.get(i as usize - 1)
+            .unwrap_or_else(|| self.map.get(&Value::Integer(i as i64))
+                .unwrap_or(&Value::Nil))
+    }
+
+    pub fn new_index(&mut self, key: Value, value: Value) {
+        match key {
+            // TODO float
+            Value::Integer(i) => self.new_index_array(i, value),
+            _ => {
+                self.map.insert(key, value);
+            }
+        }
+    }
+    pub fn new_index_array(&mut self, i: i64, value: Value) {
+        // this is not same with Lua's official implement
+        if i > 0 && (i < 4 || i < self.array.capacity() as i64 * 2) {
+            set_vec(&mut self.array, i as usize - 1, value);
+        } else {
+            self.map.insert(Value::Integer(i), value);
         }
     }
 }
@@ -154,6 +185,32 @@ impl Value {
             &Value::RustFunction(_) => "function",
             &Value::RustClosure(_) => "function",
             &Value::LuaClosure(_) => "function",
+        }
+    }
+
+    pub fn index(&self, key: &Value) -> Value {
+        match self {
+            Value::Table(t) => t.borrow().index(key).clone(),
+            _ => todo!("meta __index"),
+        }
+    }
+    pub fn index_array(&self, i: i64) -> Value {
+        match self {
+            Value::Table(t) => t.borrow().index_array(i).clone(),
+            _ => todo!("meta __index"),
+        }
+    }
+
+    pub fn new_index(&self, key: Value, value: Value) {
+        match self {
+            Value::Table(t) => t.borrow_mut().new_index(key, value),
+            _ => todo!("meta __index"),
+        }
+    }
+    pub fn new_index_array(&self, i: i64, value: Value) {
+        match self {
+            Value::Table(t) => t.borrow_mut().new_index_array(i, value),
+            _ => todo!("meta __newindex"),
         }
     }
 }
