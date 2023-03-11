@@ -69,10 +69,15 @@ pub struct FuncProto {
     pub byte_codes: Vec<ByteCode>,
 }
 
+#[derive(Debug, Default)]
+struct Level {
+    locals: Vec<(String, bool)>, // (name, referred-as-upvalue)
+    upvalues: Vec<(String, UpIndex)>,
+}
+
 #[derive(Debug)]
 struct ParseContext<R: Read> {
-    all_locals: Vec<Vec<(String, bool)>>, // (name, referred-as-upvalue)
-    all_upvalues: Vec<Vec<(String, UpIndex)>>,
+    levels: Vec<Level>,
     lex: Lex<R>,
 }
 
@@ -964,16 +969,16 @@ impl<'a, R: Read> ParseProto<'a, R> {
 // ANCHOR_END: prefixexp
 
     fn local_num(&self) -> usize {
-        self.ctx.all_locals.last().unwrap().len()
+        self.ctx.levels.last().unwrap().locals.len()
     }
 
     fn local_new(&mut self, name: String) {
-        self.ctx.all_locals.last_mut().unwrap().push((name, false));
+        self.ctx.levels.last_mut().unwrap().locals.push((name, false));
     }
 
     fn local_expire(&mut self, from: usize) {
         // drop locals
-        let mut vars = self.ctx.all_locals.last_mut().unwrap().drain(from..);
+        let mut vars = self.ctx.levels.last_mut().unwrap().locals.drain(from..);
 
         // generate Close if any dropped local variable referred as upvalue
         if vars.any(|v| v.1) {
@@ -983,50 +988,55 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
     // generate Close if any local variable in [from..] referred as upvalue
     fn local_check_close(&mut self, from: usize) {
-        let mut vars = self.ctx.all_locals.last().unwrap()[from..].iter();
+        let mut vars = self.ctx.levels.last().unwrap().locals[from..].iter();
         if vars.any(|v| v.1) {
             self.fp.byte_codes.push(ByteCode::Close(from as u8));
         }
     }
 
+    // local, upvalue, or global
     fn simple_name(&mut self, name: String) -> ExpDesc {
-        let ctx = &mut self.ctx;
+        let mut level_iter = self.ctx.levels.iter_mut().rev();
 
-        // search from current level up to top level
-        let current_level = ctx.all_locals.len() - 1;
-        let mut level = current_level;
-        let mut upidx = loop {
-            // - locals. search reversely, so new variable covers old one with same name
-            if let Some((i, var)) = ctx.all_locals[level].iter_mut().enumerate().rfind(|v| v.1.0 == name) {
-                // mark the local variable referred as upvalue, if not in current_level.
-                var.1 |= level != current_level;
-                break UpIndex::Local(i);
-            }
-            // - upvalues
-            if let Some(i) = ctx.all_upvalues[level].iter().position(|v| v.0 == name) {
-                break UpIndex::Upvalue(i);
-            }
+        // search from locals and upvalues in current level
+        let level = level_iter.next().unwrap();
+        if let Some(i) = level.locals.iter().rposition(|v| v.0 == name) {
+            // search reversely, so new variable covers old one with same name
+            return ExpDesc::Local(i);
+        }
+        if let Some(i) = level.upvalues.iter().position(|v| v.0 == name) {
+            return ExpDesc::Upvalue(i);
+        }
 
-            // run out levels, so global variable
-            if level == 0 {
-                return ExpDesc::Global(self.add_const(name));
+        // search in upper levels
+        for (depth, level) in level_iter.enumerate() {
+            if let Some(i) = level.locals.iter().rposition(|v| v.0 == name) {
+                level.locals[i].1 = true; // mark it referred as upvalue
+                return self.create_upvalue(name, UpIndex::Local(i), depth);
             }
-            level -= 1; // continue upper level
-        };
+            if let Some(i) = level.upvalues.iter().position(|v| v.0 == name) {
+                return self.create_upvalue(name, UpIndex::Upvalue(i), depth);
+            }
+        }
 
-        // fill upvalues from previous level down to current level, if any
-        for upvalues in ctx.all_upvalues[level+1 .. ].iter_mut() {
+        // not found
+        ExpDesc::Global(self.add_const(name))
+    }
+
+    fn create_upvalue(&mut self, name: String, mut upidx: UpIndex, depth: usize) -> ExpDesc {
+        let levels = &mut self.ctx.levels;
+        let last = levels.len() - 1;
+
+        // create upvalue in middle levels, if any
+        for Level { upvalues, .. } in levels[last-depth .. last].iter_mut() {
             upvalues.push((name.clone(), upidx));
             upidx = UpIndex::Upvalue(upvalues.len() - 1);
         }
 
-        // ok, now return Local or Upvalue
-        match upidx {
-            // hit locals in current level
-            UpIndex::Local(i) => ExpDesc::Local(i),
-            // hit upvalues in current level, or new upvalue for upper levels
-            UpIndex::Upvalue(i) => ExpDesc::Upvalue(i),
-        }
+        // create upvalue in current level
+        let upvalues = &mut levels[last].upvalues;
+        upvalues.push((name, upidx));
+        ExpDesc::Upvalue(upvalues.len() - 1)
     }
 
 // ANCHOR: unop_neg
@@ -1593,8 +1603,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
 pub fn load(input: impl Read) -> FuncProto {
     let mut ctx = ParseContext {
         lex: Lex::new(input),
-        all_locals: Vec::new(),
-        all_upvalues: Vec::new(),
+        levels: Default::default(),
     };
     chunk(&mut ctx, false, Vec::new(), Token::Eos) // XXX has_varargs->true
 }
@@ -1607,8 +1616,10 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
         ..Default::default()
     };
 
-    ctx.all_locals.push(params.into_iter().map(|p|(p, false)).collect());
-    ctx.all_upvalues.push(Vec::new());
+    ctx.levels.push(Level {
+        locals: params.into_iter().map(|p|(p, false)).collect(),
+        upvalues: Vec::new(),
+    });
 
     let mut proto = ParseProto {
         sp: 0,
@@ -1634,11 +1645,8 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     // clear
     let ParseProto { mut fp, ctx, ..} = proto;
 
-    // drop local variables
-    ctx.all_locals.pop();
-
-    // collect upvalues for VM executing
-    fp.upindexes = ctx.all_upvalues.pop().unwrap().into_iter().map(|u| u.1).collect();
+    let level = ctx.levels.pop().unwrap();
+    fp.upindexes = level.upvalues.into_iter().map(|u| u.1).collect();
 
     fp.byte_codes.push(ByteCode::Return0);
 
