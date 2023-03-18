@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
+use crate::parse::FuncProto;
 use crate::vm::{ExeState, LuaClosure};
 use crate::utils::{ftoi, set_vec};
 
@@ -22,6 +23,7 @@ pub enum Value {
     Table(Rc<RefCell<Table>>),
     RustFunction(fn (&mut ExeState) -> i32),
     RustClosure(Rc<RefCell<Box<dyn FnMut (&mut ExeState) -> i32>>>),
+    LuaFunction(Rc<FuncProto>),
     LuaClosure(Rc<LuaClosure>),
 }
 
@@ -85,6 +87,7 @@ impl fmt::Display for Value {
             Value::Table(t) => write!(f, "table: {:?}", Rc::as_ptr(t)),
             Value::RustFunction(_) => write!(f, "function"),
             Value::RustClosure(_) => write!(f, "function"),
+            Value::LuaFunction(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
             Value::LuaClosure(l) => write!(f, "function: {:?}", Rc::as_ptr(l)),
         }
     }
@@ -106,7 +109,8 @@ impl fmt::Debug for Value {
             }
             Value::RustFunction(_) => write!(f, "rust function"),
             Value::RustClosure(_) => write!(f, "rust closure"),
-            Value::LuaClosure(_) => write!(f, "Lua function"),
+            Value::LuaFunction(_) => write!(f, "Lua function"),
+            Value::LuaClosure(_) => write!(f, "Lua closure"),
         }
     }
 }
@@ -127,6 +131,7 @@ impl PartialEq for Value {
             (Value::Table(t1), Value::Table(t2)) => Rc::as_ptr(t1) == Rc::as_ptr(t2),
             (Value::RustFunction(f1), Value::RustFunction(f2)) => std::ptr::eq(f1, f2),
             (Value::RustClosure(f1), Value::RustClosure(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
+            (Value::LuaFunction(f1), Value::LuaFunction(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (Value::LuaClosure(f1), Value::LuaClosure(f2)) => Rc::as_ptr(f1) == Rc::as_ptr(f2),
             (_, _) => false,
         }
@@ -184,6 +189,7 @@ impl Value {
             &Value::Table(_) => "table",
             &Value::RustFunction(_) => "function",
             &Value::RustClosure(_) => "function",
+            &Value::LuaFunction(_) => "function",
             &Value::LuaClosure(_) => "function",
         }
     }
@@ -234,6 +240,7 @@ impl Hash for Value {
             Value::Table(t) => Rc::as_ptr(t).hash(state),
             Value::RustFunction(f) => (*f as *const usize).hash(state),
             Value::RustClosure(f) => Rc::as_ptr(f).hash(state),
+            Value::LuaFunction(f) => Rc::as_ptr(f).hash(state),
             Value::LuaClosure(f) => Rc::as_ptr(f).hash(state),
         }
     }

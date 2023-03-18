@@ -130,6 +130,12 @@ impl ExeState {
         // open brokers between local variables and upvalues
         let mut open_brokers: Vec<OpenBroker> = Vec::new();
 
+        // fill nil if #argument < #parameter
+        if self.stack.len() - self.base < proto.nparam {
+            self.fill_stack_nil(0, proto.nparam);
+        }
+
+        // move varargs out from stack
         let varargs = if proto.has_varargs {
             self.stack.drain(self.base + proto.nparam ..).collect()
         } else {
@@ -408,27 +414,20 @@ impl ExeState {
 
                 // define closure
                 ByteCode::Closure(dst, inner) => {
-                    let inner_proto = proto.inner_funcs[inner as usize].clone();
+                    let inner = proto.inner_funcs[inner as usize].clone();
 
-                    // generate upvalues
-                    let inner_upvalues = inner_proto.upindexes.iter().map(|up| match up {
-                        &UpIndex::Local(ilocal) => {
-                            let ilocal = self.base + ilocal;
-                            let iob = open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal)
-                                .unwrap_or_else(|i| {
-                                    open_brokers.insert(i, OpenBroker::from(ilocal));
-                                    i
-                                });
-                            open_brokers[iob].broker.clone()
-                        }
-                        &UpIndex::Upvalue(iup) => upvalues[iup].clone(),
-                    }).collect();
+                    let fc = if inner.upindexes.is_empty() {
+                        Value::LuaFunction(inner)
 
-                    let c = LuaClosure {
-                        proto: inner_proto,
-                        upvalues: inner_upvalues,
+                    } else {
+                        let c = LuaClosure {
+                            upvalues: self.make_upvalues(&inner, upvalues, &mut open_brokers),
+                            proto: inner,
+                        };
+                        Value::LuaClosure(Rc::new(c))
                     };
-                    self.set_stack(dst, Value::LuaClosure(Rc::new(c)));
+
+                    self.set_stack(dst, fc);
                 }
 
                 // function call
@@ -883,20 +882,10 @@ impl ExeState {
         }
 
         match self.stack[self.base - 1].clone() {
-            Value::RustFunction(f) => {
-                f(self) as usize
-            }
-            Value::RustClosure(c) => {
-                c.borrow_mut()(self) as usize
-            }
-            Value::LuaClosure(c) => {
-                // fill nil if #argument < #parameter
-                if self.stack.len() - self.base < c.proto.nparam {
-                    self.fill_stack_nil(0, c.proto.nparam);
-                }
-
-                self.execute(&c.proto, &c.upvalues)
-            }
+            Value::RustFunction(f) => f(self) as usize,
+            Value::RustClosure(c) => c.borrow_mut()(self) as usize,
+            Value::LuaFunction(f) => self.execute(&f, &Vec::new()),
+            Value::LuaClosure(c) => self.execute(&c.proto, &c.upvalues),
             v => panic!("invalid function: {v:?}"),
         }
     }
@@ -906,6 +895,23 @@ impl ExeState {
             let openi = broker.replace(Upvalue::Closed(self.stack[ilocal].clone()));
             debug_assert_eq!(openi, Upvalue::Open(ilocal));
         }
+    }
+
+    fn make_upvalues(&self, proto: &FuncProto, upvalues: &[Rc<RefCell<Upvalue>>],
+        open_brokers: &mut Vec<OpenBroker>) -> Vec<Rc<RefCell<Upvalue>>> {
+
+        proto.upindexes.iter().map(|up| match up {
+            &UpIndex::Upvalue(iup) => upvalues[iup].clone(),
+            &UpIndex::Local(ilocal) => {
+                let ilocal = self.base + ilocal;
+                let iob = open_brokers.binary_search_by_key(&ilocal, |b|b.ilocal)
+                    .unwrap_or_else(|i| {
+                        open_brokers.insert(i, OpenBroker::from(ilocal));
+                        i
+                    });
+                open_brokers[iob].broker.clone()
+            }
+        }).collect()
     }
 
     fn make_float(&mut self, dst: u8) -> f64 {
