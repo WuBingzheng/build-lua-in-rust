@@ -164,7 +164,11 @@ impl ExeState {
                     self.set_stack(dst, v);
                 }
                 ByteCode::LoadNil(dst, n) => {
-                    self.fill_stack(dst as usize, n as usize);
+                    let begin = self.base + dst as usize;
+                    if begin < self.stack.len() {
+                        self.stack[begin..].fill(Value::Nil);
+                    }
+                    self.fill_stack_nil(dst, n as usize);
                 }
                 ByteCode::LoadBool(dst, b) => {
                     self.set_stack(dst, Value::Boolean(b));
@@ -390,11 +394,8 @@ impl ExeState {
                         self.set_stack(iter + 2, first_ret);
 
                         // move return values to @iter+3
-                        self.stack.drain(self.base+iter as usize+3 .. iret);
-                        let want_nret = nvar as usize;
-                        if nret < want_nret {
-                            self.fill_stack(nret, want_nret - nret);
-                        }
+                        self.stack.drain(self.base + iter as usize + 3 .. iret);
+                        self.fill_stack_nil(iter + 3, nvar as usize);
 
                         // jump back to loop
                         pc -= jmp as usize;
@@ -444,7 +445,7 @@ impl ExeState {
                     // we need to fill nil if necessary.
                     let want_nret = want_nret as usize;
                     if nret < want_nret {
-                        self.fill_stack(nret, want_nret - nret);
+                        self.fill_stack_nil(func, want_nret);
                     }
                 }
                 ByteCode::CallSet(dst, func, narg_plus) => {
@@ -510,7 +511,7 @@ impl ExeState {
                         self.stack.extend_from_slice(&varargs);
                     } else if want > len {
                         self.stack.extend_from_slice(&varargs);
-                        self.fill_stack(dst as usize + len, want - len);
+                        self.fill_stack_nil(dst, want);
                     } else {
                         self.stack.extend_from_slice(&varargs[..want]);
                     }
@@ -852,16 +853,8 @@ impl ExeState {
         set_vec(&mut self.stack, self.base + dst as usize, v);
     }
 // ANCHOR_END: set_stack
-    fn fill_stack(&mut self, begin: usize, num: usize) {
-        let begin = self.base + begin;
-        let end = begin + num;
-        let len = self.stack.len();
-        if begin < len {
-            self.stack[begin .. len].fill(Value::Nil);
-        }
-        if end > len {
-            self.stack.resize(end, Value::Nil);
-        }
+    fn fill_stack_nil(&mut self, base: u8, to: usize) {
+        self.stack.resize(self.base + base as usize + to, Value::Nil);
     }
 
     // call function
@@ -884,36 +877,22 @@ impl ExeState {
     //
     // Return the number of return values.
     fn do_call_function(&mut self, narg_plus: u8) -> usize {
+        // drop potential temprary stack usage, for get_top()
+        if narg_plus != 0 {
+            self.stack.truncate(self.base + narg_plus as usize - 1);
+        }
+
         match self.stack[self.base - 1].clone() {
             Value::RustFunction(f) => {
-                // drop potential temprary stack usage, for get_top()
-                if narg_plus != 0 {
-                    self.stack.truncate(self.base + narg_plus as usize - 1);
-                }
-
                 f(self) as usize
             }
             Value::RustClosure(c) => {
-                // drop potential temprary stack usage, for get_top()
-                if narg_plus != 0 {
-                    self.stack.truncate(self.base + narg_plus as usize - 1);
-                }
-
                 c.borrow_mut()(self) as usize
             }
             Value::LuaClosure(c) => {
-                let narg = if narg_plus == 0 {
-                    self.stack.len() - self.base
-                } else {
-                    narg_plus as usize - 1
-                };
-
-                if narg < c.proto.nparam {
-                    // fill nil to meet parameters
-                    self.fill_stack(narg, c.proto.nparam - narg);
-                } else if c.proto.has_varargs && narg_plus != 0 {
-                    // drop potential temprary stack usage for VarArgs
-                    self.stack.truncate(self.base + narg);
+                // fill nil if #argument < #parameter
+                if self.stack.len() - self.base < c.proto.nparam {
+                    self.fill_stack_nil(0, c.proto.nparam);
                 }
 
                 self.execute(&c.proto, &c.upvalues)
