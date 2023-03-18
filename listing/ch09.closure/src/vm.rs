@@ -34,6 +34,31 @@ fn test_new_counter(state: &mut ExeState) -> i32 {
     state.push(Value::RustClosure(Rc::new(RefCell::new(Box::new(c)))));
     1
 }
+fn ipairs_aux(state: &mut ExeState) -> i32 {
+    let table = match state.get::<&Value>(1) {
+        Value::Table(t) => t.borrow(),
+        _ => panic!("ipairs non-table"),
+    };
+
+    let i: i64 = state.get(2);
+    if i < 0 || i as usize >= table.array.len() {
+        return 0;
+    }
+
+    let v = table.array[i as usize].clone();
+    drop(table);
+
+    state.push(i + 1);
+    state.push(v);
+    2
+}
+
+fn ipairs(state: &mut ExeState) -> i32 {
+    state.push(Value::RustFunction(ipairs_aux));
+    state.push(state.get::<&Value>(1).clone());
+    state.push(0);
+    3
+}
 // ANCHOR_END: print
 
 #[derive(Debug, PartialEq)]
@@ -89,6 +114,7 @@ impl ExeState {
         let mut env = Table::new(0, 0);
         env.map.insert("print".into(), Value::RustFunction(lib_print));
         env.map.insert("type".into(), Value::RustFunction(lib_type));
+        env.map.insert("ipairs".into(), Value::RustFunction(ipairs));
         env.map.insert("new_counter".into(), Value::RustFunction(test_new_counter));
 
         ExeState {

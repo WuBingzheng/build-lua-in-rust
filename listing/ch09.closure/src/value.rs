@@ -338,4 +338,17 @@ impl From<&Value> for bool {
     }
 }
 
+impl From<&Value> for i64 {
+    fn from(v: &Value) -> Self {
+        match v {
+            Value::Integer(i) => *i,
+            Value::Float(f) => *f as i64,
+            Value::ShortStr(_, _) => todo!("tonumber"),
+            Value::MidStr(_) => todo!("tonumber"),
+            Value::LongStr(_) => todo!("tonumber"),
+            _ => panic!("invalid string Value"),
+        }
+    }
+}
+
 // ANCHOR_END: to_vec_string
