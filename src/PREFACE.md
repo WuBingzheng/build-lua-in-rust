@@ -2,7 +2,7 @@
 
 这系列文章介绍用Rust语言从零开始实现一个Lua解释器。
 
-Rust语言个性鲜明，也[很受欢迎](https://survey.stackoverflow.co/2022/?utm_source=so-owned&utm_medium=announcement-banner&utm_campaign=dev-survey-2022&utm_content=results#section-most-loved-dreaded-and-wanted-programming-scripting-and-markup-languages)，然而学习曲线陡峭。我在读完[《Rust程序设计语言》](https://kaisery.github.io/trpl-zh-cn/)并写了些练习代码后，深感必须通过一个较大的项目实践才能理解和掌握。
+Rust语言个性鲜明，也[广受欢迎](https://survey.stackoverflow.co/2022/?utm_source=so-owned&utm_medium=announcement-banner&utm_campaign=dev-survey-2022&utm_content=results#section-most-loved-dreaded-and-wanted-programming-scripting-and-markup-languages)，然而学习曲线陡峭。我在读完[《Rust程序设计语言》](https://kaisery.github.io/trpl-zh-cn/)并写了些练习代码后，深感必须通过一个较大的项目实践才能理解和掌握。
 
 实现一个Lua解释器就很适合作为这个练习项目。因为其规模适中，[需求明确](https://www.lua.org/manual/5.4/)，而且Lua语言本身也是一门设计优秀且应用广泛的语言。实现一个Lua解释器不仅可以实践Rust语言技能，还能深入了解Lua语言。Lua解释器的[诸多实现版本](http://lua-users.org/wiki/LuaImplementations)足以说明实现一个Lua解释器是多么吸引人。希望以后我的这个版本也能罗列其中。
 
@@ -16,9 +16,7 @@ Rust语言个性鲜明，也[很受欢迎](https://survey.stackoverflow.co/2022/
 
 ## 内容
 
-本系列文章预期读者对Lua和Rust这两门语言都有基本的了解，而并不会介绍语言的基本语法。其中对Lua语言自然是越熟悉越好。对Rust语言则无高要求，只要读过《Rust程序设计语言》，了解基本语法即可，毕竟这个项目的初衷就是为了学习Rust。
-
-本系列文章的内容安排如下。第1章实现一个最小的、只能解析 `print "hello, world!"` 语句的解释器。虽然简单，但是包括了解释器的完整流程，构建了基本框架。后续章节就以Lua语言特性为出发点，在这个最小解释器上逐渐地增加功能。
+内容安排如下。第1章实现一个最小的、只能解析 `print "hello, world!"` 语句的解释器。虽然简单，但是包括了解释器的完整流程，构建了基本框架。后续章节就以Lua语言特性为出发点，在这个最小解释器上逐渐地增加功能。
 
 第2章介绍编程语言中最基本的类型和变量的概念。第3章以完善字符串类型为目标，介绍Rust语言的几个特性。第4章实现Lua中的表结构，并引入语法分析中关键的ExpDesc概念。第5章是繁琐的数值计算。
 
@@ -26,8 +24,10 @@ Rust语言个性鲜明，也[很受欢迎](https://survey.stackoverflow.co/2022/
 
 第8章介绍函数，函数的基本概念和实现是比较简单的，但可变参数和多返回值要求对栈做精细管理。第9章介绍的闭包是Lua语言中的一个强大特性，这其中的关键是Upvalue及其逃逸。
 
-每一章都从Lua功能特性出发，先讨论如何设计，再介绍具体实现。不仅要讲清楚“怎么做”，更重要的是讲清楚“为什么这么做”，尽量避免写成代码阅读笔记。不过为了实现完整的Lua特性，肯定会有部分文章很无聊，尤其是前面几章。读者可以先看相对有趣的[字符串类型的定义](./ch03-01.string_type.md)和[Upvalue的逃逸](./ch09-02.escape_and_closure.md)这两节，以判断本系列文章是否符合口味。
+每一章都从Lua功能特性出发，先讨论如何设计，再介绍具体实现。不仅要讲清楚“怎么做”，更重要的是讲清楚“为什么这么做”，尽量避免写成代码阅读笔记。不过为了实现完整的Lua特性，肯定会有部分文章很无聊，尤其是前面几章。读者可以先浏览相对有趣的[字符串类型的定义](./ch03-01.string_type.md)和[Upvalue的逃逸](./ch09-02.escape_and_closure.md)这两节，以判断本系列文章是否符合口味。
 
 每一章都有完整的可运行代码，并且每一章的代码都是基于前一章的最终代码，保证整个项目是连续的。每个小节对应的代码改动都集中在两三个commit中，可以通过git来查看变更历史。开头的章节在介绍完设计原理后，基本还会逐行解释代码；到后面只会解释关键部分的代码；最后两章基本上就不讲代码了。
+
+我们预期读者对Lua和Rust这两门语言都有基本的了解，而并不会介绍语言的基本语法。其中对Lua语言自然是越熟悉越好。对Rust语言则无高要求，只要读过《Rust程序设计语言》，了解基本语法即可，毕竟这个项目的初衷就是为了学习Rust。
 
 由于编译原理、Lua语言、Rust语言等各方面技术能力所限，项目和文章中必定会有很多错误；另外我的语言表达能力很差，文章中也会有很多词不达意或语句不通之处，都欢迎读者来项目的[github主页](https://github.com/WuBingzheng/build-lua-in-rust)提issue反馈。

@@ -17,6 +17,7 @@
   - [类型转换](./ch03-02.from_trait.md)
   - [输入类型](./ch03-03.read_input.md)
   - [Unicode和UTF-8](./ch03-04.unicode_utf8.md)
+  - [垃圾回收和Rc](./ch03-05.gc_vs_rc.md)
 
 - [表和ExpDesc](./ch04-00.table.md)
   - [表的定义](./ch04-01.table_definition.md)
@@ -60,3 +61,5 @@
   - [环境 _ENV](./ch09-06.environment.md)
 
 [未完待续](./TO_BE_CONTINUED.md)
+
+[参考文献](./REFERENCES.md)
