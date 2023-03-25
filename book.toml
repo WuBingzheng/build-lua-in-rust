@@ -1,6 +1,9 @@
 [book]
-authors = ["wub"]
-language = "en"
+title = "用Rust实现Lua解释器"
+authors = ["Wu Bingzheng"]
+language = "zh-cn"
 multilingual = false
 src = "src"
-title = "Build a Lua Interpreter in Rust"
+
+[output.html]
+git-repository-url = "https://github.com/WuBingzheng/build-lua-in-rust"
