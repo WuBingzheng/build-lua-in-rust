@@ -27,6 +27,7 @@ enum ExpDesc {
 
     // function call
     Function(usize),
+    Closure(usize),
     Call(usize, usize),
     VarArgs,
 
@@ -65,7 +66,6 @@ pub struct FuncProto {
     pub nparam: usize,
     pub constants: Vec<Value>,
     pub upindexes: Vec<UpIndex>,
-    pub inner_funcs: Vec<Rc<FuncProto>>,
     pub byte_codes: Vec<ByteCode>,
 }
 
@@ -282,8 +282,13 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         let proto = chunk(self.ctx, has_varargs, params, Token::End);
 
-        self.fp.inner_funcs.push(Rc::new(proto));
-        ExpDesc::Function(self.fp.inner_funcs.len() - 1)
+        let no_upvalue = proto.upindexes.is_empty();
+        let iconst = self.add_const(Value::LuaFunction(Rc::new(proto)));
+        if no_upvalue {
+            ExpDesc::Function(iconst)
+        } else {
+            ExpDesc::Closure(iconst)
+        }
     }
 
 // ANCHOR: assignment
@@ -1423,7 +1428,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::IndexInt(itable, ikey) => ByteCode::GetInt(dst as u8, itable as u8, ikey),
             ExpDesc::IndexUpField(itable, ikey) => ByteCode::GetUpField(dst as u8, itable as u8, ikey as u8),
             ExpDesc::VarArgs => ByteCode::VarArgs(dst as u8, 1),
-            ExpDesc::Function(f) => ByteCode::Closure(dst as u8, f as u16),
+            ExpDesc::Function(f) => ByteCode::LoadConst(dst as u8, f as u16),
+            ExpDesc::Closure(f) => ByteCode::Closure(dst as u8, f as u16),
             ExpDesc::Call(ifunc, narg_plus) => ByteCode::CallSet(dst as u8, ifunc as u8, narg_plus as u8),
             ExpDesc::UnaryOp(op, i) => op(dst as u8, i as u8),
             ExpDesc::BinaryOp(op, left, right) => op(dst as u8, left as u8, right as u8),
