@@ -548,34 +548,29 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     fn break_stat(&mut self) {
-        if let Some(breaks) = self.break_blocks.last_mut() {
-            self.fp.byte_codes.push(ByteCode::Jump(0));
-            breaks.push(self.fp.byte_codes.len() - 1);
-        } else {
+        let Some(breaks) = self.break_blocks.last_mut() else {
             panic!("break outside loop");
-        }
+        };
+        self.fp.byte_codes.push(ByteCode::Jump(0));
+        breaks.push(self.fp.byte_codes.len() - 1);
     }
 
     fn try_continue_stat(&mut self, name: &Token) -> bool {
-        if let Token::Name(name) = name {
-            if name.as_str() != "continue" {
-                return false;
-            }
-            if !matches!(self.ctx.lex.peek(), Token::End | Token::Elseif | Token::Else) {
-                return false;
-            }
-
-            let nvar = self.local_num();
-            if let Some(continues) = self.continue_blocks.last_mut() {
-                self.fp.byte_codes.push(ByteCode::Jump(0));
-                continues.push((self.fp.byte_codes.len() - 1, nvar));
-            } else {
-                panic!("continue outside loop");
-            }
-            true
-        } else {
-            false
+        let Token::Name(name) = name else { return false; };
+        if name.as_str() != "continue" {
+            return false;
         }
+        if !matches!(self.ctx.lex.peek(), Token::End | Token::Elseif | Token::Else) {
+            return false;
+        }
+
+        let nvar = self.local_num();
+        let Some(continues) = self.continue_blocks.last_mut() else {
+            panic!("continue outside loop");
+        };
+        self.fp.byte_codes.push(ByteCode::Jump(0));
+        continues.push((self.fp.byte_codes.len() - 1, nvar));
+        true
     }
 
     // before entering loop block
@@ -1163,22 +1158,21 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
             Token::And | Token::Or => {
                 // left operand has been made into ExpDesc::Test in preprocess_binop_left()
-                if let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left {
-                    match right {
-                        ExpDesc::Compare(op, l, r, mut right_true_list, mut right_false_list) => {
-                            left_true_list.append(&mut right_true_list);
-                            left_false_list.append(&mut right_false_list);
-                            ExpDesc::Compare(op, l, r, left_true_list, left_false_list)
-                        }
-                        ExpDesc::Test(condition, mut right_true_list, mut right_false_list) => {
-                            left_true_list.append(&mut right_true_list);
-                            left_false_list.append(&mut right_false_list);
-                            ExpDesc::Test(condition, left_true_list, left_false_list)
-                        }
-                        _ => ExpDesc::Test(Box::new(right), left_true_list, left_false_list),
-                    }
-                } else {
+                let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left else {
                     panic!("impossible");
+                };
+                match right {
+                    ExpDesc::Compare(op, l, r, mut right_true_list, mut right_false_list) => {
+                        left_true_list.append(&mut right_true_list);
+                        left_false_list.append(&mut right_false_list);
+                        ExpDesc::Compare(op, l, r, left_true_list, left_false_list)
+                    }
+                    ExpDesc::Test(condition, mut right_true_list, mut right_false_list) => {
+                        left_true_list.append(&mut right_true_list);
+                        left_false_list.append(&mut right_false_list);
+                        ExpDesc::Test(condition, left_true_list, left_false_list)
+                    }
+                    _ => ExpDesc::Test(Box::new(right), left_true_list, left_false_list),
                 }
             }
             _ => panic!("impossible"),

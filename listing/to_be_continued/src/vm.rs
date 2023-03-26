@@ -220,18 +220,17 @@ impl ExeState {
                 }
                 ByteCode::SetList(table, n) => {
                     let ivalue = self.base + table as usize + 1;
-                    if let Value::Table(table) = self.get_stack(table).clone() {
-                        let end = if n == 0 {
-                            // 0 is special, means all following values in stack
-                            self.stack.len()
-                        } else {
-                            ivalue + n as usize
-                        };
-                        let values = self.stack.drain(ivalue .. end);
-                        table.borrow_mut().array.extend(values);
-                    } else {
+                    let Value::Table(table) = self.get_stack(table).clone() else {
                         panic!("not table");
-                    }
+                    };
+                    let end = if n == 0 {
+                        // 0 is special, means all following values in stack
+                        self.stack.len()
+                    } else {
+                        ivalue + n as usize
+                    };
+                    let values = self.stack.drain(ivalue .. end);
+                    table.borrow_mut().array.extend(values);
                 }
                 ByteCode::GetInt(dst, t, k) => {
                     let value = self.get_stack(t).index_array(k as i64);
@@ -352,23 +351,21 @@ impl ExeState {
                     // stack: i, limit, step
                     match (self.get_stack(dst + 1), self.get_stack(dst + 2)) {
                         (&Value::Integer(limit), &Value::Integer(step)) => {
-                            if let Value::Integer(i) = self.get_stack_mut(dst) {
-                                *i += step;
-                                if for_check(*i, limit, step>0) {
-                                    pc -= jmp as usize;
-                                }
-                            } else {
+                            let Value::Integer(i) = self.get_stack_mut(dst) else {
                                 panic!("xxx");
+                            };
+                            *i += step;
+                            if for_check(*i, limit, step>0) {
+                                pc -= jmp as usize;
                             }
                         }
                         (&Value::Float(limit), &Value::Float(step)) => {
-                            if let Value::Float(i) = self.get_stack_mut(dst) {
-                                *i += step;
-                                if for_check(*i, limit, step>0.0) {
-                                    pc -= jmp as usize;
-                                }
-                            } else {
+                            let Value::Float(i) = self.get_stack_mut(dst) else {
                                 panic!("xxx");
+                            };
+                            *i += step;
+                            if for_check(*i, limit, step>0.0) {
+                                pc -= jmp as usize;
                             }
                         }
                         _ => panic!("xx"),
