@@ -10,6 +10,7 @@ type FnBc2u8 = fn(u8, u8) -> ByteCode;
 type FnBc3u8 = fn(u8, u8, u8) -> ByteCode;
 type FnBcBool = fn(u8, u8, bool) -> ByteCode;
 
+// expression description, inner layer between source code and byte code
 #[derive(Debug, PartialEq)]
 enum ExpDesc {
     // constants
@@ -46,11 +47,13 @@ enum ExpDesc {
     Compare(FnBcBool, usize, usize, Vec<usize>, Vec<usize>),
 }
 
+// see discharge_const()
 enum ConstStack {
     Const(usize),
     Stack(usize),
 }
 
+// mark both goto and label
 #[derive(Debug)]
 struct GotoLabel {
     name: String,
@@ -58,12 +61,14 @@ struct GotoLabel {
     nvar: usize,
 }
 
+// index of locals/upvalues in upper functions
 #[derive(Debug)]
 pub enum UpIndex {
-    Local(usize), // index of local variables in upper functions
-    Upvalue(usize), // index of upvalues in upper functions
+    Local(usize),
+    Upvalue(usize),
 }
 
+// core struct, generated in parse phase and executed in VM
 #[derive(Debug, Default)]
 pub struct FuncProto {
     pub has_varargs: bool,
@@ -73,6 +78,7 @@ pub struct FuncProto {
     pub byte_codes: Vec<ByteCode>,
 }
 
+// level of inner functions, used for matching upvalue
 #[derive(Debug, Default)]
 struct Level {
     locals: Vec<(String, bool)>, // (name, referred-as-upvalue)
@@ -132,7 +138,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             // reset sp before each statement
             self.sp = self.local_num();
 
-// ANCHOR: func_or_assign
             match self.ctx.lex.next() {
                 Token::SemiColon => (),
                 t@Token::Name(_) | t@Token::ParL => {
@@ -146,14 +151,14 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     let desc = self.prefixexp(t);
                     if let ExpDesc::Call(ifunc, narg_plus) = desc {
                         // prefixexp() matches the whole functioncall statement.
-                        self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg_plus as u8, 0));
+                        let code = ByteCode::Call(ifunc as u8, narg_plus as u8, 0);
+                        self.fp.byte_codes.push(code);
                     } else {
                         // prefixexp() matches only the first variable, so we
                         // continue the statement
                         self.assignment(desc);
                     }
                 }
-// ANCHOR_END: func_or_assign
                 Token::Local =>
                     if self.ctx.lex.peek() == &Token::Function {
                         self.local_function()
@@ -195,7 +200,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
             self.explist_want(vars.len());
         } else {
             // no exp, load nils
-            self.fp.byte_codes.push(ByteCode::LoadNil(self.sp as u8, vars.len() as u8));
+            let code = ByteCode::LoadNil(self.sp as u8, vars.len() as u8);
+            self.fp.byte_codes.push(code);
         }
 
         // append vars into self.locals after evaluating explist
@@ -284,6 +290,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
 
+        // body
         let proto = chunk(self.ctx, has_varargs, params, Token::End);
 
         let no_upvalue = proto.upindexes.is_empty();
@@ -295,7 +302,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
     }
 
-// ANCHOR: assignment
     // BNF:
     //   varlist = explist
     //   varlist ::= var {`,` var}
@@ -340,7 +346,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             self.assign_from_stack(var, sp0 + nexp);
         }
     }
-// ANCHOR_END: assignment
 
     // BNF:
     //   if exp then block {elseif exp then block} [else block] end
@@ -721,7 +726,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         self.fp.byte_codes.push(code);
     }
 
-// ANCHOR: assign_helper
     // process assignment: var = value
     fn assign_var(&mut self, var: ExpDesc, value: ExpDesc) {
         if let ExpDesc::Local(i) = var {
@@ -761,16 +765,15 @@ impl<'a, R: Read> ParseProto<'a, R> {
         };
         self.fp.byte_codes.push(code);
     }
-// ANCHOR_END: assign_helper
 
+    // add the value to constants
     fn add_const(&mut self, c: impl Into<Value>) -> usize {
         let c = c.into();
         let constants = &mut self.fp.constants;
-        constants.iter().position(|v| v.same(&c))
-            .unwrap_or_else(|| {
-                constants.push(c);
-                constants.len() - 1
-            })
+        constants.iter().position(|v| v.same(&c)).unwrap_or_else(|| {
+            constants.push(c);
+            constants.len() - 1
+        })
     }
 
     // explist ::= exp {`,` exp}
@@ -874,11 +877,9 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     // used for unary operand
-// ANCHOR: exp_unop
     fn exp_unop(&mut self) -> ExpDesc {
         self.exp_limit(12) // 12 is all unary operators' priority
     }
-// ANCHOR_END: exp_unop
 
     // BNF:
     //   prefixexp ::= var | functioncall | `(` exp `)`
@@ -910,7 +911,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
     // where:
     //   A' ::= alpha A' | Epsilon
     //        = (`[` exp `]` | `.` Name | args | `:` Name args) A' | Epsilon
-// ANCHOR: prefixexp
     fn prefixexp(&mut self, ahead: Token) -> ExpDesc {
         let sp0 = self.sp;
 
@@ -989,7 +989,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
     }
-// ANCHOR_END: prefixexp
 
     fn local_num(&self) -> usize {
         self.ctx.levels.last().unwrap().locals.len()
@@ -1017,7 +1016,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
     }
 
-    // local, upvalue, or global
+    // match the name as local, upvalue, or global
     fn simple_name(&mut self, name: String) -> ExpDesc {
         let mut level_iter = self.ctx.levels.iter_mut().rev();
 
@@ -1042,7 +1041,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             }
         }
 
-        // not found, so global variable, by _ENV[name]
+        // not matched as local or upvalue, so global variable, by _ENV[name]
         let iname = self.add_const(name);
         match self.simple_name("_ENV".into()) {
             ExpDesc::Local(i) => ExpDesc::IndexField(i, iname),
@@ -1067,7 +1066,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         ExpDesc::Upvalue(upvalues.len() - 1)
     }
 
-// ANCHOR: unop_neg
+    // unop `-`
     fn unop_neg(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(-i),
@@ -1076,7 +1075,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
             desc => ExpDesc::UnaryOp(ByteCode::Neg, self.discharge_any(desc))
         }
     }
-// ANCHOR_END: unop_neg
+
+    // unop `not`
     fn unop_not(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::Nil => ExpDesc::Boolean(true),
@@ -1085,6 +1085,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             desc => ExpDesc::UnaryOp(ByteCode::Not, self.discharge_any(desc)),
         }
     }
+    // unop `~`
     fn unop_bitnot(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::Integer(i) => ExpDesc::Integer(!i),
@@ -1092,6 +1093,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
             desc => ExpDesc::UnaryOp(ByteCode::BitNot, self.discharge_any(desc)),
         }
     }
+    // unop `#`
     fn unop_len(&mut self) -> ExpDesc {
         match self.exp_unop() {
             ExpDesc::String(s) => ExpDesc::Integer(s.len() as i64),
@@ -1101,25 +1103,24 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
     fn preprocess_binop_left(&mut self, left: ExpDesc, binop: &Token) -> ExpDesc {
-        match binop {
-            // Generate TestOrJump/TestAndJump before reading right operand,
-            // because of short-circuit evaluation.
-            Token::And => ExpDesc::Test(Box::new(ExpDesc::Nil), Vec::new(), self.test_or_jump(left)),
-            Token::Or => ExpDesc::Test(Box::new(ExpDesc::Nil), self.test_and_jump(left), Vec::new()),
+        // Generate TestOrJump/TestAndJump before reading right operand,
+        // because of short-circuit evaluation.
+        if binop == &Token::And {
+            ExpDesc::Test(Box::new(ExpDesc::Nil), Vec::new(), self.test_or_jump(left))
+        } else if binop == &Token::Or {
+            ExpDesc::Test(Box::new(ExpDesc::Nil), self.test_and_jump(left), Vec::new())
 
-            // Discharge left operand before reading right operand, which may
-            // affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
-            // the `f(t)` may change `t.k`, so we must evaluate `t.k` before
-            // calling `f(t)`. */
-            // But we do not discharge constants, because they will not be
-            // affected by right operand. Besides we try to fold constants
-            // in process_binop() later.
-            _ =>
-                if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
-                    left
-                } else {
-                    ExpDesc::Local(self.discharge_any(left))
-                }
+        // Discharge left operand before reading right operand, which may
+        // affect the evaluation of left operand. e.g. `t.k + f(t) * 1`,
+        // the `f(t)` may change `t.k`, so we must evaluate `t.k` before
+        // calling `f(t)`. */
+        // But we do not discharge constants, because they will not be
+        // affected by right operand. Besides we try to fold constants
+        // in process_binop() later.
+        } else if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
+            left
+        } else {
+            ExpDesc::Local(self.discharge_any(left))
         }
     }
 
@@ -1179,7 +1180,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
     }
 
-// ANCHOR: do_binop
     fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc,
             opr: FnBc3u8, opi: FnBc3u8, opk: FnBc3u8) -> ExpDesc {
 
@@ -1205,7 +1205,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
         ExpDesc::BinaryOp(op, left, right)
     }
-// ANCHOR_END: do_binop
 
     fn do_compare(&mut self, mut left: ExpDesc, mut right: ExpDesc,
             opr: FnBcBool, opi: FnBcBool, opk: FnBcBool) -> ExpDesc {
@@ -1385,7 +1384,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         ExpDesc::Call(ifunc, narg_plus)
     }
 
-// ANCHOR: discharge_helper
     // discharge @desc into the top of stack, if need
     fn discharge_any(&mut self, desc: ExpDesc) -> usize {
         let dst = if let &ExpDesc::Call(ifunc, _) = &desc {
@@ -1405,7 +1403,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             dst
         }
     }
-// ANCHOR_END: discharge_helper
 
     // discharge @desc into @dst, and update self.sp=dst+1
     fn discharge(&mut self, dst: usize, desc: ExpDesc) {
@@ -1460,9 +1457,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
         self.sp = dst + 1;
     }
 
-// ANCHOR: discharge_const
     // for constant types, add @desc to constants;
-    // otherwise, discharge @desc into the top of stack
+    // otherwise, discharge @desc into stack
     fn discharge_const(&mut self, desc: ExpDesc) -> ConstStack {
         match desc {
             // add const
@@ -1471,12 +1467,12 @@ impl<'a, R: Read> ParseProto<'a, R> {
             ExpDesc::Integer(i) => ConstStack::Const(self.add_const(i)),
             ExpDesc::Float(f) => ConstStack::Const(self.add_const(f)),
             ExpDesc::String(s) => ConstStack::Const(self.add_const(s)),
+            ExpDesc::Function(f) => ConstStack::Const(f),
 
             // discharge to stack
             _ => ConstStack::Stack(self.discharge_any(desc)),
         }
     }
-// ANCHOR_END: discharge_const
 
     fn discharge_expand_want(&mut self, desc: ExpDesc, want: usize) {
         debug_assert!(want > 1);
@@ -1512,7 +1508,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         true
     }
 
-// ANCHOR: table_constructor
     fn table_constructor(&mut self) -> ExpDesc {
         let table = self.sp;
         self.sp += 1;
@@ -1548,11 +1543,16 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     self.ctx.lex.expect(Token::Assign); // `=`
 
                     TableEntry::Map(match key {
-                        ExpDesc::Local(i) => (ByteCode::SetTable, ByteCode::SetTableConst, i),
-                        ExpDesc::String(s) => (ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(s)),
-                        ExpDesc::Integer(i) if u8::try_from(i).is_ok() => (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
-                        ExpDesc::Nil => panic!("nil can not be table key"),
-                        ExpDesc::Float(f) if f.is_nan() => panic!("NaN can not be table key"),
+                        ExpDesc::Local(i) =>
+                            (ByteCode::SetTable, ByteCode::SetTableConst, i),
+                        ExpDesc::String(s) =>
+                            (ByteCode::SetField, ByteCode::SetFieldConst, self.add_const(s)),
+                        ExpDesc::Integer(i) if u8::try_from(i).is_ok() =>
+                            (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
+                        ExpDesc::Nil =>
+                            panic!("nil can not be table key"),
+                        ExpDesc::Float(f) if f.is_nan() =>
+                            panic!("NaN can not be table key"),
                         _ => (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_any(key)),
                     })
                 }
@@ -1623,7 +1623,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
         self.sp = table + 1;
         ExpDesc::Local(table)
     }
-// ANCHOR_END: table_constructor
 
     fn read_name(&mut self) -> String {
         if let Token::Name(name) = self.ctx.lex.next() {
@@ -1694,7 +1693,6 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     fp
 }
 
-// ANCHOR: binop_pri
 fn binop_pri(binop: &Token) -> (i32, i32) {
     match binop {
         Token::Pow => (14, 13), // right associative
@@ -1712,7 +1710,6 @@ fn binop_pri(binop: &Token) -> (i32, i32) {
         _ => (-1, -1)
     }
 }
-// ANCHOR_END: binop_pri
 
 fn is_block_end(t: &Token) -> bool {
     matches!(t, Token::End | Token::Elseif | Token::Else | Token::Until | Token::Eos)
