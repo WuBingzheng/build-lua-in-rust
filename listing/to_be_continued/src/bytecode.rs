@@ -119,6 +119,4 @@ pub enum ByteCode {
     SetFalseSkip(u8),
 
     Concat(u8, u8, u8),
-    ConcatInt(u8, u8, u8),
-    ConcatConst(u8, u8, u8),
 }

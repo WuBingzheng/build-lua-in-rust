@@ -1142,7 +1142,6 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Token::BitOr  => self.do_binop(left, right, ByteCode::BitOr, ByteCode::BitOrInt, ByteCode::BitOrConst),
             Token::ShiftL => self.do_binop(left, right, ByteCode::ShiftL, ByteCode::ShiftLInt, ByteCode::ShiftLConst),
             Token::ShiftR => self.do_binop(left, right, ByteCode::ShiftR, ByteCode::ShiftRInt, ByteCode::ShiftRConst),
-            Token::Concat => self.do_binop(left, right, ByteCode::Concat, ByteCode::ConcatInt, ByteCode::ConcatConst),
 
             Token::Equal => self.do_compare(left, right, ByteCode::Equal, ByteCode::EqualInt, ByteCode::EqualConst),
             Token::NotEq => self.do_compare(left, right, ByteCode::NotEq, ByteCode::NotEqInt, ByteCode::NotEqConst),
@@ -1150,6 +1149,13 @@ impl<'a, R: Read> ParseProto<'a, R> {
             Token::GreEq => self.do_compare(left, right, ByteCode::GreEq, ByteCode::GreEqInt, ByteCode::GreEqConst),
             Token::Less => self.do_compare(left, right, ByteCode::Less, ByteCode::LessInt, ByteCode::LessConst),
             Token::Greater => self.do_compare(left, right, ByteCode::Greater, ByteCode::GreaterInt, ByteCode::GreaterConst),
+
+            Token::Concat => {
+                // TODO support multiple operants
+                let left = self.discharge_any(left);
+                let right = self.discharge_any(right);
+                ExpDesc::BinaryOp(ByteCode::Concat, left, right)
+            }
 
             Token::And | Token::Or => {
                 // left operand has been made into ExpDesc::Test in preprocess_binop_left()

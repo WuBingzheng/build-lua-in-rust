@@ -1,4 +1,3 @@
-use std::io::Write;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -835,15 +834,7 @@ impl ExeState {
                 }
 
                 ByteCode::Concat(dst, a, b) => {
-                    let r = exe_concat(&self.get_stack(a), &self.get_stack(b));
-                    self.set_stack(dst, r);
-                }
-                ByteCode::ConcatConst(dst, a, b) => {
-                    let r = exe_concat(&self.get_stack(a), &proto.constants[b as usize]);
-                    self.set_stack(dst, r);
-                }
-                ByteCode::ConcatInt(dst, a, i) => {
-                    let r = exe_concat(&self.get_stack(a), &Value::Integer(i as i64));
+                    let r = self.get_stack(a).concat(self.get_stack(b));
                     self.set_stack(dst, r);
                 }
             }
@@ -1000,37 +991,6 @@ fn exe_binop_int_i(v1: &Value, i2: u8, arith_i: fn(i64,i64)->i64) -> Value {
         _ => todo!("meta"),
     };
     Value::Integer(arith_i(i1, i2 as i64))
-}
-
-fn exe_concat(v1: &Value, v2: &Value) -> Value {
-    // TODO remove duplicated code
-    let mut numbuf1: Vec<u8> = Vec::new();
-    let v1 = match v1 {
-        Value::Integer(i) => {
-            write!(&mut numbuf1, "{}", i).unwrap();
-            numbuf1.as_slice()
-        }
-        Value::Float(f) => {
-            write!(&mut numbuf1, "{}", f).unwrap();
-            numbuf1.as_slice()
-        }
-        _ => v1.into()
-    };
-
-    let mut numbuf2: Vec<u8> = Vec::new();
-    let v2 = match v2 {
-        Value::Integer(i) => {
-            write!(&mut numbuf2, "{}", i).unwrap();
-            numbuf2.as_slice()
-        }
-        Value::Float(f) => {
-            write!(&mut numbuf2, "{}", f).unwrap();
-            numbuf2.as_slice()
-        }
-        _ => v2.into()
-    };
-
-    [v1, v2].concat().into()
 }
 
 fn for_check<T: PartialOrd>(i: T, limit: T, is_step_positive: bool) -> bool {

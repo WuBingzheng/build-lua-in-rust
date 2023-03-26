@@ -219,6 +219,28 @@ impl Value {
             _ => todo!("meta __newindex"),
         }
     }
+
+    pub fn concat(&self, v2: &Self) -> Self {
+        let s1: &[u8] = self.into();
+
+        match v2 {
+            Value::Integer(_) => todo!("int"),
+            Value::Float(_) => todo!("float"),
+            _ => {
+                let s2: &[u8] = v2.into();
+                let l1 = s1.len();
+                let l2 = s2.len();
+                if l1 + l2 < MID_STR_MAX {
+                    let mut buf = [0; MID_STR_MAX];
+                    buf[..l1].copy_from_slice(s1);
+                    buf[l1..l1+l2].copy_from_slice(s2);
+                    buf[..l2].into()
+                } else {
+                    [s1, s2].concat().into()
+                }
+            }
+        }
+    }
 }
 
 // ANCHOR: hash
