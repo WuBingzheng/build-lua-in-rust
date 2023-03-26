@@ -713,7 +713,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                     // tail call
                     ByteCode::TailCall(func as u8, narg_plus as u8)
 
-                } else if self.discharge_expand(last_exp) {
+                } else if self.discharge_try_expand(last_exp, 0) {
                     // return variable values
                     ByteCode::Return(iret as u8, 0)
 
@@ -1356,7 +1356,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
                 if self.ctx.lex.peek() != &Token::ParR {
                     let (nexp, last_exp) = self.explist();
                     self.ctx.lex.expect(Token::ParR);
-                    if self.discharge_expand(last_exp) {
+                    if self.discharge_try_expand(last_exp, 0) {
                         None // variable arguments
                     } else {
                         Some(nexp + 1)
@@ -1476,36 +1476,31 @@ impl<'a, R: Read> ParseProto<'a, R> {
 
     fn discharge_expand_want(&mut self, desc: ExpDesc, want: usize) {
         debug_assert!(want > 1);
-        let code = match desc {
-            ExpDesc::Call(ifunc, narg_plus) => {
-                ByteCode::Call(ifunc as u8, narg_plus as u8, want as u8)
-            }
-            ExpDesc::VarArgs => {
-                ByteCode::VarArgs(self.sp as u8, want as u8)
-            }
-            _ => {
-                self.discharge(self.sp, desc);
-                ByteCode::LoadNil(self.sp as u8, want as u8 - 1)
-            }
-        };
-        self.fp.byte_codes.push(code);
+        if !self.discharge_try_expand(desc, want) {
+            let code = ByteCode::LoadNil(self.sp as u8, want as u8 - 1);
+            self.fp.byte_codes.push(code);
+        }
     }
 
-    fn discharge_expand(&mut self, desc: ExpDesc) -> bool {
-        let code = match desc {
+    // try to expand the @desc to #want values.
+    // want==0 means expand as many as possible.
+    fn discharge_try_expand(&mut self, desc: ExpDesc, want: usize) -> bool {
+        match desc {
             ExpDesc::Call(ifunc, narg_plus) => {
-                ByteCode::Call(ifunc as u8, narg_plus as u8, 0)
+                let code = ByteCode::Call(ifunc as u8, narg_plus as u8, want as u8);
+                self.fp.byte_codes.push(code);
+                true
             }
             ExpDesc::VarArgs => {
-                ByteCode::VarArgs(self.sp as u8, 0)
+                let code = ByteCode::VarArgs(self.sp as u8, want as u8);
+                self.fp.byte_codes.push(code);
+                true
             }
             _ => {
                 self.discharge(self.sp, desc);
-                return false
+                false
             }
-        };
-        self.fp.byte_codes.push(code);
-        true
+        }
     }
 
     fn table_constructor(&mut self) -> ExpDesc {
@@ -1605,7 +1600,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         }
 
         if let Some(last) = last_array_entry {
-            let num = if self.discharge_expand(last) {
+            let num = if self.discharge_try_expand(last, 0) {
                 // do not update @narray
                 0 // 0 is special, means all following values in stack
             } else {
@@ -1693,6 +1688,7 @@ fn chunk(ctx: &mut ParseContext<impl Read>, has_varargs: bool, params: Vec<Strin
     fp
 }
 
+// priorities of binops
 fn binop_pri(binop: &Token) -> (i32, i32) {
     match binop {
         Token::Pow => (14, 13), // right associative
