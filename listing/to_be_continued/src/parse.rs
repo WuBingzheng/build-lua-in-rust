@@ -6,6 +6,10 @@ use crate::bytecode::ByteCode;
 use crate::value::Value;
 use crate::utils::ftoi;
 
+type FnBc2u8 = fn(u8, u8) -> ByteCode;
+type FnBc3u8 = fn(u8, u8, u8) -> ByteCode;
+type FnBcBool = fn(u8, u8, bool) -> ByteCode;
+
 #[derive(Debug, PartialEq)]
 enum ExpDesc {
     // constants
@@ -32,14 +36,14 @@ enum ExpDesc {
     VarArgs,
 
     // arithmetic operators
-    UnaryOp(fn(u8,u8)->ByteCode, usize), // (opcode, operand)
-    BinaryOp(fn(u8,u8,u8)->ByteCode, usize, usize), // (opcode, left-operand, right-operand)
+    UnaryOp(FnBc2u8, usize), // (opcode, operand)
+    BinaryOp(FnBc3u8, usize, usize), // (opcode, left-operand, right-operand)
 
     // binaray logical operators: 'and', 'or'
     Test(Box<ExpDesc>, Vec<usize>, Vec<usize>), // (condition, true-list, false-list)
 
     // relational operators, e.g. '==', '<='
-    Compare(fn(u8,u8,bool)->ByteCode, usize, usize, Vec<usize>, Vec<usize>),
+    Compare(FnBcBool, usize, usize, Vec<usize>, Vec<usize>),
 }
 
 enum ConstStack {
@@ -1182,8 +1186,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 
 // ANCHOR: do_binop
-    fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,u8)->ByteCode,
-            opi: fn(u8,u8,u8)->ByteCode, opk: fn(u8,u8,u8)->ByteCode) -> ExpDesc {
+    fn do_binop(&mut self, mut left: ExpDesc, mut right: ExpDesc,
+            opr: FnBc3u8, opi: FnBc3u8, opk: FnBc3u8) -> ExpDesc {
 
         if opr == ByteCode::Add || opr == ByteCode::Mul { // commutative
             if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
@@ -1209,8 +1213,8 @@ impl<'a, R: Read> ParseProto<'a, R> {
     }
 // ANCHOR_END: do_binop
 
-    fn do_compare(&mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,bool)->ByteCode,
-            opi: fn(u8,u8,bool)->ByteCode, opk: fn(u8,u8,bool)->ByteCode) -> ExpDesc {
+    fn do_compare(&mut self, mut left: ExpDesc, mut right: ExpDesc,
+            opr: FnBcBool, opi: FnBcBool, opk: FnBcBool) -> ExpDesc {
 
         if opr == ByteCode::Equal || opr == ByteCode::NotEq { // commutative
             if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
@@ -1523,7 +1527,7 @@ impl<'a, R: Read> ParseProto<'a, R> {
         self.fp.byte_codes.push(ByteCode::NewTable(table as u8, 0, 0));
 
         enum TableEntry {
-            Map((fn(u8,u8,u8)->ByteCode, fn(u8,u8,u8)->ByteCode, usize)),
+            Map((FnBc3u8, FnBc3u8, usize)),
             Array(ExpDesc),
         }
 
