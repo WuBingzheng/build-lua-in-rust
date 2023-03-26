@@ -27,12 +27,10 @@ pub enum Value {
     LuaClosure(Rc<LuaClosure>),
 }
 
-// ANCHOR: table
 pub struct Table {
     pub array: Vec<Value>,
     pub map: HashMap<Value, Value>,
 }
-// ANCHOR_END: table
 
 impl Table {
     pub fn new(narray: usize, nmap: usize) -> Self {
@@ -115,7 +113,6 @@ impl fmt::Debug for Value {
     }
 }
 
-// ANCHOR: peq
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -137,13 +134,9 @@ impl PartialEq for Value {
         }
     }
 }
-// ANCHOR_END: peq
 
-// ANCHOR: eq
 impl Eq for Value {}
-// ANCHOR_END: eq
 
-// ANCHOR: partialord
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self, other) {
@@ -170,7 +163,6 @@ impl PartialOrd for Value {
         }
     }
 }
-// ANCHOR_END: partialord
 
 impl Value {
     pub fn same(&self, other: &Self) -> bool {
@@ -243,7 +235,6 @@ impl Value {
     }
 }
 
-// ANCHOR: hash
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
@@ -267,7 +258,6 @@ impl Hash for Value {
         }
     }
 }
-// ANCHOR_END: hash
 
 impl From<()> for Value {
     fn from(_: ()) -> Self {
@@ -281,7 +271,6 @@ impl From<bool> for Value {
     }
 }
 
-// ANCHOR: from_num
 impl From<f64> for Value {
     fn from(n: f64) -> Self {
         Value::Float(n)
@@ -293,9 +282,7 @@ impl From<i64> for Value {
         Value::Integer(n)
     }
 }
-// ANCHOR_END: from_num
 
-// ANCHOR: from_vec_string
 // convert &[u8], Vec<u8>, &str and String into Value
 impl From<&[u8]> for Value {
     fn from(v: &[u8]) -> Self {
@@ -335,9 +322,7 @@ fn vec_to_short_mid_str(v: &[u8]) -> Option<Value> {
         None
     }
 }
-// ANCHOR_END: from_vec_string
 
-// ANCHOR: to_vec_string
 impl<'a> From<&'a Value> for &'a [u8] {
     fn from(v: &'a Value) -> Self {
         match v {
@@ -379,5 +364,3 @@ impl From<&Value> for i64 {
         }
     }
 }
-
-// ANCHOR_END: to_vec_string

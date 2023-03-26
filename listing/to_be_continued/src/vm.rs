@@ -6,8 +6,7 @@ use crate::value::{Value, Table};
 use crate::parse::{FuncProto, UpIndex};
 use crate::utils::{ftoi, set_vec};
 
-// ANCHOR: print
-// "print" function in Lua's std-lib.
+// TODO move these library functions out
 fn lib_print(state: &mut ExeState) -> i32 {
     for i in 1 ..= state.get_top() {
         if i != 1 {
@@ -58,7 +57,6 @@ fn ipairs(state: &mut ExeState) -> i32 {
     state.push(0);
     3
 }
-// ANCHOR_END: print
 
 #[derive(Debug, PartialEq)]
 pub enum Upvalue {
@@ -81,7 +79,10 @@ impl Upvalue {
     }
 }
 
+// broker between local variables and open upvalues.
 struct OpenBroker {
+    // @broker contains @ilocal, however, the duplicated @ilocal
+    // exists for quick comparation
     ilocal: usize,
     broker: Rc<RefCell<Upvalue>>,
 }
@@ -100,16 +101,15 @@ pub struct LuaClosure {
     upvalues: Vec<Rc<RefCell<Upvalue>>>,
 }
 
-// ANCHOR: state
+// global execute state
 pub struct ExeState {
     stack: Vec::<Value>,
     base: usize, // stack base of current function
 }
-// ANCHOR_END: state
 
-// ANCHOR: new
 impl ExeState {
     pub fn new() -> Self {
+        // TODO initilize the standard library outside
         let mut env = Table::new(0, 0);
         env.map.insert("print".into(), Value::RustFunction(lib_print));
         env.map.insert("type".into(), Value::RustFunction(lib_type));
@@ -117,13 +117,14 @@ impl ExeState {
         env.map.insert("new_counter".into(), Value::RustFunction(test_new_counter));
 
         ExeState {
+            // 0: un-used entry function, 1: `_ENV` argument
             stack: vec![Value::Nil, Value::Table(Rc::new(RefCell::new(env)))],
-            base: 1, // for entry function
+
+            // always an entry function, even not used
+            base: 1,
         }
     }
-// ANCHOR_END: new
 
-// ANCHOR: execute
     pub fn execute(&mut self, proto: &FuncProto, upvalues: &Vec<Rc<RefCell<Upvalue>>>) -> usize {
 
         // open brokers between local variables and upvalues
@@ -145,25 +146,7 @@ impl ExeState {
         loop {
             println!("  [{pc}]\t{:?}", proto.byte_codes[pc]);
             match proto.byte_codes[pc] {
-                ByteCode::GetUpvalue(dst, src) => {
-                    let v = upvalues[src as usize].borrow().get(&self.stack).clone();
-                    self.set_stack(dst, v);
-                }
-                ByteCode::SetUpvalue(dst, src) => {
-                    let v = self.get_stack(src).clone();
-                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
-                }
-                ByteCode::SetUpvalueConst(dst, src) => {
-                    let v = proto.constants[src as usize].clone();
-                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
-                }
-                ByteCode::Close(ilocal) => {
-                    let ilocal = self.base + ilocal as usize;
-                    let from = open_brokers.binary_search_by_key(&ilocal, |b| b.ilocal)
-                        .unwrap_or_else(|i| i);
-                    self.close_brokers(open_brokers.drain(from..));
-                }
-
+                // local variable
                 ByteCode::LoadConst(dst, c) => {
                     let v = proto.constants[c as usize].clone();
                     self.set_stack(dst, v);
@@ -185,22 +168,49 @@ impl ExeState {
                     let v = self.get_stack(src).clone();
                     self.set_stack(dst, v);
                 }
-// ANCHOR: vm_table
+
+                // upvalues
+                ByteCode::GetUpvalue(dst, src) => {
+                    let v = upvalues[src as usize].borrow().get(&self.stack).clone();
+                    self.set_stack(dst, v);
+                }
+                ByteCode::SetUpvalue(dst, src) => {
+                    let v = self.get_stack(src).clone();
+                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
+                }
+                ByteCode::SetUpvalueConst(dst, src) => {
+                    let v = proto.constants[src as usize].clone();
+                    upvalues[dst as usize].borrow_mut().set(&mut self.stack, v);
+                }
+                ByteCode::Close(ilocal) => {
+                    let ilocal = self.base + ilocal as usize;
+                    let from = open_brokers.binary_search_by_key(&ilocal, |b| b.ilocal)
+                        .unwrap_or_else(|i| i);
+                    self.close_brokers(open_brokers.drain(from..));
+                }
+
+                // table
                 ByteCode::NewTable(dst, narray, nmap) => {
                     let table = Table::new(narray as usize, nmap as usize);
                     self.set_stack(dst, Value::Table(Rc::new(RefCell::new(table))));
+                }
+                ByteCode::SetTable(t, k, v) => {
+                    let key = self.get_stack(k).clone();
+                    let value = self.get_stack(v).clone();
+                    self.get_stack(t).new_index(key, value);
+                }
+                ByteCode::SetField(t, k, v) => {
+                    let key = proto.constants[k as usize].clone();
+                    let value = self.get_stack(v).clone();
+                    self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetInt(t, i, v) => {
                     let value = self.get_stack(v).clone();
                     self.get_stack(t).new_index_array(i as i64, value);
                 }
-                ByteCode::SetIntConst(t, i, v) => {
+                ByteCode::SetTableConst(t, k, v) => {
+                    let key = self.get_stack(k).clone();
                     let value = proto.constants[v as usize].clone();
-                    self.get_stack(t).new_index_array(i as i64, value);
-                }
-                ByteCode::SetField(t, k, v) => {
-                    let key = proto.constants[k as usize].clone();
-                    let value = self.get_stack(v).clone();
                     self.get_stack(t).new_index(key, value);
                 }
                 ByteCode::SetFieldConst(t, k, v) => {
@@ -208,15 +218,9 @@ impl ExeState {
                     let value = proto.constants[v as usize].clone();
                     self.get_stack(t).new_index(key, value);
                 }
-                ByteCode::SetTable(t, k, v) => {
-                    let key = self.get_stack(k).clone();
-                    let value = self.get_stack(v).clone();
-                    self.get_stack(t).new_index(key, value);
-                }
-                ByteCode::SetTableConst(t, k, v) => {
-                    let key = self.get_stack(k).clone();
+                ByteCode::SetIntConst(t, i, v) => {
                     let value = proto.constants[v as usize].clone();
-                    self.get_stack(t).new_index(key, value);
+                    self.get_stack(t).new_index_array(i as i64, value);
                 }
                 ByteCode::SetList(table, n) => {
                     let ivalue = self.base + table as usize + 1;
@@ -232,13 +236,18 @@ impl ExeState {
                     let values = self.stack.drain(ivalue .. end);
                     table.borrow_mut().array.extend(values);
                 }
-                ByteCode::GetInt(dst, t, k) => {
-                    let value = self.get_stack(t).index_array(k as i64);
+                ByteCode::GetTable(dst, t, k) => {
+                    let key = self.get_stack(k);
+                    let value = self.get_stack(t).index(key);
                     self.set_stack(dst, value);
                 }
                 ByteCode::GetField(dst, t, k) => {
                     let key = &proto.constants[k as usize];
                     let value = self.get_stack(t).index(key);
+                    self.set_stack(dst, value);
+                }
+                ByteCode::GetInt(dst, t, k) => {
+                    let value = self.get_stack(t).index_array(k as i64);
                     self.set_stack(dst, value);
                 }
                 ByteCode::GetFieldSelf(dst, t, k) => {
@@ -248,12 +257,6 @@ impl ExeState {
                     self.set_stack(dst, value);
                     self.set_stack(dst+1, table);
                 }
-                ByteCode::GetTable(dst, t, k) => {
-                    let key = self.get_stack(k);
-                    let value = self.get_stack(t).index(key);
-                    self.set_stack(dst, value);
-                }
-// ANCHOR_END: vm_table
 
                 // upvalue table
                 //
@@ -281,6 +284,9 @@ impl ExeState {
                 }
 
                 // condition structures
+                ByteCode::Jump(jmp) => {
+                    pc = (pc as isize + jmp as isize) as usize;
+                }
                 ByteCode::TestAndJump(icondition, jmp) => {
                     if self.get_stack(icondition).into() { // jump if true
                         pc = (pc as isize + jmp as isize) as usize;
@@ -305,12 +311,8 @@ impl ExeState {
                         pc += jmp as usize;
                     }
                 }
-                ByteCode::Jump(jmp) => {
-                    pc = (pc as isize + jmp as isize) as usize;
-                }
 
                 // for-loop
-// ANCHOR: for_prepare
                 ByteCode::ForPrepare(dst, jmp) => {
                     // clear into 2 cases: integer and float
                     // stack: i, limit, step
@@ -346,7 +348,6 @@ impl ExeState {
                         }
                     }
                 }
-// ANCHOR_END: for_prepare
                 ByteCode::ForLoop(dst, jmp) => {
                     // stack: i, limit, step
                     match (self.get_stack(dst + 1), self.get_stack(dst + 2)) {
@@ -373,20 +374,13 @@ impl ExeState {
                 }
 
                 ByteCode::ForCallLoop(iter, nvar, jmp) => {
-                    // before call:         after call:
-                    //   |           |        |           |     |           |
-                    //   +-----------+        +-----------+     +-----------+
-                    //   | iter func |entry   | iter func |     | iter func |
-                    //   +-----------+        +-----------+     +-----------+
-                    //   | state     |\       | state     |     | state     |
-                    //   +-----------+ 2args  +-----------+     +-----------+
-                    //   | ctrl var  |/       | ctrl var  |     | ctrl var  |<--first return value
-                    //   +-----------+        +-----------+     +-----------+
-                    //   |           |        :           :   ->| return-   |
-                    //                        +-----------+  /  | values    |
-                    //                        | return-   +-/   |           |
-                    //                        | values    |
-                    //                        |           |
+                    // stack:
+                    // - before call:
+                    //     iter-func, state, ctrl-var
+                    // - after call:
+                    //     iter-func, state, ctrl-var, ..., return-values
+                    // - update ctrl-var, and clear middle values
+                    //     iter-func, state, ctrl-var*, return-values
                     let nret = self.call_function(iter, 2+1);
                     let iret = self.stack.len() - nret;
 
@@ -841,7 +835,6 @@ impl ExeState {
             pc += 1;
         }
     }
-// ANCHOR_END: execute
 
     fn get_stack(&self, dst: u8) -> &Value {
         &self.stack[self.base + dst as usize]
@@ -849,11 +842,9 @@ impl ExeState {
     fn get_stack_mut(&mut self, dst: u8) -> &mut Value {
         &mut self.stack[self.base + dst as usize]
     }
-// ANCHOR: set_stack
     fn set_stack(&mut self, dst: u8, v: Value) {
         set_vec(&mut self.stack, self.base + dst as usize, v);
     }
-// ANCHOR_END: set_stack
     fn fill_stack_nil(&mut self, base: u8, to: usize) {
         self.stack.resize(self.base + base as usize + to, Value::Nil);
     }
