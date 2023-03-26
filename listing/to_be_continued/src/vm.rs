@@ -350,23 +350,25 @@ impl ExeState {
 // ANCHOR_END: for_prepare
                 ByteCode::ForLoop(dst, jmp) => {
                     // stack: i, limit, step
-                    match self.get_stack(dst) {
-                        Value::Integer(i) => {
-                            let limit = self.read_int(dst + 1);
-                            let step = self.read_int(dst + 2);
-                            let i = i + step;
-                            if for_check(i, limit, step>0) {
-                                self.set_stack(dst, Value::Integer(i));
-                                pc -= jmp as usize;
+                    match (self.get_stack(dst + 1), self.get_stack(dst + 2)) {
+                        (&Value::Integer(limit), &Value::Integer(step)) => {
+                            if let Value::Integer(i) = self.get_stack_mut(dst) {
+                                *i += step;
+                                if for_check(*i, limit, step>0) {
+                                    pc -= jmp as usize;
+                                }
+                            } else {
+                                panic!("xxx");
                             }
                         }
-                        Value::Float(f) => {
-                            let limit = self.read_float(dst + 1);
-                            let step = self.read_float(dst + 2);
-                            let i = f + step;
-                            if for_check(i, limit, step>0.0) {
-                                self.set_stack(dst, Value::Float(i));
-                                pc -= jmp as usize;
+                        (&Value::Float(limit), &Value::Float(step)) => {
+                            if let Value::Float(i) = self.get_stack_mut(dst) {
+                                *i += step;
+                                if for_check(*i, limit, step>0.0) {
+                                    pc -= jmp as usize;
+                                }
+                            } else {
+                                panic!("xxx");
                             }
                         }
                         _ => panic!("xx"),
@@ -847,6 +849,9 @@ impl ExeState {
     fn get_stack(&self, dst: u8) -> &Value {
         &self.stack[self.base + dst as usize]
     }
+    fn get_stack_mut(&mut self, dst: u8) -> &mut Value {
+        &mut self.stack[self.base + dst as usize]
+    }
 // ANCHOR: set_stack
     fn set_stack(&mut self, dst: u8, v: Value) {
         set_vec(&mut self.stack, self.base + dst as usize, v);
@@ -907,20 +912,6 @@ impl ExeState {
             }
             // TODO convert string
             ref v => panic!("not number {v:?}"),
-        }
-    }
-    fn read_int(&self, dst: u8) -> i64 {
-        if let &Value::Integer(i) = self.get_stack(dst) {
-            i
-        } else {
-            panic!("invalid integer");
-        }
-    }
-    fn read_float(&self, dst: u8) -> f64 {
-        if let &Value::Float(f) = self.get_stack(dst) {
-            f
-        } else {
-            panic!("invalid integer");
         }
     }
 }
