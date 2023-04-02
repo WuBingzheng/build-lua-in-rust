@@ -114,8 +114,7 @@ impl<R: Read> Lex<R> {
                         Token::Sub
                     }
                 }
-                b'0' => self.read_heximal(),
-                ch@b'1'..=b'9' => self.read_decimal(ch as char),
+                ch@b'0'..=b'9' => self.read_decimal(ch as char),
                 b'A'..=b'Z' | b'a'..=b'z' | b'_' => self.read_name(byt),
                 _ => panic!("invalid char {byt}"),
             }
@@ -157,6 +156,7 @@ impl<R: Read> Lex<R> {
     }
 
     fn read_decimal(&mut self, ahead: char) -> Token {
+        // TODO heximal
         let mut is_float = ahead == '.';
         let mut buf = String::new();
         buf.push(ahead);
@@ -178,12 +178,6 @@ impl<R: Read> Lex<R> {
         } else {
             Token::Integer(buf.parse::<i64>().unwrap())
         }
-    }
-
-
-    fn read_heximal(&mut self) -> Token {
-        self.next_byte(); // skip 'x'
-        todo!("lex heximal")
     }
 
     fn read_string(&mut self, quote: u8) -> Token {
