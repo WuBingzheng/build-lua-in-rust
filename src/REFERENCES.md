@@ -1,14 +1,18 @@
 # 参考文献
 
-- [Lua 5.4语言手册](https://www.lua.org/manual/5.4/)，也是这个项目的需求文档。
+- [Lua 5.4 Reference Manual](https://www.lua.org/manual/5.4/)，也是这个项目的需求文档。
 
 - 《Lua程序设计（第4版）》，Lua官方教程。虽然是基于Lua 5.3版本，但是由于5.4版本的[变化并不多](http://www.lua.org/manual/5.4/readme.html#changes)，所以影响不大。
 
 - 《Lua设计与实现》，感觉像是一份Lua官方实现的源码阅读笔记，直接讲代码实现细节，刚上手看时很吃力。
 
-- 《自己动手实现Lua》，跟本系列文章很像，也是从零实现一个Lua解释器。个人感觉最大的区别是，这本书是以Lua官方实现里的字节码定义为出发点，先实现虚拟机去执行字节码，然后再实现编译器去生成字节码。而我们这系列文章是以Lua语言手册为出发点，设计并实现编译过程、虚拟机、字节码定义等。
+- 《自己动手实现Lua》，跟本系列文章很像，也是从零实现一个Lua解释器。但是这本书是以Lua官方实现里的字节码定义为出发点，先实现虚拟机去执行字节码，然后再实现编译器去生成字节码。而我们这系列文章是以Lua语言手册为出发点，设计并实现编译过程、虚拟机、字节码定义等。
+
+- [Why is there no continue statement?](https://www.luafaq.org/#T1.26)，对Lua中为什么没有continue语句的解释。但并不完整。
 
 - [《Rust程序设计语言》](https://kaisery.github.io/trpl-zh-cn/)，Rust官方教程。
+
+- [Rust官方文档](https://doc.rust-lang.org/)，主要是参考其中的标准库部分。
 
 - [Designing a GC in Rust](https://manishearth.github.io/blog/2015/09/01/designing-a-gc-in-rust/)，介绍用Rust实现GC的设计思路。
 
@@ -21,6 +25,8 @@
 - [When Zig is safer and faster than Rust](https://zackoverflow.dev/writing/unsafe-rust-vs-zig/)，以Roc语言使用Zig而非Rust来实现GC部分为出发点，来说明用unsafe Rust来实现某些功能是很困难的。
 
 - [Luster](https://github.com/kyren/luster)，用Rust实现的Lua解释器，也是用的GC而非RC，但项目没完成。
+
+- [The Story of Tail Call Optimizations in Rust](https://dev.to/seanchen1991/the-story-of-tail-call-optimizations-in-rust-35hf)，对Rust语言支持尾调用的讨论。
 
 - [Lua bindings: lua, hlua or rlua?](https://www.reddit.com/r/rust/comments/8coe49/lua_bindings_lua_hlua_or_rlua/)，Reddit上对现有的3个Lua crate：lua、hlua和rlua的简单对比。
 
