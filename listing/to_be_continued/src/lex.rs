@@ -2,7 +2,6 @@ use std::mem;
 use std::io::{Read, Bytes};
 use std::iter::Peekable;
 
-// ANCHOR: token
 #[derive(Debug, PartialEq)]
 pub enum Token {
     // keywords
@@ -33,15 +32,12 @@ pub enum Token {
     // end
     Eos,
 }
-// ANCHOR_END: token
 
 #[derive(Debug)]
-// ANCHOR: lex
 pub struct Lex<R: Read> {
     input: Peekable::<Bytes::<R>>,
     ahead: Token,
 }
-// ANCHOR_END: lex
 
 impl<R: Read> Lex<R> {
     pub fn new(input: R) -> Self {
@@ -51,7 +47,6 @@ impl<R: Read> Lex<R> {
         }
     }
 
-// ANCHOR: peek_next
     pub fn next(&mut self) -> Token {
         if self.ahead == Token::Eos {
             self.do_next()
@@ -66,7 +61,6 @@ impl<R: Read> Lex<R> {
         }
         &self.ahead
     }
-// ANCHOR_END: peek_next
 //
     pub fn expect(&mut self, t: Token) {
         assert_eq!(self.next(), t);
@@ -107,14 +101,10 @@ impl<R: Read> Lex<R> {
                         } else {
                             Token::Concat
                         }
-                    },
-                    b'0'..=b'9' => {
-                        self.read_number_fraction(0)
-                    },
-                    _ => {
-                        Token::Dot
-                    },
-                },
+                    }
+                    b'0'..=b'9' => self.read_decimal('.'),
+                    _ => Token::Dot,
+                }
                 b'-' => {
                     if self.peek_byte() == b'-' {
                         self.next_byte();
@@ -123,8 +113,9 @@ impl<R: Read> Lex<R> {
                     } else {
                         Token::Sub
                     }
-                },
-                b'0'..=b'9' => self.read_number(byt),
+                }
+                b'0' => self.read_heximal(),
+                ch@b'1'..=b'9' => self.read_decimal(ch as char),
                 b'A'..=b'Z' | b'a'..=b'z' | b'_' => self.read_name(byt),
                 _ => panic!("invalid char {byt}"),
             }
@@ -165,60 +156,31 @@ impl<R: Read> Lex<R> {
         }
     }
 
-    fn read_number(&mut self, first: u8) -> Token {
-        // heximal
-        if first == b'0' {
-            let second = self.peek_byte();
-            if second == b'x' || second == b'X' {
-                return self.read_heximal();
-            }
-        }
-
-        // decimal
-        let mut n = (first - b'0') as i64;
+    fn read_decimal(&mut self, ahead: char) -> Token {
+        let mut is_float = ahead == '.';
+        let mut buf = String::new();
+        buf.push(ahead);
         loop {
             let byt = self.peek_byte();
-            if let Some(d) = char::to_digit(byt as char, 10) {
-                self.next_byte();
-                n = n * 10 + d as i64;
-            } else if byt == b'.' {
-                return self.read_number_fraction(n);
-            } else if byt == b'e' || byt == b'E' {
-                return self.read_number_exp(n as f64);
-            } else {
-                break;
+            match byt {
+                b'0' ..= b'9' => buf.push(byt as char),
+                b'.' | b'e' | b'E' | b'+' | b'-' => {
+                    buf.push(byt as char);
+                    is_float = true;
+                }
+                _ => break,
             }
+            self.next_byte();
         }
 
-        // check following
-        let fch = self.peek_byte();
-        if (fch as char).is_alphabetic() || fch == b'.' {
-            panic!("malformat number");
+        if is_float {
+            Token::Float(buf.parse::<f64>().unwrap())
+        } else {
+            Token::Integer(buf.parse::<i64>().unwrap())
         }
+    }
 
-        Token::Integer(n)
-    }
-    fn read_number_fraction(&mut self, i: i64) -> Token {
-        self.next_byte(); // skip '.'
 
-        let mut n: i64 = 0;
-        let mut x: f64 = 1.0;
-        loop {
-            let byt = self.peek_byte();
-            if let Some(d) = char::to_digit(byt as char, 10) {
-                self.next_byte();
-                n = n * 10 + d as i64;
-                x *= 10.0;
-            } else {
-                break;
-            }
-        }
-        Token::Float(i as f64 + n as f64 / x)
-    }
-    fn read_number_exp(&mut self, _: f64) -> Token {
-        self.next_byte(); // skip 'e'
-        todo!("lex number exp")
-    }
     fn read_heximal(&mut self) -> Token {
         self.next_byte(); // skip 'x'
         todo!("lex heximal")
