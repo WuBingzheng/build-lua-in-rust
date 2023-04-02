@@ -226,7 +226,7 @@ impl Value {
                     let mut buf = [0; MID_STR_MAX];
                     buf[..l1].copy_from_slice(s1);
                     buf[l1..l1+l2].copy_from_slice(s2);
-                    buf[..l2].into()
+                    buf[..l1+l2].into()
                 } else {
                     [s1, s2].concat().into()
                 }
