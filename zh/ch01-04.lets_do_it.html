@@ -1,0 +1,424 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>动手实现 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html" class="active"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="动手实现"><a class="header" href="#动手实现">动手实现</a></h1>
+<p>之前章节介绍了编译原理基础知识，并定义了两个最重要的概念字节码ByteCode和值Value。接下来就可以动手编码实现我们的解释器了！</p>
+<p>这系列文章对应的代码全部使用Rust自带的Cargo来管理。目前采用二进制类型的项目，后续会改成库类型。</p>
+<p>目前要实现的极简解释器是非常简单的，代码很少，我当初也是把代码都写在一个文件里。不过可以预见的是，这个项目的代码量会随着功能的增加而增加。所以为了避免后续再拆文件的改动，我们直接创建多个文件：</p>
+<ul>
+<li>程序入口：<code>main.rs</code>；</li>
+<li>三个组件：词法分析 <code>lex.rs</code>、语法分析 <code>parse.rs</code>、和虚拟机 <code>vm.rs</code>；</li>
+<li>两个概念：字节码 <code>byte_code.rs</code>、值<code>value.rs</code>。</li>
+</ul>
+<p>后面的两个概念和其代码之前已经介绍了。下面介绍其他4个文件。先从程序入口开始。</p>
+<h2 id="程序入口"><a class="header" href="#程序入口">程序入口</a></h2>
+<p>简单起见，我们的解释器只有一种工作方式，即接受一个参数作为Lua源码文件，然后解析并执行。代码如下：</p>
+<pre><code class="language-rust ignore">use std::env;
+use std::fs::File;
+
+mod value;
+mod bytecode;
+mod lex;
+mod parse;
+mod vm;
+
+fn main() {
+    let args: Vec&lt;String&gt; = env::args().collect();
+    if args.len() != 2 {
+        println!(&quot;Usage: {} script&quot;, args[0]);
+        return;
+    }
+    let file = File::open(&amp;args[1]).unwrap();
+
+    let proto = parse::load(file);
+    vm::ExeState::new().execute(&amp;proto);
+}
+</code></pre>
+<p>开头2行引用了两个标准库。<code>env</code>用于获取命令行参数，可<a href="https://kaisery.github.io/trpl-zh-cn/ch12-01-accepting-command-line-arguments.html#%E8%AF%BB%E5%8F%96%E5%8F%82%E6%95%B0%E5%80%BC">参考这里</a>。<code>fs::File</code>用来打开Lua源文件。</p>
+<p>中间几行通过<code>use</code>引用其他<a href="https://kaisery.github.io/trpl-zh-cn/ch07-04-bringing-paths-into-scope-with-the-use-keyword.html">文件的模块</a>。</p>
+<p>然后看<code>main()</code>函数。前面几行是读取参数并打开源文件。在打开源文件时使用了<code>unwrap()</code>，如果打开失败则终止程序。简单起见，接下来几章对所有错误的处理方式都是直接终止程序，之后再统一引入规范的错误处理。</p>
+<p>最后2行是核心功能：</p>
+<ul>
+<li>首先语法分析模块<code>parse</code>（内部调用词法分析<code>lex</code>）解析文件，并返回解析结果<code>proto</code>；</li>
+<li>然后创建一个虚拟机，并执行<code>proto</code>。</li>
+</ul>
+<p>这个流程跟Lua官方实现的API调用方式不一样。Lua官方实现的主要流程如下（<a href="https://www.lua.org/pil/24.1.html">完整示例</a>）：</p>
+<pre><code class="language-c">lua_State *L = lua_open();   // 创建lua_State
+luaL_loadfile(L, filename);  // 解析，并把解析结果放在栈顶
+lua_pcall(L, 0, 0, 0);       // 执行栈顶
+</code></pre>
+<p>这是因为Lua官方实现是“库”，API对外只暴露<code>lua_State</code>这一个数据结构，负责解析和执行两部分的功能，所以要先创建<code>lua_State</code>，再以其为基础去调用解析和执行，解析结果也是通过<code>Lua_state</code>的栈来传递。而我们目前没有类似的统一的状态数据结构，所以只能先分别调用解析和执行两部分的功能。</p>
+<p>下面分别看解析和执行过程。</p>
+<h2 id="词法分析"><a class="header" href="#词法分析">词法分析</a></h2>
+<p>虽然上面的<code>main()</code>函数里是直接调用的语法分析<code>parse</code>模块，但语法分析内部是调用了词法分析<code>lex</code>模块。先看词法分析。</p>
+<p>词法分析的输出是Token流。对于&quot;hello, world!&quot;程序，只需用到“标识<code>print</code>”和“字符串<code>&quot;hello, world!&quot;</code>”这两个Token，简单起见我们也暂时只支持这两个。另外我们还定义一个<code>Eos</code>用于表示文件结束：</p>
+<pre><code class="language-rust ignore">#[derive(Debug)]
+pub enum Token {
+    Name(String),
+    String(String),
+    Eos,
+}
+</code></pre>
+<p>我们并没有一次性把输入文件解析完毕，返回一个Token数组，而是提供一个类似迭代器的功能，以便让语法分析模块按需调用。为此先定义一个词法分析器：</p>
+<pre><code class="language-rust ignore">#[derive(Debug)]
+pub struct Lex {
+    input: File,
+}
+</code></pre>
+<p>现在暂时只包含一个成员，即输入文件。</p>
+<p>对外提供2个API：<code>new()</code>基于输入文件创建语法分析器；<code>next()</code>返回下一个Token。</p>
+<pre><code class="language-rust ignore">impl Lex {
+    pub fn new(input: File) -&gt; Self ;
+    pub fn next(&amp;mut self) -&gt; Token ;
+}
+</code></pre>
+<p>具体的解析过程就是单纯的字符串处理了，代码略过。</p>
+<p>按照Rust的惯例，这里的<code>next()</code>函数的返回值应该是<code>Option&lt;Token&gt;</code>类型，<code>Some&lt;Token&gt;</code>表示读到新Token，<code>None</code>表示文件结束。但是既然<code>Token</code>本身就是一个<code>enum</code>了，直接在里面加入一个<code>Eos</code>似乎更方便些。而且如果改成<code>Option&lt;Token&gt;</code>类型，那么在下一次语法分析调用的地方，也会需要多一层判断，如下代码。所以还是选择了新增<code>Eos</code>类型。</p>
+<pre><code class="language-rust ignore">loop {
+    if let Some(token) = lex.next() {  // extra check
+        match token {
+            ... // parse
+        }
+    } else {
+        break
+    }
+}
+</code></pre>
+<h2 id="语法分析"><a class="header" href="#语法分析">语法分析</a></h2>
+<p>上面<code>main()</code>函数中的解析结果<code>proto</code>是解析和执行两个过程的中间纽带。但是鉴于Rust强大的类型机制，在上述代码中<code>proto</code>并没有展示出具体的类型。现在来看其类型定义。在<a href="./ch01-02.byte_codes.html">字节码</a>一节中已经介绍过，解析结果需要包含2部分：字节码序列和常量表。于是可以定义解析结果的格式如下：</p>
+<pre><code class="language-rust ignore">#[derive(Debug)]
+pub struct ParseProto {
+    pub constants: Vec::&lt;Value&gt;,
+    pub byte_codes: Vec::&lt;ByteCode&gt;,
+}
+</code></pre>
+<p>常量表<code>constants</code>是包含<code>Value</code>类型的<code>Vec</code>，字节码序列<code>byte_codes</code>是包含<code>ByteCode</code>类型的<code>Vec</code>。他们都是<code>Vec</code>结构，具有相同的功能，但包含类型不一样。在古老的C语言里要包含<code>Value</code>和<code>ByteCode</code>这两种类型，要么针对每种类型都编写一套代码，要么就要用到宏或函数指针等复杂特性。Rust语言中的<a href="https://kaisery.github.io/trpl-zh-cn/ch10-01-syntax.html">泛型</a>就可以针对不同类型抽象出同一套逻辑。后续代码中会用到泛型的更多特性。</p>
+<p>在定义好<code>ParseProto</code>后，接下来看语法分析流程。我们目前只支持<code>print &quot;hello, world!&quot;</code>这一个类型的语句，也就是<code>Name String</code>的格式。首先从词法分析中读取Name，然后再读取字符串常量。如果不是这个格式则报错。具体代码如下：</p>
+<pre><code class="language-rust ignore">pub fn load(input: File) -&gt; ParseProto {
+    let mut constants = Vec::new();
+    let mut byte_codes = Vec::new();
+    let mut lex = Lex::new(input);
+
+    loop {
+        match lex.next() {
+            Token::Name(name) =&gt; { // `Name LiteralString` as function call
+                constants.push(Value::String(name));
+                byte_codes.push(ByteCode::GetGlobal(0, (constants.len()-1) as u8));
+
+                if let Token::String(s) = lex.next() {
+                    constants.push(Value::String(s));
+                    byte_codes.push(ByteCode::LoadConst(1, (constants.len()-1) as u8));
+                    byte_codes.push(ByteCode::Call(0, 1));
+                } else {
+                    panic!(&quot;expected string&quot;);
+                }
+            }
+            Token::Eos =&gt; break,
+            t =&gt; panic!(&quot;unexpected token: {t:?}&quot;),
+        }
+    }
+
+    dbg!(&amp;constants);
+    dbg!(&amp;byte_codes);
+    ParseProto { constants, byte_codes }
+}
+</code></pre>
+<p>输入是源文件<code>File</code>，输出是刚才定义的<code>ParseProto</code>。</p>
+<p>函数主体是个循环，通过在函数开头创建的词法分析器<code>lex</code>提供的<code>next()</code>函数，循环读取Token。我们目前只支持一种类型的语句，即<code>Name LiteralString</code>，并且语义是函数调用。所以分析逻辑也很简单：</p>
+<ul>
+<li>遇到<code>Name</code>，认为是语句开始：
+<ul>
+<li>把<code>Name</code>作为全局变量，存入常量表中；</li>
+<li>生成<code>GetGlobal</code>字节码，把根据名字把全局变量加载到栈上。第1个参数是目标栈索引，由于我们目前只支持函数调用语言，栈只用来函数调用，所以函数一定是在0的位置；第2个参数是全局变量名在全局变量中的索引；</li>
+<li>读取下一个Token，并预期是字符串常量，否则panic；</li>
+<li>把字符串常量加入到常量表中；</li>
+<li>生成<code>LoadConst</code>字节码，把常量加载到栈上。第1个参数是目标栈索引，排在函数的后面，为1；第2个参数是常量在常量表中的索引；</li>
+<li>准备好了函数和参数，就可以生成<code>Call</code>字节码，调用函数。目前2个参数，分别是函数位置和参数个数，分别固定为0和1。</li>
+</ul>
+</li>
+<li>遇到<code>Eos</code>，退出循环。</li>
+<li>遇到其他Token（目前只能是<code>Token::String</code>类型），则panic。</li>
+</ul>
+<p>函数后面通过<code>dbg!</code>输出常量表和字节码序列，用于调试。可以跟<code>luac</code>的输出做对比。</p>
+<p>最后返回<code>ParseProto</code>。</p>
+<h2 id="虚拟机执行"><a class="header" href="#虚拟机执行">虚拟机执行</a></h2>
+<p>解析生成<code>ParseProto</code>后，就轮到虚拟机执行了。按照之前分析，虚拟机目前需求2个组件：栈和全局变量表。所以定义虚拟机状态如下：</p>
+<pre><code class="language-rust ignore">pub struct ExeState {
+    globals: HashMap&lt;String, Value&gt;,
+    stack: Vec::&lt;Value&gt;,
+}
+</code></pre>
+<p>创建虚拟机时，需要提前在全局变量表里添加<code>print</code>函数：</p>
+<pre><code class="language-rust ignore">impl ExeState {
+    pub fn new() -&gt; Self {
+        let mut globals = HashMap::new();
+        globals.insert(String::from(&quot;print&quot;), Value::Function(lib_print));
+
+        ExeState {
+            globals,
+            stack: Vec::new(),
+        }
+    }
+</code></pre>
+<p>其中<code>print</code>函数的定义如下：</p>
+<pre><code class="language-rust ignore">// &quot;print&quot; function in Lua's std-lib.
+// It supports only 1 argument and assumes the argument is at index:1 on stack.
+fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
+    println!(&quot;{:?}&quot;, state.stack[1]);
+    0
+}
+</code></pre>
+<p>目前<code>print</code>函数只支持一个参数，并假设这个参数在栈的1位置。函数功能就是打印这个参数。因为这个函数不需要向调用者返回数据，所以返回0。</p>
+<p>完成初始化后，下面就是最核心的虚拟机执行功能，也就是字节码分发的大循环：依次读取字节码序列并执行对应的预定义功能。具体代码如下：</p>
+<pre><code class="language-rust ignore">    pub fn execute(&amp;mut self, proto: &amp;ParseProto) {
+        for code in proto.byte_codes.iter() {
+            match *code {
+                ByteCode::GetGlobal(dst, name) =&gt; {
+                    let name = &amp;proto.constants[name as usize];
+                    if let Value::String(key) = name {
+                        let v = self.globals.get(key).unwrap_or(&amp;Value::Nil).clone();
+                        self.set_stack(dst, v);
+                    } else {
+                        panic!(&quot;invalid global key: {name:?}&quot;);
+                    }
+                }
+                ByteCode::LoadConst(dst, c) =&gt; {
+                    let v = proto.constants[c as usize].clone();
+                    self.set_stack(dst, v);
+                }
+                ByteCode::Call(func, _) =&gt; {
+                    let func = &amp;self.stack[func as usize];
+                    if let Value::Function(f) = func {
+                        f(self);
+                    } else {
+                        panic!(&quot;invalid function: {func:?}&quot;);
+                    }
+                }
+            }
+        }
+    }
+</code></pre>
+<p>现在只支持3个字节码。每个功能都很明确，无须多言。</p>
+<h2 id="测试"><a class="header" href="#测试">测试</a></h2>
+<p>至此，我们实现了一个完整流程的Lua解释器！看下运行效果：</p>
+<pre><code>$ cargo r -q -- test_lua/hello.lua
+[src/parse.rs:39] &amp;constants = [
+    print,
+    hello, world!,
+]
+[src/parse.rs:40] &amp;byte_codes = [
+    GetGlobal(
+        0,
+        0,
+    ),
+    LoadConst(
+        1,
+        1,
+    ),
+    Call(
+        0,
+    ),
+]
+hello, world!
+</code></pre>
+<p>输出分3部分。第1部分是常量表，包含2个字符串常量。第2部分是字节码，可以跟<a href="./ch01-02.byte_codes.html">字节码</a>一节里的<code>luac</code>的输出对比下。最后1行就是我们期待的结果：hello, world!</p>
+<p>还有个额外的功能。语法分析部分并非只支持一条语句，而是一个循环。所以我们可以支持多条<code>print</code>语句，比如：</p>
+<pre><code class="language-lua">print &quot;hello, world!&quot;
+print &quot;hello, again...&quot;
+</code></pre>
+<p>执行会发现有个小问题，就是在常量表里<code>print</code>出现了两次。这里可以优化为，每次向常量表里添加值时可以先判断是否已经存在。在下一章处理。</p>
+<h2 id="总结"><a class="header" href="#总结">总结</a></h2>
+<p>本章的目的是实现一个完整流程的Lua解释器，以熟悉解释器结构。为此，我们首先介绍了编译原理基础知识，然后介绍了Lua的字节码和值这两个核心概念，最后编码实现！</p>
+<p>我们一直在强调“完整流程”，是因为后续只需要基于这个框架上，加上亿点点细节，就能完成一个“完整功能”的Lua解释器。继续前行。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch01-03.value_and_type.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch02-00.variables.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch01-03.value_and_type.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch02-00.variables.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

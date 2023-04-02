@@ -1,0 +1,703 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>参数 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html" class="active"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="参数"><a class="header" href="#参数">参数</a></h1>
+<p>上一节介绍了Lua函数的定义和调用流程。这一节介绍函数的参数。</p>
+<p>参数这个名词有两个概念：</p>
+<ul>
+<li>形参，parameter，指函数原型中的参数，包括参数名和参数类型等信息；</li>
+<li>实参，argument，指函数调用时的参数，是具体的值。</li>
+</ul>
+<p>本节后面介绍语法分析和虚拟机执行时，都要明确区分形参和实参。</p>
+<p>很重要的一点是：在Lua语言中，函数的参数就是局部变量！在语法分析时，形参也会放到局部变量表中起始位置，这样后续代码中如果有对形参的引用，也会在局部变量表中定位到。在虚拟机执行阶段，实参被加载到栈上紧跟函数入口的位置，后面再跟局部变量，与语法分析阶段局部变量表中的顺序一致。比如对于如下函数：</p>
+<pre><code class="language-lua">local function foo(a, b)
+    local x, y = 1, 2
+end
+</code></pre>
+<p>在执行<code>foo()</code>函数时，栈布局如下（栈右边的数字0-3是相对索引）：</p>
+<pre><code>|     |
++-----+
+| foo |
++=====+ &lt;---base
+|  a  | 0  \
++-----+     + 参数
+|  b  | 1  /
++-----+
+|  x  | 2  \
++-----+     + 局部变量
+|  y  | 3  /
++-----+
+|     |
+</code></pre>
+<p>参数和局部变量唯一的区别就是，参数的值是在调用时由调用者传入的，而局部变量是在函数内部赋值的。</p>
+<h2 id="形参的语法分析"><a class="header" href="#形参的语法分析">形参的语法分析</a></h2>
+<p>形参的语法分析，也就是函数定义的语法分析。上一节介绍函数定义时，语法分析的过程省略了参数部分，现在加上。函数定义的BNF是funcbody，其定义如下：</p>
+<pre><code>   funcbody ::= `(` [parlist] `)` block end
+   parlist ::= namelist [`,` `...`] | `...`
+   namelist ::= Name {`,` Name}
+</code></pre>
+<p>由此可以看到，形参列表由两个可选的部分组成：</p>
+<ul>
+<li>
+<p>可选的多个Name，是固定参数。上一节在解析新函数，创建<code>FuncProto</code>结构时，局部变量表<code>locals</code>字段被初始化为空列表。现在要改为初始化为形参列表。这样形参就在局部变量表的最前面，后续新建的局部变量跟在后面，与本节开头的栈布局图一致。另外，由于Lua语言中调用函数的实参个数允许跟形参个数不等。多则舍去，少则补nil。所以<code>FuncProto</code>结果中也要增加形参的个数，用以在虚拟机执行时做比较。</p>
+</li>
+<li>
+<p>最后一个可选的<code>...</code>，表明这个函数支持可变参数。如果支持，那么在后续的语法分析中，函数体内就可以使用<code>...</code>来引用可变参数，并且在虚拟机执行阶段，也要对可变参数做特殊处理。所以在<code>FuncProto</code>中需要增加一个标志位，表明这个函数是否支持可变参数。</p>
+</li>
+</ul>
+<p>综上，一共有三个改造点。在<code>FuncProto</code>中增加两个字段：</p>
+<pre><code class="language-rust ignore">pub struct FuncProto {
+    pub has_varargs: bool,  // 是否支持可变参数。语法分析和虚拟机执行中都要使用。
+    pub nparam: usize, // 固定参数个数。虚拟机执行中使用。
+    pub constants: Vec&lt;Value&gt;,
+    pub byte_codes: Vec&lt;ByteCode&gt;,
+}
+</code></pre>
+<p>另外在初始化<code>ParseProto</code>结构时，用形参列表来初始化局部变量<code>locals</code>字段。代码如下：</p>
+<pre><code class="language-rust ignore">impl&lt;'a, R: Read&gt; ParseProto&lt;'a, R&gt; {
+    // 新增has_varargs和params两个参数
+    fn new(lex: &amp;'a mut Lex&lt;R&gt;, has_varargs: bool, params: Vec&lt;String&gt;) -&gt; Self {
+        ParseProto {
+            fp: FuncProto {
+                has_varargs: has_varargs,  // 是否支持可变参数
+                nparam: params.len(),  // 形参个数
+                constants: Vec::new(),
+                byte_codes: Vec::new(),
+            },
+            sp: 0,
+            locals: params,  // 用形参列表初始化locals字段
+            break_blocks: Vec::new(),
+            continue_blocks: Vec::new(),
+            gotos: Vec::new(),
+            labels: Vec::new(),
+            lex: lex,
+        }
+    }
+</code></pre>
+<p>至此，完成形参的语法分析。其中涉及到可变参数、虚拟机执行等部分，下面再详细介绍。</p>
+<h2 id="实参的语法分析"><a class="header" href="#实参的语法分析">实参的语法分析</a></h2>
+<p>实参的语法分析，也就是函数调用的语法分析。这个在之前章节实现prefixexp的时候已经实现过了：通过<code>explist()</code>函数读取参数列表，并依次加载到栈上函数入口的后面位置。与本节开头的栈布局图一致，相当于是给形参赋值。这里解析到实际的参数个数，并写入到字节码<code>Call</code>的参数中，用于在虚拟机执行阶段跟形参做比较。</p>
+<p>但当时的实现并不完整，还不支持可变参数。本节后面再详细介绍。</p>
+<h2 id="虚拟机执行"><a class="header" href="#虚拟机执行">虚拟机执行</a></h2>
+<p>上面的实参语法分析中，已经把实参加载到栈上，相当于是给形参赋值，所以虚拟机执行函数调用时，本来就无需再处理参数了。但是在Lua语言中，函数调用时实参个数可能不等于形参个数。如果实参多于形参，那无需处理，就认为多出的部分是个占据栈位置但无用的临时变量；但如果实参少于形参，那么需要对不足的部分设置为nil，否则后续字节码对这个形参的引用就会导致Lua的栈访问异常。除此之外，<code>Call</code>字节码的执行就不需要对参数做其他处理。</p>
+<p>上面语法分析时已经介绍过，形参和实参的个数，分别在<code>FuncProto</code>结构中的<code>nparam</code>字段和<code>Call</code>字节码的关联参数中。所以函数调用的虚拟机执行代码如下：</p>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, narg) =&gt; {  // narg是实际传入的实参个数
+        self.base += func as usize + 1;
+        match &amp;self.stack[self.base - 1] {
+            Value::LuaFunction(f) =&gt; {
+                let narg = narg as usize;
+                let f = f.clone();
+                if narg &lt; f.nparam {  // f.nparam是函数定义中的形参个数
+                    self.fill_stack(narg, f.nparam - narg);  // 填nil
+                }
+                self.execute(&amp;f);
+            }
+</code></pre>
+<p>至此，完成了固定参数的部分，还是比较简单的；下面介绍可变参数部分，开始变得复杂起来。</p>
+<h2 id="可变参数"><a class="header" href="#可变参数">可变参数</a></h2>
+<p>在上面<a href="#%E5%BD%A2%E5%8F%82%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90">形参的语法分析</a>中已经提到了可变参数，其功能比较简单，代表这个函数支持可变参数。本节接下来主要介绍可变参数作为实参的处理，也就是执行函数调用时实际传入的参数。</p>
+<p>本节最开始就介绍函数的参数就是局部变量，并画了栈的布局图。不过这个说法只适合固定的实参，而对于可变实参就不适合了。在之前的<code>foo()</code>函数中加上可变参数作为示例，代码如下：</p>
+<pre><code class="language-lua">local function foo(a, b, ...)
+    local x, y = 1, 2
+    print(x, y, ...)
+end
+foo(1, 2, 3, 4, 5)
+</code></pre>
+<p>加上可变参数后，栈布局该变成什么样？或者说，可变实参要存在哪里？上述代码中最后一行<code>foo()</code>调用时，其中<code>1</code>和<code>2</code>分别对应形参<code>a</code>和<code>b</code>，而后面的<code>3</code>、<code>4</code>和<code>5</code>就是可变实参。在调用开始前，栈布局如下：</p>
+<pre><code>|     |
++-----+
+| foo |
++=====+ &lt;-- base
+|  1  |  \
++-----+   + 固定实参，对应a和b
+|  2  |  /
++-----+
+|  3  |  \
++-----+   |
+|  4  |   + 可变实参，对应...
++-----+   |
+|  5  |  /
++-----+
+|     |
+</code></pre>
+<p>那进入到<code>foo()</code>函数后，后面的三个实参要存在哪里？最直接的想法是保持上面的布局不变，也就是可变实参存到固定实参的后面。但是，这样是不行的！因为这样就会挤占局部变量的空间，即示例里的<code>x</code>和<code>y</code>就要后移，后移的距离是可变实参的个数。但是在语法分析阶段是不能确定可变实参的个数的，就无法确定局部变量在栈上的位置，就无法访问局部变量了。</p>
+<p>Lua官方的实现是，在语法分析阶段忽略可变参数，让局部变量仍然在固定参数的后面。但是在虚拟机执行时，在进入到函数中后，把可变参数挪到函数入口的前面，并且记录可变实参的个数。这样后续在访问可变参数时，根据函数入口位置和可变实参的个数，就可以定位栈位置，即<code>stack[self.base - 1 - 实参个数 .. self.base - 1]</code>。下面是栈布局图：</p>
+<pre><code>|     |
++-----+
+|  3  | -4 \
++-----+     |                          num_varargs: usize  // 记录下可变实参的个数
+|  4  | -3  + 相对于上图，                    +-----+
++-----+     | 把可变实参挪到函数入口前面        |  3   |
+|  5  | -2 /                                +-----+
++-----+
+| foo | &lt;-- 函数入口
++=====+ &lt;-- base
+| a=1 | 0  \
++-----+     + 固定实参，对应a和b
+| b=2 | 1  /
++-----+
+|  x  | 2  \
++-----+     + 局部变量
+|  y  | 3  /  仍然紧跟固定参数后面
+</code></pre>
+<p>既然这个方案需要在虚拟机执行时需要记录额外信息（可变实参的个数），并且还要移动栈上参数，那么更简单的做法是直接记录可变实参：</p>
+<pre><code>|     |
++-----+
+| foo | &lt;-- 函数入口                  varargs: Vec&lt;Value&gt;  // 直接记录可变实参
++=====+                                 +-----+-----+-----+
+| a=1 | 0  \                            |  3  |  4  |  5  |
++-----+     + 固定实参，对应a和b           +-----+-----+-----+
+| b=2 | 1  /
++-----+
+|  x  | 2  \
++-----+     + 局部变量
+|  y  | 3  /
+</code></pre>
+<p>相比于Lua的官方实现，这个方法没有利用栈，而是使用Vec，会有额外的堆上内存分配。但是更加直观清晰。</p>
+<p>确定下可变实参的存储方式后，就可以进行语法分析和虚拟机执行了。</p>
+<h2 id="expdescvarargs和应用场景"><a class="header" href="#expdescvarargs和应用场景">ExpDesc::VarArgs和应用场景</a></h2>
+<p>上面讲的是函数调用时传递可变参数，接下来介绍在函数体内如何访问可变参数。</p>
+<p>访问可变实参是一个独立的表达式，语法是也<code>...</code>，在<code>exp_limit()</code>函数中解析，并新增一种表达式类型<code>ExpDesc::VarArgs</code>，这个类型没有关联参数。</p>
+<p>读取这个表达式很简单，先检查当前函数是否支持可变参数（函数原型中有没有<code>...</code>），然后返回<code>ExpDesc::VarArgs</code>即可。具体代码如下：</p>
+<pre><code class="language-rust ignore">    fn exp_limit(&amp;mut self, limit: i32) -&gt; ExpDesc {
+        let mut desc = match self.lex.next() {
+            Token::Dots =&gt; {
+                if !self.fp.has_varargs {  // 检查当前函数是否支持可变参数？
+                    panic!(&quot;no varargs&quot;);
+                }
+                ExpDesc::VarArgs  // 新增表达式类型
+            }
+</code></pre>
+<p>但是读到的<code>ExpDesc::VarArgs</code>如何处理？这就要先梳理使用可变实参的3种场景：</p>
+<ol>
+<li>
+<p>当<code>...</code>作为函数调用的最后一个参数、return语句的最后一个参数、表构造的最后一个列表成员时，代表实际传入的全部实参。比如下面示例：</p>
+<pre><code class="language-lua">print(&quot;hello: &quot;, ...)  -- 最后一个实参
+local t = {1, 2, ...}  -- 最后一个列表成员
+return a+b, ...  -- 最后一个返回值
+</code></pre>
+</li>
+<li>
+<p>当<code>...</code>作为局部变量定义语句、或赋值语句的等号<code>=</code>后面最后一个表达式时，会按需求扩展或缩减个数。比如下面示例：</p>
+<pre><code class="language-lua">local x, y = ...   -- 取前2个实参，分别赋值给x和y
+t.k, t.j = a, ...  -- 取前1个实参，赋值给t.j
+</code></pre>
+</li>
+<li>
+<p>其他地方都只代表实际传入的第一个实参。比如下面示例：</p>
+<pre><code class="language-lua">local x, y = ..., b  -- 不是最后一个表达式，只取第1个实参并赋值给x
+t.k, t.j = ..., b    -- 不是最后一个表达式，只取第1个实参并赋值给t.k
+if ... then  -- 条件判断
+    t[...] = ... + f  -- 表索引，和二元运算操作数
+end
+</code></pre>
+</li>
+</ol>
+<p>其中，第1个场景是最基本的，但也是实现起来最复杂的；后面两个场景属于特殊情况，实现起来相对简单。下面对这3种场景依次分析。</p>
+<h2 id="场景1全部可变实参"><a class="header" href="#场景1全部可变实参">场景1：全部可变实参</a></h2>
+<p>先介绍第1种场景，即加载全部可变实参。这个场景中的3个语句如下：</p>
+<ol>
+<li>
+<p>函数调用的最后一个参数，是把当前函数的可变实参作为调用函数的可变实参，涉及两个可变实参，有点绕，不方便描述；</p>
+</li>
+<li>
+<p>return语句的最后一个参数，但是现在还不支持返回值，要在下一节介绍；</p>
+</li>
+<li>
+<p>表构造的最后一个列表成员。</p>
+</li>
+</ol>
+<p>这3个语句的实现思路类似，都是在解析表达式列表的时候，只discharge前面的表达式，而保留最后一个表达式不discharge；然后在解析完整个语句后，单独检查最后一个语句是否为<code>ExpDesc::VarArgs</code>：</p>
+<ul>
+<li>
+<p>如果不是，则正常discharge。这种情况下，在语法分析时就能确定所有表达式的数量，而这个数量就可以编码进对应的字节码中。</p>
+</li>
+<li>
+<p>如果是，则用新增的字节码<code>VarArgs</code>加载全部可变参数，而实际参数的个数在语法分析时不知道，要在虚拟机执行时才能知道，所以总的表达式的数量也不知道，也就无法编码到对应的字节码中，就需要用特殊值或新字节码来处理。</p>
+</li>
+</ul>
+<p>这3个语句中第3个语句表构造相对而言最简单，下面先介绍表构造语句。</p>
+<p>之前表构造的语法分析流程是：在循环读取全部成员过程中，如果解析到数组成员，则立即discharge到栈上；在循环读取完毕后，所有数组成员依次被加载到栈上，然后生成<code>SetList</code>字节码将其添加到表里。这个<code>SetList</code>字节码的第2个关联参数就是成员数量。为了简单起见，这里忽略超过50个成员时分批加载的处理。</p>
+<p>现在修改流程：为了单独处理最后一个表达式，在解析到数组成员时，要延迟discharge。具体做法比较简单但不容易描述，可以参见下面代码。代码摘自<code>table_constructor()</code>函数，只保留跟本节相关内容。</p>
+<pre><code class="language-rust ignore">    // 新增这个变量，用来保存最后一个读到的数组成员
+    let mut last_array_entry = None;
+
+    // 循环读取全部成员
+    loop {
+        let entry = // 省略读取成员的代码
+        match entry {
+            TableEntry::Map((op, opk, key)) =&gt; // 省略字典成员部分的代码
+            TableEntry::Array(desc) =&gt; {
+                // 使用replace()函数，用新成员desc替换出上一个读到的成员
+                // 并discharge。而新成员，也就是当前的“最后一个成员”，被
+                // 存到last_array_entry中。
+                if let Some(last) = last_array_entry.replace(desc) {
+                    self.discharge(sp0, last);
+                }
+            }
+        }
+    }
+
+    // 处理最后一个表达式，如果有的话
+    if let Some(last) = last_array_entry {
+        let num = if self.discharge_expand(last) {
+            // 可变参数。在语法分析阶段无法得知具体的参数个数，所以用0来代表栈上全部
+            0
+        } else {
+            // 计算出总的成员个数
+            (self.sp - (table + 1)) as u8
+        };
+        self.fp.byte_codes.push(ByteCode::SetList(table as u8, num));
+    }
+</code></pre>
+<p>上述代码整理流程比较简单，这里不一一介绍。在处理最后一个表达式时，有几个细节需要介绍：</p>
+<ul>
+<li>新增的<code>discharge_expand()</code>方法，用以特殊处理<code>ExpDesc::VarArgs</code>类型表达式。可以预见这个函数后面还会被其他两个语句（return语句和函数调用语句）用到。其代码如下：</li>
+</ul>
+<pre><code class="language-rust ignore">    fn discharge_expand(&amp;mut self, desc: ExpDesc) -&gt; bool {
+        match desc {
+            ExpDesc::VarArgs =&gt; {
+                self.fp.byte_codes.push(ByteCode::VarArgs(self.sp as u8));
+                true
+            }
+            _ =&gt; {
+                self.discharge(self.sp, desc);
+                false
+            }
+        }
+    }
+</code></pre>
+<ul>
+<li>
+<p>最后一个表达式如果是可变参数，那么<code>SetList</code>字节码的第2个关联参数则设置为<code>0</code>。之前（不支持可变数据表达式的时候）<code>SetList</code>字节码的这个参数不可能是0，因为如果没有数组成员，那不生成<code>SetList</code>字节码即可，而没必要生成一个关联参数是0的<code>SetList</code>。所以这里可以用<code>0</code>作为特殊值。相比而言，这个场景里的其他两个语句（return语句和函数调用语句）本来就支持0个表达式，即没有返回值和没有参数，那就不能用<code>0</code>作为特殊值了。到时候再想其他办法。</p>
+<p>当然这里也可以不用<code>0</code>这个特殊值，而是新增一个字节码，比如叫<code>SetListAll</code>，专门用来处理这种情况。这两种做法差不多，我们还是选择使用特殊值<code>0</code>。</p>
+</li>
+<li>
+<p>虚拟机执行时，对于<code>SetList</code>第二个关联参数是<code>0</code>的情况，就取栈上表后面的全部的值。也就是从表的位置一直到栈顶，都是用来初始化的表达式。具体代码如下，增加对<code>0</code>的判断：</p>
+</li>
+</ul>
+<pre><code class="language-rust ignore">    ByteCode::SetList(table, n) =&gt; {
+        let ivalue = self.base + table as usize + 1;
+        if let Value::Table(table) = self.get_stack(table).clone() {
+            let end = if n == 0 { // 0，可变参数，直至栈顶的全部表达式
+                self.stack.len()
+            } else {
+                ivalue + n as usize
+            };
+            let values = self.stack.drain(ivalue .. end);
+            table.borrow_mut().array.extend(values);
+        } else {
+            panic!(&quot;not table&quot;);
+        }
+    }
+</code></pre>
+<ul>
+<li>既然对于可变参数的情况，可以在虚拟机执行时根据栈顶来获取实际的表达式数量，那之前固定表达式的情况是不是也可以在执行时决定表达式数量，而不用在语法分析阶段就确定？这样一来<code>SetList</code>关联的第2个参数是不是就没用了？答案是否定的，因为栈上可能有临时变量！比如下面的代码：</li>
+</ul>
+<pre><code class="language-lua">t = { g1+g2 }
+</code></pre>
+<p>表达式<code>g1+g2</code>的两个操作数都是全局变量，在对整个表达式求值前，要都分别加载到栈上，需要占用2个临时变量的位置。栈布局如下：</p>
+<pre><code>|       |
++-------+
+|   t   |
++-------+
+| g1+g2 | 先把g1加载到这里。然后在求值g1+g2时，结果也加载到这里，覆盖原来的g1。
++-------+
+|   g2  | 在求值g1+g2时，把全局变量g2加载到这里的临时位置
++-------+
+|       |
+</code></pre>
+<p>此时栈顶是g2，如果也按照从表后直至栈顶的做法，那么g2也会被认为是表的一个成员。所以，对于之前的情况（固定数量的表达式）还是需要在语法分析阶段确定表达式的数量。</p>
+<ul>
+<li>那么，为什么对于可变参数的情况就可以根据栈顶来确定表达式数量呢？这就要求虚拟机在执行加载可变参数的字节码时，清理掉临时变量。这一点非常重要。具体代码如下：</li>
+</ul>
+<pre><code class="language-rust ignore">    ByteCode::VarArgs(dst) =&gt; {
+        self.stack.truncate(self.base + dst as usize);  // 清理临时变量！！！
+        self.stack.extend_from_slice(&amp;varargs);  // 加载可变参数
+    }
+</code></pre>
+<p>至此，完成了可变参数作为表构造最后一个表达式的语句的处理。相关代码并不多，但理清思路和一些细节并不简单。</p>
+<h2 id="场景1全部可变实参续"><a class="header" href="#场景1全部可变实参续">场景1：全部可变实参（续）</a></h2>
+<p>上面介绍了第1种场景下的表构造语句，现在介绍可变参数作为函数调用的最后一个参数的情况，光听这个描述就很绕。这两个语句对可变参数的处理方法差不多，这里只介绍下不同的地方。</p>
+<p>本节上面介绍<a href="#%E5%AE%9E%E5%8F%82%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90">实参的语法分析</a>时已经说明，所有实参通过<code>explist()</code>函数依次加载到栈顶，并把实参个数写入到<code>Call</code>字节码中。但当时的实现并不支持可变参数。现在为了支持可变参数，就要对最后一个表达式做特殊处理。为此我们修改<code>explist()</code>函数，保留并返回最后一个表达式，而只是把前面的表达式依次加载到栈上。具体代码比较简单，这里略过。复习一下，在<a href="./ch04-05.table_rw_and_bnf.html#%E8%A1%A8%E7%9A%84%E5%86%99%E6%93%8D%E4%BD%9C%E5%92%8C%E8%B5%8B%E5%80%BC%E8%AF%AD%E5%8F%A5">赋值语句</a>中，读取等号<code>=</code>右边的表达式列表时，也需要保留最后一个表达式不加载。这次改造了<code>exp_list()</code>函数后，在赋值语句中就也可以使用这个函数了。</p>
+<p>改造<code>explist()</code>函数后，再结合上面对表构造语句的介绍，就可以实现函数调用中的可变参数了。代码如下：</p>
+<pre><code class="language-rust ignore">    fn args(&amp;mut self) -&gt; ExpDesc {
+        let ifunc = self.sp - 1;
+        let narg = match self.lex.next() {
+            Token::ParL =&gt; {  // 括号()包裹的参数列表
+                if self.lex.peek() != &amp;Token::ParR {
+                    // 读取实参列表。保留和返回最后一个表达式last_exp，而把前面的
+                    // 表达式依次加载到栈上并返回其个数nexp。
+                    let (nexp, last_exp) = self.explist();
+                    self.lex.expect(Token::ParR);
+
+                    if self.discharge_expand(last_exp) {
+                        // 可变实参。生成新增的VarArgs字节码，读取全部可变实参！！
+                        None
+                    } else {
+                        // 固定实参。last_exp也被加载到栈上，作为最后1个实参。
+                        Some(nexp + 1)
+                    }
+                } else {  // 没有参数
+                    self.lex.next();
+                    Some(0)
+                }
+            }
+            Token::CurlyL =&gt; {  // 不带括号的表构造
+                self.table_constructor();
+                Some(1)
+            }
+            Token::String(s) =&gt; {  // 不带括号的字符串常量
+                self.discharge(ifunc+1, ExpDesc::String(s));
+                Some(1)
+            }
+            t =&gt; panic!(&quot;invalid args {t:?}&quot;),
+        };
+
+        // 对于n个固定实参，转换为n+1；
+        // 对于可变实参，转换为0。
+        let narg_plus = if let Some(n) = narg { n + 1 } else { 0 };
+
+        ExpDesc::Call(ifunc, narg_plus)
+    }
+</code></pre>
+<p>跟之前介绍的表构造语句不一样的地方是，表构造语句对应的字节码是<code>SetList</code>，在固定成员的情况下，其关联的用于表示数量的参数不会是<code>0</code>；所以就可以用<code>0</code>作为特殊值，来表示可变数量的成员。但是，对于函数调用语句，本来就支持没有实参的情况，也就是说字节码<code>Call</code>关联的用户表示实参数量的参数本来就可能是<code>0</code>，所以就不能简单把<code>0</code>作为特殊值。那么，就有2个方案：</p>
+<ul>
+<li>换一个特殊值，比如用<code>u8::MAX</code>，即255作为特殊值；</li>
+<li>仍然用<code>0</code>做特殊值，但是在固定实参的情况下，把参数加1。比如5个实参，那么就在<code>Call</code>字节码中写入6；N个字节码就写入N+1；这样就可以确保固定参数的情况下，这个参数肯定是大于0的。</li>
+</ul>
+<p>我感觉第1个方案稍微好一点，更清晰，不容易出错。但是Lua官方实现用的是第2个方案。我们也采用第2个方案。对应到上述代码中的两个变量：</p>
+<ul>
+<li><code>narg: Option&lt;usize&gt;</code>表示实际的参数数量，<code>None</code>表示可变参数，<code>Some(n)</code>代表有<code>n</code>个固定参数；</li>
+<li><code>narg_plus: usize</code>是修正后的值，用来写入到<code>Call</code>字节码中。</li>
+</ul>
+<p>跟之前介绍的表构造语句一样的地方是，既然用<code>0</code>这个特殊值来表示可变参数，那么虚拟机执行的时候，就需要有办法知道实际参数的个数。只能通过栈顶指针和函数入口的距离来计算出实际参数的个数，那也就需要确保栈顶都是参数，而没有临时变量。对于这个要求，有两种情况：</p>
+<ul>
+<li>实参也是可变参数，也就是最后一个实参是<code>VarArgs</code>，比如调用语句是<code>foo(1, 2, ...)</code>，那么由于之前介绍过<code>VarArgs</code>的虚拟机执行会确保清理临时变量，所以这个情况下就无需再次清理；</li>
+<li>实参是固定参数，比如调用语句是<code>foo(g1+g2)</code>，那么就需要清理可能存在的临时变量。</li>
+</ul>
+<p>对应的，在虚拟机执行阶段的函数调用，也就是<code>Call</code>字节码的执行，需要如下修改：</p>
+<ul>
+<li>修正关联参数narg_plus；</li>
+<li>在需要时，清理栈上可能的临时变量。</li>
+</ul>
+<p>代码如下：</p>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, narg_plus) =&gt; {  // narg_plus是修正后的实参个数
+        self.base += func as usize + 1;
+        match &amp;self.stack[self.base - 1] {
+            Value::LuaFunction(f) =&gt; {
+                // 实参数量
+                let narg = if narg_plus == 0 {
+                    // 可变实参。上面介绍过，VarArgs字节码的执行会清理掉可能的
+                    // 临时变量，所以可以用栈顶来确定实际的参数个数。
+                    self.stack.len() - self.base
+                } else {
+                    // 固定实参。需要减去1做修正。
+                    narg_plus as usize - 1
+                };
+
+                if narg &lt; f.nparam {  // 填补nil，原有逻辑
+                    self.fill_stack(narg, f.nparam - narg);
+                } else if f.has_varargs &amp;&amp; narg_plus != 0 {
+                    // 如果被调用的函数支持可变形参，并且调用是固定实参，
+                    // 那么需要清理栈上可能的临时变量
+                    self.stack.truncate(self.base + narg);
+                }
+
+                self.execute(&amp;f);
+            }
+</code></pre>
+<p>至此，我们完成了可变参数的第1种场景的部分。这部分是最基本的，也是最复杂的。下面介绍另外两种场景。</p>
+<h2 id="场景2前n个可变实参"><a class="header" href="#场景2前n个可变实参">场景2：前N个可变实参</a></h2>
+<p>现在介绍可变参数的第2种场景，需要固定个数的可变实参。这个场景中需要使用的参数个数固定，可以编入字节码中，比上个场景简单很多。</p>
+<p>这个场景包括2条语句：局部变量定义语句和赋值语句。当可变参数作为等号<code>=</code>后面最后一个表达式时，会按需求扩展或缩减个数。比如下面的示例代码：</p>
+<pre><code class="language-lua">    local x, y = ...   -- 取前2个实参，分别赋值给x和y
+    t.k, t.j = a, ...  -- 取前1个实参，赋值给t.j
+</code></pre>
+<p>这两个语句的处理方式基本一样。这里只介绍第一个局部变量定义语句。</p>
+<p>之前这个语句的处理流程是，首先把<code>=</code>右边的表达式依次加载到栈上，完成对局部变量的赋值。如果当<code>=</code>右边表达式的个数小于左边局部变量的个数时，则生成<code>LoadNil</code>字节码对多出的局部变量进行赋值；如果不小于则无需处理。</p>
+<p>现在需要对最后一个表达式特殊处理：如果表达式的个数小于局部变量的个数，并且最后一个表达式是可变参数<code>...</code>，那么就按需读取参数；如果不是可变参数，那还是回退成原来的方法，即用<code>LoadNil</code>来填补。刚才改造过的<code>explist()</code>函数就又派上用场了，具体代码如下：</p>
+<pre><code class="language-rust ignore">    let want = vars.len();  
+
+    // 读取表达式列表。保留和返回最后一个表达式last_exp，而把前面的
+    // 表达式依次加载到栈上并返回其个数nexp。
+    let (nexp, last_exp) = self.explist();
+    match (nexp + 1).cmp(&amp;want) {
+        Ordering::Equal =&gt; {
+            // 如果表达式跟局部变量个数一致，则把最后一个表达式也正常
+            // 加载到栈上即可。
+            self.discharge(self.sp, last_exp);
+        }
+        Ordering::Less =&gt; {
+            // 如果表达式少于局部变量个数，则需要尝试特殊处理最后一个表达式！！！
+            self.discharge_expand_want(last_exp, want - nexp);
+        }
+        Ordering::Greater =&gt; {
+            // 如果表达式多于局部变量个数，则调整栈顶指针；最后一个表达式
+            // 也就无需处理了。
+            self.sp -= nexp - want;
+        }
+    }
+</code></pre>
+<p>上述代码中，新增的逻辑是<code>discharge_expand_want()</code>函数，用以加载<code>want - nexp</code>个表达式到栈上。代码如下：</p>
+<pre><code class="language-rust ignore">    fn discharge_expand_want(&amp;mut self, desc: ExpDesc, want: usize) {
+        debug_assert!(want &gt; 1);
+        let code = match desc {
+            ExpDesc::VarArgs =&gt; {
+                // 可变参数表达式
+                ByteCode::VarArgs(self.sp as u8, want as u8)
+            }
+            _ =&gt; {
+                // 对于其他类型表达式，还是用之前的方法，即用LoadNil来填补
+                self.discharge(self.sp, desc);
+                ByteCode::LoadNil(self.sp as u8, want as u8 - 1)
+            }
+        };
+        self.fp.byte_codes.push(code);
+    }
+</code></pre>
+<p>这个函数跟上面第1种场景中的<code>discharge_expand()</code>函数很像，但有两个区别：</p>
+<ul>
+<li>
+<p>之前是需要实际执行中<strong>所有</strong>的可变参数，但这个函数有确定的个数需求，所以多了一个参数<code>want</code>；</p>
+</li>
+<li>
+<p>之前函数需要返回是否为可变参数，以便调用者再做区别处理；但这个函数因为需求明确，不需要调用者做区别处理，所以没有返回值。</p>
+</li>
+</ul>
+<p>跟上面第1个场景相比，还有一个重要改变是<code>VarArgs</code>字节码新增一个关联参数，用以表示需要加载具体多少个参数到栈上。因为在这种场景下，这个参数肯定不小于2，而在下一种场景下，这个参数固定是1，都没有用到0，所以可以用0作为特殊值，来表示上面第1种场景中的执行时实际<strong>所有</strong>参数。</p>
+<p>这个字节码的虚拟机执行代码也改变如下：</p>
+<pre><code class="language-rust ignore">    ByteCode::VarArgs(dst, want) =&gt; {
+        self.stack.truncate(self.base + dst as usize);
+
+        let len = varargs.len();  // 实际参数个数
+        let want = want as usize; // 需要参数个数
+        if want == 0 { // 需要实际全部参数，流程不变
+            self.stack.extend_from_slice(&amp;varargs);
+        } else if want &gt; len {
+            // 需要的比实际的多，则用fill_stack()填补nil
+            self.stack.extend_from_slice(&amp;varargs);
+            self.fill_stack(dst as usize + len, want - len);
+        } else {
+            // 需要的比实际的一样或更少
+            self.stack.extend_from_slice(&amp;varargs[..want]);
+        }
+    }
+</code></pre>
+<p>至此，完成可变参数第2种场景部分。</p>
+<h2 id="场景3只取第1个可变实参"><a class="header" href="#场景3只取第1个可变实参">场景3：只取第1个可变实参</a></h2>
+<p>前面介绍的两种场景都是在特定的语句上下文中，分别通过<code>discharge_expand_want()</code>或<code>discharge_expand()</code>函数，把可变参数加载到栈上。而第3种场景是除了上述特定语句上下文外的其他所有地方。所以从这个角度说，第3个场景可以算是通用场景，那么也就要用通用的加载方式。在本节介绍可变参数这个表达式之前，其他所有表达式都是通过调用<code>discharge()</code>函数加载到栈上，可以看做是通用的加载方式。于是这个场景下，也要通过<code>discharge()</code>函数来加载可变参数表达式。</p>
+<p>其实上面已经遇到了这种场景。比如，在上述第2种场景中，如果<code>=</code>右边的表达式个数和局部变量个数相等时，最后一个表达式就是通过<code>discharge()</code>函数处理的：</p>
+<pre><code class="language-rust ignore">    let (nexp, last_exp) = self.explist();
+    match (nexp + 1).cmp(&amp;want) {
+        Ordering::Equal =&gt; {
+            // 如果表达式跟局部变量个数一致，则把最后一个表达式也正常
+            // 加载到栈上即可。
+            self.discharge(self.sp, last_exp);
+        }
+</code></pre>
+<p>这里<code>discharge()</code>的最后一个表达式也可能是可变参数表达式<code>...</code>，那么就是当前场景。</p>
+<p>再比如，上述两个场景中都调用了<code>explist()</code>函数来处理表达式列表。除了最后一个表达式外，前面的表达式都会被这个函数通过调用<code>discharge()</code>来加载到栈上。如果前面的表达式里就有可变参数表达式<code>...</code>，比如<code>foo(a, ..., b)</code>，那么也是当前场景。</p>
+<p>另外，上面也罗列了可变表达式在其他语句中的示例，都是属于当前场景。</p>
+<p>既然这个场景属于通用场景，那么在语法分析阶段就不需要做什么改造，而只需要补齐<code>discharge()</code>函数中对可变表达式<code>ExpDesc::VarArgs</code>这个表达式的处理即可。这个处理也很简单，就是使用上面介绍的<code>VarArgs</code>字节码，只加载第1个参数到栈上：</p>
+<pre><code class="language-rust ignore">    fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+        let code = match desc {
+            ExpDesc::VarArgs =&gt; ByteCode::VarArgs(dst as u8, 1), // 1表示只加载第1个参数
+</code></pre>
+<p>这就完成了第3种场景。</p>
+<p>至此，终于介绍完可变参数的所有场景。</p>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>本节开始分别介绍了形参和实参的机制。对于形参，语法分析把形参加到局部变量表中，作为局部变量使用。对于实参，调用者把参数加载到栈上，相当于给参数赋值。</p>
+<p>后面大部分篇幅介绍了可变参数的处理，包括3种场景：实际全部实参，固定个数实参，和通用场景下第1个实参。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch08-01.define_and_call.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch08-03.results.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch08-01.define_and_call.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch08-03.results.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

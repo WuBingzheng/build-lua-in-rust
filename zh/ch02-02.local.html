@@ -1,0 +1,407 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>局部变量 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html" class="active"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="局部变量"><a class="header" href="#局部变量">局部变量</a></h1>
+<p>本节介绍局部变量的定义和访问（下一节介绍赋值）。</p>
+<p>简单起见，我们暂时只支持定义局部变量语句的简化格式：<code>local name = expression</code>，也就是说不支持多变量或者无初始化。目标代码如下：</p>
+<pre><code class="language-lua">local a = &quot;hello, local!&quot;  -- define new local var 'a'
+print(a)  -- use 'a'
+</code></pre>
+<p>局部变量如何管理，如何存储，如何访问？先参考下luac的结果：</p>
+<pre><code>main &lt;local.lua:0,0&gt; (6 instructions at 0x6000006e8080)
+0+ params, 3 slots, 1 upvalue, 1 local, 2 constants, 0 functions
+	1	[1]	VARARGPREP	0
+	2	[1]	LOADK    	0 0	; &quot;hello, world!&quot;
+	3	[2]	GETTABUP 	1 0 1	; _ENV &quot;print&quot;
+	4	[2]	MOVE     	2 0
+	5	[2]	CALL     	1 2 1	; 1 in 0 out
+	6	[2]	RETURN   	1 1 1	; 0 out
+</code></pre>
+<p>跟上一章的直接打印&quot;hello, world!&quot;的程序对比，有几个区别：</p>
+<ul>
+<li>输出的第2行里的<code>1 local</code>，说明有1个局部变量。不过这只是一个说明，跟下列字节码没关系。</li>
+<li>LOADK，加载常量到栈的索引0处。对应源码第[1]行，即定义局部变量。由此可见变量是存储在栈上，并在执行过程中赋值。</li>
+<li>GETTABUP的目标地址是1（上一章里是0），也就是把<code>print</code>加载到位置1，因为位置0用来保存局部变量。</li>
+<li>MOVE，新字节码，用于栈内值的复制。2个参数分别是目的索引和源索引。这里就是把索引0的值复制到索引2处。就是把局部变量a作为print的参数。</li>
+</ul>
+<p>前4个字节码执行完毕后，栈上布局如下：</p>
+<pre><code>  +-----------------+   MOVE
+0 | local a         |----\
+  +-----------------+    |
+1 | print           |    |
+  +-----------------+    |
+2 | &quot;hello, world!&quot; |&lt;---/
+  +-----------------+
+  |                 |
+</code></pre>
+<p>由此可知，执行过程中局部变量存储在栈上。在上一章里，栈只是用于<strong>函数调用</strong>，现在又多了<strong>存储局部变量</strong>的功能。相对而言局部变量是更持久的，只有在当前block结束后才失效。而函数调用是在函数返回后就失效。</p>
+<h2 id="定义局部变量"><a class="header" href="#定义局部变量">定义局部变量</a></h2>
+<p>增加局部变量的处理。首先定义局部变量表<code>locals</code>。在<a href="./ch01-03.value_and_type.html">值和类型</a>一节里说明，Lua的变量只包含变量名信息，而没有类型信息，所以这个表里只保存变量名即可，定义为<code>Vec&lt;String&gt;</code>。另外，此表只在语法分析时使用，而在虚拟机执行时不需要，所以不用添加到<code>ParseProto</code>中。</p>
+<p>目前已经支持2种语句（函数调用的2种格式）：</p>
+<pre><code>Name String
+Name ( exp )
+</code></pre>
+<p>其中<code>exp</code>是表达式，目前支持多种常量，比如字符串、数字等。</p>
+<p>现在要新增的定义局部变量语句的简化格式如下：</p>
+<pre><code>local Name = exp
+</code></pre>
+<p>这里面也包括<code>exp</code>。所以把这部分提取为一个函数<code>load_exp()</code>。那么定义局部变量对应的语法分析代码如下：</p>
+<pre><code class="language-rust ignore">    Token::Local =&gt; { // local name = exp
+        let var = if let Token::Name(var) = lex.next() {
+            var  // can not add to locals now
+        } else {
+            panic!(&quot;expected variable&quot;);
+        };
+
+        if lex.next() != Token::Assign {
+            panic!(&quot;expected `=`&quot;);
+        }
+
+        load_exp(&amp;mut byte_codes, &amp;mut constants, lex.next(), locals.len());
+
+        // add to locals after load_exp()
+        locals.push(var);
+    }
+</code></pre>
+<p>代码比较简单，无需全部介绍。<code>load_exp()</code>函数参考下面小节。</p>
+<p>需要特别注意的是，最开始解析到变量名<code>var</code>时，并不能直接加入到局部变量表<code>locals</code>中，而是要在解析完表达式后才能加入。可以认为解析到<code>var</code>时，还没有完整局部变量的定义；需要等到整个语句结束后才算完成定义，才能加入到局部变量表中。下面小节说明具体原因。</p>
+<h2 id="访问局部变量"><a class="header" href="#访问局部变量">访问局部变量</a></h2>
+<p>现在访问局部变量，即<code>print(a)</code>这句代码。也就是在<code>exp</code>中增加对局部变量的处理。</p>
+<blockquote>
+<p>其实，在上一节的函数调用语句的<code>Name ( exp )</code>格式里，就可以在<code>exp</code>里增加全局变量。这样就可以支持<code>print(print)</code>这样的Lua代码了。只不过当时只顾得增加其他类型常量，就忘记支持全局变量了。这也反应了现在的状态，即加功能特性全凭感觉，完全不能保证完整性甚至正确性。我们会在后续章节里解决这个问题。</p>
+</blockquote>
+<p>于是修改<code>load_exp()</code>的代码（这里省略原来各种常量类型的处理部分）：</p>
+<pre><code class="language-rust ignore">fn load_exp(byte_codes: &amp;mut Vec&lt;ByteCode&gt;, constants: &amp;mut Vec&lt;Value&gt;,
+        locals: &amp;Vec&lt;String&gt;, token: Token, dst: usize) {
+
+    let code = match token {
+        ... // other type consts, such as Token::Float()... 
+        Token::Name(var) =&gt; load_var(constants, locals, dst, var),
+        _ =&gt; panic!(&quot;invalid argument&quot;),
+    };
+    byte_codes.push(code);
+}
+
+fn load_var(constants: &amp;mut Vec&lt;Value&gt;, locals: &amp;Vec&lt;String&gt;, dst: usize, name: String) -&gt; ByteCode {
+    if let Some(i) = locals.iter().rposition(|v| v == &amp;name) {
+        // local variable
+        ByteCode::Move(dst as u8, i as u8)
+    } else {
+        // global variable
+        let ic = add_const(constants, Value::String(name));
+        ByteCode::GetGlobal(dst as u8, ic as u8)
+    }
+}
+</code></pre>
+<p><code>load_exp()</code>函数中对变量的处理也放到单独的<code>load_var()</code>函数中，这是因为之前的函数调用语句的“函数”部分也可以调用这个函数，这样就也可以支持局部变量的函数了。</p>
+<p>对变量的处理逻辑是：先在局部变量表<code>locals</code>里查找：</p>
+<ul>
+<li>如果存在，就是局部变量，生成<code>Move</code>字节码。这是一个新字节码。</li>
+<li>否则，就是全局变量，处理过程之前章节介绍过，这里略过。</li>
+</ul>
+<blockquote>
+<p>可以预见，后续在支持upvalue后，也是在这个函数中判断。</p>
+</blockquote>
+<p><code>load_var()</code>函数在变量表中查找变量时，是从后往前查找，即使用<code>.rposition()</code>函数。这是因为我们在注册局部变量时，并没有检查重名。如果有重名，也会照旧注册，即排到局部变量表的最后。这种情况下，反向查找，就会找到后注册的变量，而先注册的变量就永远定位不到了。相当于后注册的变量覆盖了前面的变量。比如下列代码是合法的，并且输出<code>456</code>：</p>
+<pre><code class="language-lua">local a = 123
+local a = 456
+print(a)  -- 456
+</code></pre>
+<p>我感觉这种做法很巧妙。如果每次添加局部变量时都先判断是否存在的话，必定会消耗性能。而这种重复定义局部变量的情况并不多见（也可能是我孤陋寡闻），为了这小概率情况而去判断重复（无论是报错还是重复利用）都不太值得。而现在的做法（反向查找）即保证了性能，又可以正确支持这种重复定义的情况。</p>
+<blockquote>
+<p>Rust中也有类似的shadow变量。不过我猜Rust应该不能这么简单的忽略处理，因为Rust中一个变量不可见时（比如被shadow了）是要drop的，所以还是要特意判断这种shadow情况并特别处理。</p>
+</blockquote>
+<p>另外一个问题是，在上一段<a href="#%E5%AE%9A%E4%B9%89%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F">定义局部变量</a>的最后提到，解析到变量名<code>var</code>时，并不能直接加入到局部变量表<code>locals</code>中，而是要在解析完表达式后才能加入。当时因为还没有“访问”局部变量，所以没有说明具体原因。现在可以说明了。比如对下列代码：</p>
+<pre><code class="language-lua">local print = print
+</code></pre>
+<p>这种语句在Lua代码中比较常见，即把一个常用的“全局变量”赋值给一个同名的“局部变量”，这样后续在引用此名字时就是访问的局部变量。局部变量比全局变量快很多（局部变量通过栈索引访问，而全局变量要实时查找全局变量表，也就是<code>Move</code>和<code>GetGlobal</code>这两个字节码的区别），这么做会提升性能。</p>
+<p>回到刚才的问题，如果在刚解析到变量名<code>print</code>时就加入到局部变量表中，那在解析<code>=</code>后面的表达式<code>print</code>时，查询局部变量表就会找到刚刚加入的<code>print</code>，那么就相当于是把局部变量<code>print</code>赋值给局部变量<code>print</code>，就循环了，没意义了（真这么做的话，<code>print</code>会被赋值为nil）。</p>
+<p>综上，必须在解析完<code>=</code>后面表达式后，才能把变量加入到局部变量表中。</p>
+<h2 id="函数调用的位置"><a class="header" href="#函数调用的位置">函数调用的位置</a></h2>
+<p>之前我们的解释器只支持函数调用的语句，所以栈只是函数调用的场所，执行函数调用时，函数和参数分别固定在0和1的位置。现在支持了局部变量，栈就不只是函数调用的场所了，函数和参数的位置也就不固定了，而需要变成栈上的第一个空闲位置，即局部变量的下一个位置。为此：</p>
+<ul>
+<li>
+<p>在语法分析时，可以通过<code>locals.len()</code>获取局部变量的个数，也就是栈上的第一个空闲位置。</p>
+</li>
+<li>
+<p>在虚拟机执行时，需要在<code>ExeState</code>中增加一个字段<code>func_index</code>，在函数调用前设置此字段来表示这个位置，并在函数中使用。对应的代码分别如下：</p>
+</li>
+</ul>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, _) =&gt; {
+        self.func_index = func as usize;  // set func_index
+        let func = &amp;self.stack[self.func_index];
+        if let Value::Function(f) = func {
+            f(self);
+        } else {
+            panic!(&quot;invalid function: {func:?}&quot;);
+        }
+    }
+</code></pre>
+<pre><code class="language-rust ignore">fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
+    println!(&quot;{:?}&quot;, state.stack[state.func_index + 1]);  // use func_index
+    0
+}
+</code></pre>
+<h2 id="测试"><a class="header" href="#测试">测试</a></h2>
+<p>至此，我们实现了局部变量的定义和访问，并且在这个过程中还整理了代码，使得之前的函数调用语句也变强大了，函数和参数都支持了全局变量和局部全局。所以本文开头的那个只有2行的目标代码太简单了。可以试试下面的代码：</p>
+<pre><code class="language-lua">local a = &quot;hello, local!&quot;  -- define a local by string
+local b = a  -- define a local by another local
+print(b)  -- print local variable
+print(print)  -- print global variable
+local print = print  -- define a local by global variable with same name
+print &quot;I'm local-print!&quot;  -- call local function
+</code></pre>
+<p>执行结果：</p>
+<pre><code>[src/parse.rs:71] &amp;constants = [
+    hello, local!,
+    print,
+    I'm local-print!,
+]
+byte_codes:
+  LoadConst(0, 0)
+  Move(1, 0)
+  GetGlobal(2, 1)
+  Move(3, 1)
+  Call(2, 1)
+  GetGlobal(2, 1)
+  GetGlobal(3, 1)
+  Call(2, 1)
+  GetGlobal(2, 1)
+  Move(3, 2)
+  LoadConst(4, 2)
+  Call(3, 1)
+hello, local!
+function
+I'm local-print!
+</code></pre>
+<p>符合预期！这个字节码有点多了，可以跟luac的输出对比一下。我们之前是只能分析和模仿luac编译的字节码序列，现在可以自主编译并输出字节码了。很大的进步！</p>
+<h2 id="语法分析代码的oo改造"><a class="header" href="#语法分析代码的oo改造">语法分析代码的OO改造</a></h2>
+<p>功能已经完成。但是随着功能的增加，语法分析部分的代码变的比较乱，比如上述<code>load_exp()</code>函数的定义，就有一堆的参数。为了整理代码，把语法分析也改造成面向对象模式的，围绕<code>ParseProto</code>来定义方法，这些方法通过<code>self</code>就能获取全部信息，就不用很多参数传来传去了。具体改动参见<a href="https://github.com/WuBingzheng/build-lua-in-rust/commit/f89d2fd6bca4574d1d18d60f9363731bfd89e4b1">提交f89d2fd</a>。</p>
+<p>把几个独立的成员集合在一起，也带来一个小问题，一个Rust语言特有的问题。比如原来读取字符串常量的代码如下，先调用<code>load_const()</code>生成并返回字节码，然后调用<code>byte_codes.push()</code>保存字节码。这两个函数调用是可以写在一起的：</p>
+<pre><code class="language-rust ignore">byte_codes.push(load_const(&amp;mut constants, iarg, Value::String(s)));
+</code></pre>
+<p>改成面向对象方式后，代码如下：</p>
+<pre><code class="language-rust ignore">self.byte_codes.push(self.load_const(iarg, Value::String(s)));
+</code></pre>
+<p>而这是不能编译通过的，报错如下：</p>
+<pre><code>error[E0499]: cannot borrow `*self` as mutable more than once at a time
+  --&gt; src/parse.rs:70:38
+   |
+70 |                 self.byte_codes.push(self.load_const(iarg, Value::String(s)));
+   |                 ---------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-
+   |                 |               |    |
+   |                 |               |    second mutable borrow occurs here
+   |                 |               first borrow later used by call
+   |                 first mutable borrow occurs here
+   |
+help: try adding a local storing this argument...
+  --&gt; src/parse.rs:70:38
+   |
+70 |                 self.byte_codes.push(self.load_const(iarg, Value::String(s)));
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: ...and then using that local as the argument to this call
+  --&gt; src/parse.rs:70:17
+   |
+70 |                 self.byte_codes.push(self.load_const(iarg, Value::String(s)));
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0499`.
+</code></pre>
+<p>Rust编译器虽然很严格，但报错信息还是很清晰的，甚至给出了正确的修改方法。</p>
+<p><code>self</code>被mut引用了2次。虽然<code>self.load_const()</code>中并没有用到<code>self.byte_codes</code>，实际中并不会出现冲突，但编译器并不知道这些细节，编译器只知道<code>self</code>被引用了两次。这就是把多个成员集合在一起的后果。解决方法是，按照Rust给出的建议，引入一个局部变量，然后把这行代码拆成两行：</p>
+<pre><code class="language-rust ignore">let code = self.load_const(iarg, Value::String(s));
+self.byte_codes.push(code);
+</code></pre>
+<p>这里的情况还属于简单的，因为返回的字节码<code>code</code>和<code>self.constants</code>没有关联，也就跟<code>self</code>没了关联，所以下面才能正常使用<code>self.byte_codes</code>。假如一个方法返回的内容还跟这个数据结构有关联，那解决方法就没这么简单了。后续在虚拟机执行时会遇到这种情况。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch02-01.more_types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch02-03.assignment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch02-01.more_types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch02-03.assignment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

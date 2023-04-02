@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rust闭包 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html" class="active"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="rust闭包"><a class="header" href="#rust闭包">Rust闭包</a></h1>
+<p>前面几节介绍了在Lua中定义的闭包。除此之外，Lua语言的官方实现还支持C语言闭包。我们的解释器是由Rust实现的，自然也就要改成Rust闭包。本节就来介绍Rust闭包。</p>
+<h2 id="lua官方实现中的c闭包"><a class="header" href="#lua官方实现中的c闭包">Lua官方实现中的C闭包</a></h2>
+<p>先来看下Lua官方实现中的C闭包。C语言本身不支持闭包，所以必须依赖Lua配合才能实现闭包。具体来说，就是把Upvalue存到Lua的栈上，然后再跟C函数原型绑定起来组成C闭包。Lua通过API向C函数提供访问栈上Upvalue的方式。</p>
+<p>下面是C闭包版本的计数器示例代码：</p>
+<pre><code class="language-c">// 计数器函数原型
+static int counter(Lua_State *L) {
+    int i = lua_tointeger(L, lua_upvalueindex(1)); // 读取Upvalue计数
+    lua_pushinteger(L, ++i);  // 加1，并压入栈顶
+    lua_copy(L, -1, lua_upvalueindex(1));  // 用栈顶新值更新Upvalue计数
+    return 1;  // 返回栈顶的计数
+}
+
+// 工厂函数，创建闭包
+int new_counter(Lua_State *L) {
+    lua_pushinteger(L, 0);  // 压到栈上
+    
+    // 创建C闭包，函数原型是counter，另外包括1个Upvalue，即上一行压入的0。
+    lua_pushcclosure(L, &amp;counter, 1);
+
+    // 创建的C闭包压在栈顶，下面return 1代表返回栈顶这个C闭包
+    return 1;
+}
+</code></pre>
+<p>先看第2个函数<code>new_counter()</code>，也是创建闭包的工厂函数。先调用<code>lua_pushinteger()</code>把Upvalue计数压入到栈顶；然后调用<code>lua_pushcclosure()</code>创建闭包。复习一下，闭包由函数原型和Upvalue组成，这两部分分别由<code>lua_pushcclosure()</code>函数的后面两个参数指定。第一个参数指定函数原型<code>counter</code>，第二个参数<code>1</code>代表栈顶的1个Value是Upvalue，即刚刚压入的0。下图是调用这个函数创建C闭包前后的栈示意图：</p>
+<pre><code>|     |                            |         |
++-----+                            +---------+
+|  i  +--\  +-C_closure------+&lt;----+ closure |
++-----+  |  | proto: counter |     +---------+
+|     |  |  | upvalues:      |     |         |
+         \--+--&gt; i           |
+            +----------------+
+</code></pre>
+<p>上图最左边是把计数i=0压入到栈顶。中间是创建的C闭包，包括了函数原型和Upvalue。最右边是创建完闭包后的栈布局，闭包压入栈上。</p>
+<p>再看上述代码中第1个函数<code>counter()</code>，也就是创建的闭包的函数原型。这个函数比较简单，其中最关键的是<code>lua_upvalueindex()</code> API，生成代表Upvalue的索引，就可以用来读写被封装在闭包中的Upvalue了。</p>
+<p>通过上述示例中代码对相关API的调用流程，基本可以猜到C闭包的具体实现。我们的Rust闭包也可以参考这种方式。但是，Rust本身就支持闭包！所以我们可以利用这个特性更简单的实现Lua中的Rust闭包。</p>
+<h2 id="rust闭包的类型定义"><a class="header" href="#rust闭包的类型定义">Rust闭包的类型定义</a></h2>
+<p>用Rust语言的闭包实现Lua中的“Rust闭包”类型，就是新建一个Value类型，包含Rust语言的闭包就行。</p>
+<p><a href="https://kaisery.github.io/trpl-zh-cn/ch13-01-closures.html">《Rust程序设计语言》</a>中已经详细介绍了Rust的闭包，这里就不再多言。我们只需要知道Rust闭包是一种trait。具体到Lua中的Rust闭包类型就是<code>FnMut (&amp;mut ExeState) -&gt; i32</code>。然后就可以尝试定义Lua中Value的Rust闭包类型如下：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    RustFunction(fn (&amp;mut ExeState) -&gt; i32),   // 普通函数
+    RustClosure(FnMut (&amp;mut ExeState) -&gt; i32), // 闭包
+</code></pre>
+<p>然而这个定义是非法的，编译器会有如下报错：</p>
+<pre><code>error 782| trait objects must include the `dyn` keyword
+</code></pre>
+<p>这就涉及到Rust中trait的Static Dispatch和Dynamic Dispatch了。对此<a href="https://kaisery.github.io/trpl-zh-cn/ch17-02-trait-objects.html#trait-%E5%AF%B9%E8%B1%A1%E6%89%A7%E8%A1%8C%E5%8A%A8%E6%80%81%E5%88%86%E5%8F%91">《Rust程序设计语言》</a>也有详细的介绍，这里不再多言。</p>
+<p>然后，我们根据编译器的提示，加上<code>dyn</code>：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    RustClosure(dyn FnMut (&amp;mut ExeState) -&gt; i32),
+</code></pre>
+<p>编译器仍然报错，但是换了一个错误：</p>
+<pre><code>error 277| the size for values of type `(dyn for&lt;'a&gt; FnMut(&amp;'a mut ExeState) -&gt; i32 + 'static)` cannot be known at compilation time
+</code></pre>
+<p>就是说trait object是个DST。这个之前在<a href="./ch03-00.optimize_string.html">介绍字符串定义</a>的时候介绍过，只不过当时遇到的是slice，现在是trait，这也是Rust中最主要的两个DST。对此<a href="https://kaisery.github.io/trpl-zh-cn/ch19-04-advanced-types.html#%E5%8A%A8%E6%80%81%E5%A4%A7%E5%B0%8F%E7%B1%BB%E5%9E%8B%E5%92%8C-sized-trait">《Rust程序设计语言》</a>也有详细的介绍。解决方法就是在外面封装一层指针。既然Value要支持Clone，那么<code>Box</code>就不能用，只能用<code>Rc</code>。又由于是<code>FnMut</code>而不是<code>Fn</code>，在调用的时候会改变捕捉的环境，所以还需要再套一层<code>RefCell</code>来提供内部可变性。于是得到如下定义：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    RustClosure(Rc&lt;RefCell&lt;dyn FnMut (&amp;mut ExeState) -&gt; i32&gt;&gt;),
+</code></pre>
+<p>这次终于编译通过了！但是，想一想当初在介绍字符串各种定义的时候为什么没有使用<code>Rc&lt;str&gt;</code>？因为对于DST类型，需要在外面的指针或引用的地方存储实际的长度，那么指针就会变成“胖指针”，需要占用2个word。这就会进一步导致整个Value的size变大。为了避免这种情况，只能再套一层<code>Box</code>，让Box包含具体长度变成胖指针，从而让<code>Rc</code>恢复1个word。定义如下：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    RustClosure(Rc&lt;RefCell&lt;Box&lt;dyn FnMut (&amp;mut ExeState) -&gt; i32&gt;&gt;&gt;),
+</code></pre>
+<p>在定义了Rust闭包的类型后，也遇到了跟Lua闭包同样的问题：还要不要保留Rust函数的类型？是否保留区别都不大。我们这里选择了保留。</p>
+<h2 id="虚拟机执行"><a class="header" href="#虚拟机执行">虚拟机执行</a></h2>
+<p>Rust闭包的虚拟机执行非常简单。因为Rust语言中闭包和函数的调用方式一样，所以Rust闭包的调用跟之前Rust函数的调用一样：</p>
+<pre><code class="language-rust ignore">    fn do_call_function(&amp;mut self, narg_plus: u8) -&gt; usize {
+        match self.stack[self.base - 1].clone() {
+            Value::RustFunction(f) =&gt; { // Rust普通函数
+                // 省略参数的准备
+                f(self) as usize
+            }
+            Value::RustClosure(c) =&gt; { // Rust闭包
+                // 省略同样的参数准备过程
+                c.borrow_mut()(self) as usize
+            }
+</code></pre>
+<h2 id="测试"><a class="header" href="#测试">测试</a></h2>
+<p>至此就完成了Rust闭包类型。借用了Rust语言自身的闭包后，这个实现就非常简单。并不需要像Lua官方实现那样用Lua栈来配合，也就不需要引入一些专门的API。</p>
+<p>下面代码展示了用Rust闭包来完成本节开头的计数器例子：</p>
+<pre><code class="language-rust ignore">fn test_new_counter(state: &amp;mut ExeState) -&gt; i32 {
+    let mut i = 0_i32;
+    let c = move |_: &amp;mut ExeState| {
+        i += 1;
+        println!(&quot;counter: {i}&quot;);
+        0
+    };
+    state.push(Value::RustClosure(Rc::new(RefCell::new(Box::new(c)))));
+    1
+}
+</code></pre>
+<p>相比于本节开头的C闭包，这个版本除了最后一句创建闭包的语句非常啰嗦以外，其他流程都更加清晰。后续在整理解释器API时也会优化最后这条语句。</p>
+<h2 id="rust闭包的局限"><a class="header" href="#rust闭包的局限">Rust闭包的局限</a></h2>
+<p>上面的示例代码中可以看到，捕获的环境（或者说Upvalue）<code>i</code>是需要move进闭包的。这也就导致多个闭包间共享不能共享Upvalue。不过Lua官方的C闭包也不支持共享，所以并没什么问题。</p>
+<p>另外一个需要说明的地方是，Lua官方的C闭包中是用Lua的栈来存储Upvalue，也就导致Upvalue的类型就是Lua的Value类型。而我们使用Rust语言的闭包，那Upvalue就可以是“更多”的类型，而不限于Value类型了。不过这两者之间在功能上应该是等价的：</p>
+<ul>
+<li>Rust闭包支持的“更多”类型，在Lua中都可以用LightUserData，也就是指针来实现；虽然对于Rust来说这很不安全。</li>
+<li>Lua中支持的内部类型，比如表Table，在我们的解释器中，也可以通过<a href="./ch08-04.rust_functions_and_api.html#rust-api"><code>get()</code></a>这个API获取到（而Lua的官方实现中，表这个类型是内部的，没有对外）。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch09-03.escape_from_block_and_goto.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch09-05.generic_for.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch09-03.escape_from_block_and_goto.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch09-05.generic_for.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

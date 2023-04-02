@@ -1,0 +1,668 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Upvalue的逃逸和闭包 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html" class="active"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="upvalue的逃逸和闭包"><a class="header" href="#upvalue的逃逸和闭包">Upvalue的逃逸和闭包</a></h1>
+<p>上一节介绍了Upvalue的概念，并以Upvalue最基本的用法为例介绍了为支持Upvalue而对语法分析做的改造。本节就来介绍Upvalue的完整特性，主要是Upvalue的逃逸。</p>
+<p>下面参考《Lua程序设计》书中的示例代码：</p>
+<pre><code class="language-lua">local function newCounter()
+    local i = 0
+    return function ()
+        i = i + 1  -- upvalue
+        print(i)
+    end
+end
+
+local c1 = newCounter()
+c1() -- 输出：1
+c1() -- 输出：2
+</code></pre>
+<p>上述代码中的<code>newCounter()</code>是个典型的工厂函数，它创造并返回一个匿名函数。这里需要说明的是，返回的匿名函数引用了<code>newCounter()</code>中的局部变量<code>i</code>，也就是Upvalue。
+下半段代码调用<code>newCounter()</code>函数并把返回的匿名函数赋值给<code>c1</code>并调用。此时<code>newCounter()</code>函数已经结束，看上去其中定义的局部变量<code>i</code>也已经超出了作用范围，此时再调用<code>c1</code>去引用局部变量<code>i</code>会出问题（如果你是C语言程序员应该能明白这个意思）。然而在Lua中，闭包的机制保证了这里调用<code>c1</code>是没问题的。也就是Upvalue的逃逸。</p>
+<p>《Lua程序设计》这本书是面向Lua程序员的，介绍到Upvalue逃逸的概念就足够了。但我们的目的是要实现一个解释器（而不只是使用解释器），所以不仅要知道这样是没问题的，还要知道如何来做到没问题，即如何实现Upvalue的逃逸。</p>
+<h2 id="不可行的静态存储方案"><a class="header" href="#不可行的静态存储方案">不可行的静态存储方案</a></h2>
+<p>最简单的办法是参考C语言中函数内部的static变量，对于被Upvalue引用的局部变量（比如这里<code>newCounter()</code>函数中的<code>i</code>）并不放到栈上，而是放到一个静态的区域。但是这个方案并不可行，因为C语言中的static变量是全局唯一的，而Lua中的Upvalue是每次调用都会生成一份新的。比如接着上面的代码，继续如下代码：</p>
+<pre><code class="language-lua">local c2 = newCounter()
+c2() -- 输出：1。新的计数开始。
+c1() -- 输出：3。继续上面c1的输出。
+</code></pre>
+<p>再次调用<code>newCounter()</code>，会生成一个新的计数器，其中的局部变量<code>i</code>会重新初始化为0，重新开始计数。此时就存在两个计数器：<code>c1</code>和<code>c2</code>，两者各自拥有独立的局部变量<code>i</code>。于是当调用<code>c2()</code>的时候，会从1开始重新计数；如果穿插调用之前的<code>c1()</code>也会继续之前的计数。多么有趣！</p>
+<pre><code>   --+---+--              +---+   +---+
+     | i |                | i |   | i |
+   --+-^-+--              +-^-+   +-^-+
+       |                    |       |
+   /---+---\                |       |
+   |       |                |       |
++----+   +----+          +----+   +----+
+| c1 |   | c2 |          | c1 |   | c2 |
++----+   +----+          +----+   +----+
+</code></pre>
+<p>上面左图展示的是把<code>i</code>放到全局唯一的静态存储，那么所有计数器函数指向唯一的i。这是不满足我们需求的。我们需要的是右图所示，每个计数器函数都有独立的<code>i</code>。</p>
+<h2 id="堆上存储方案"><a class="header" href="#堆上存储方案">堆上存储方案</a></h2>
+<p>既然不能放在栈上，也不能放在全局静态区，那么就只能放在堆上了。接着的问题是，什么时候放到堆上？有几个可能的方案：</p>
+<ol>
+<li>刚进入到函数时，就把所有被Upvalue引用的局部变量放到堆上；</li>
+<li>当一个局部变量被Upvalue引用时，才从栈上挪到堆上；</li>
+<li>当函数退出时，把所有被Upvalue引用的局部变量挪到堆上；</li>
+</ol>
+<p>第1个方案不行，因为一个局部变量在被Upvalue引用前，可能已经被作为局部变量使用过了，已经生成了相关的字节码。第2个方案应该是可行的，但是局部变量在被Upvalue引用后，后续还可能在当前函数内被作为局部变量使用，提前挪到堆上并没有必要，毕竟对栈的访问更快更方便。所以我们选择第3个方案。</p>
+<p>这种把局部变量从栈上挪到堆上的操作，我们遵循Lua官方实现的代码，也称之为“关闭close”。</p>
+<p>接下来，为了演示一个Upvalue分别在逃逸前和逃逸后被访问的情况，在上面的计数器示例代码的基础上改造下，在内部的匿名函数返回前，先在<code>newCounter()</code>函数内部调用一次。为此，需要把这个匿名函数赋值给一个局部变量<code>retf</code>：</p>
+<pre><code class="language-lua">local function newCounter()
+    local i = 0
+    local function retf()
+        i = i + 1  -- upvalue
+        print(i)
+    end
+    retf()  -- 在newCounter()内部调用
+    return retf  -- 返回retf
+end
+</code></pre>
+<p>分两部分介绍这个例子，先是在工厂函数内部调用<code>retf()</code>，再是工厂函数返回<code>retf</code>造成的Upvalue逃逸。</p>
+<p>首先，在工厂函数内部调用<code>retf()</code>的时候，<code>retf</code>要操作的<code>i</code>仍然还在栈上。示意图如下。</p>
+<pre><code>     |          |
+     +----------+
+base |newCounter|
+     +----------+
+   0 |    i     |&lt;- - - - - - - - - - \
+     +----------+                     |
+   1 |   retf   +--+-&gt;+-FuncProto-----+--+
+     +----------+  |  |byte_codes:    |  |
+   2 |   retf   +--/  | GetUpvalue(0, 0) |
+     +----------+     | ...              |
+     |          |     +------------------+
+</code></pre>
+<p>图中，左边是栈，其中<code>newCounter</code>是函数调用入口，也是当前函数的base位置，后面i和第一个retf是局部变量，第二个retf是函数调用的栈上入口，两个retf指向同一个函数原型。retf函数原型中的字节码序列中，第一个字节码<code>GetUpvalue</code>是把Upvalue <code>i</code>加载到栈上以执行加法。这个字节码有两个关联参数。第1个是加载到栈上的目标地址，这里忽略；第2个是Upvalue的源地址，参考上一节中对Upvalue的语法分析，这个参数的含义是：上一层函数的局部变量的栈索引。在这个例子里，就是<code>i</code>在newCounter()函数中的索引，也就是<code>0</code>。到此为止还都是上一节的内容，还没涉及到逃逸。</p>
+<p>现在考虑Upvalue的逃逸。在<code>newCounter()</code>函数退出后，左边的栈上的3个空间都会销毁，<code>i</code>也就不存在了。为了retf函数后续可以继续访问<code>i</code>，那在<code>newCounter()</code>函数退出前，需要关闭局部变量<code>i</code>，把<code>i</code>从栈上挪到堆上。示意图如下：</p>
+<pre><code>     |          |
+     +----------+
+base |newCounter|         +===+
+     +----------+  close  | i |&lt;- - - \
+   0 |    i     +--------&gt;+===+       ?
+     +----------+                     ?
+   1 |   retf   +----&gt;+-FuncProto-----?--+
+     +----------+     |byte_codes:    ?  |
+     |          |     | GetUpvalue(0, 0) |
+                      | ...              |
+                      +------------------+
+</code></pre>
+<p>这样虽然保证了<code>i</code>可以被继续访问，但是有个非常明显的问题：字节码<code>GetUpvalue</code>关联的第2个参数不能定位到堆上的<code>i</code>了（图中连续的<code>?</code>线）。这也就是在<a href="./ch09-01.upvalue.html#%E5%8F%98%E9%87%8F%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B">上一节</a>里提到的，直接用局部变量在栈上的索引来表示Upvalue的方案，是不可行的。需要在这个方案基础上做改进。</p>
+<h2 id="改进upvalue中介"><a class="header" href="#改进upvalue中介">改进：Upvalue中介</a></h2>
+<p>为了在关闭局部变量后仍然可以被Upvalue访问到，我们需要一个Upvalue的中介，开始时还是用栈上索引来表示Upvalue，而当外层函数的局部变量被关闭后，就挪到这个中介里。</p>
+<p>下面两个图展示了在加上Upvalue中介后的情况。</p>
+<pre><code>     |          |             - - - - - - \
+     +----------+            |            |
+base |newCounter|            |      *-----+-+---
+     +----------+            |      |Open(0)|
+   0 |    i     |&lt;- - - - - -       *-^-----+---
+     +----------+                     |
+   1 |   retf   +--+-&gt;+-FuncProto-----+--+
+     +----------+  |  |byte_codes:    |  |
+   2 |   retf   +--/  | GetUpvalue(0, 0) |
+     +----------+     | ...              |
+     |          |     +------------------+
+</code></pre>
+<p>上图是在<code>newCounter()</code>函数内部调用<code>retf()</code>函数的示意图。对比之前的版本，增加了Upvalue中介列表（图中以<code>*</code>为角的列表），并只有1个成员：<code>Open(0)</code>，代表这个局部变量还没关闭，并且是在栈上的相对索引是0。而<code>retf</code>的函数原型中，字节码<code>GetUpvalue</code>关联的第2个参数虽然没有变，但其含义变了，变成了中介列表的索引。只不过这个例子中恰巧也是0而已。</p>
+<pre><code>     |          |          /----------------\
+     +----------+          |                |
+base |newCounter|          |        *-------V-+---
+     +----------+  close   |        |Closed(i)|
+   0 |    i     +----------/        *-^-------+---
+     +----------+                     |
+   1 |   retf   +----&gt;+-FuncProto-----+--+
+     +----------+     |byte_codes:    |  |
+     |          |     | GetUpvalue(0, 0) |
+                      | ...              |
+                      +------------------+
+</code></pre>
+<p>上图是<code>newCounter()</code>函数返回前，关闭局部变量<code>i</code>之后的示意图。上图中增加的Upvalue中介列表中的成员，变成了<code>Closed(i)</code>，即把局部变量<code>i</code>挪到这个中介列表中。这样<code>GetUpvalue</code>仍然可以定位到第0个Upvalue中介，并访问关闭后的<code>i</code>。</p>
+<h2 id="改进共享upvalue"><a class="header" href="#改进共享upvalue">改进：共享Upvalue</a></h2>
+<p>上述方案可以支持目前简单的逃逸情景了，但是不支持多个闭包共享同一个局部变量的情景。比如下面示例代码：</p>
+<pre><code class="language-lua">local function foo()
+    local i, ip, ic = 0, 0, 0
+    local function producer()
+        i = i + 1
+        ip = ip + 1
+    end
+    local function consumer()
+        i = i - 1
+        ic = ic + 1
+    end
+    return produce, consume
+end
+</code></pre>
+<p>上述的<code>foo()</code>函数返回的两个内部函数都引用了局部变量<code>i</code>，而且很明显这两个函数是要共享<code>i</code>，要操作同一个<code>i</code>，而不是各自独立的<code>i</code>。那当<code>foo()</code>函数结束关闭<code>i</code>后，就需要两个函数来共享关闭后的<code>i</code>了。由于这两个函数拥有不同的Upvalue列表，分别是<code>i, ip</code>和<code>i, ic</code>，所以两个函数不用共享同一个Upvalue列表。那就只能针对每个Upvalue单独共享了。</p>
+<p>下图是单独共享每个Upvalue的方案：</p>
+<pre><code>     |          |
+     +----------+     +=======+
+base |    foo   |     |Open(0)|&lt;===============+------------\
+     +----------+     +=======+                |            |
+   0 |    i     |&lt;- -/  +=======+              |            |
+     +----------+       |Open(1)|&lt;-------------|---\        |
+   1 |    ip    |&lt;- - - +=======+              |   |        |
+     +----------+         +=======+            |   |        |
+   2 |    ic    |&lt;- - - - |Open(2)|&lt;-----------|---|--------|---\
+     +----------+         +=======+          *-+-+-+-+--    |   |
+   3 | producer +----&gt;+-FuncProto--------+   | i |ip |      |   |
+     +----------+     |byte_codes:       |   *-^-+-^-+--    |   |
+   4 | consumer +--\  | GetUpvalue(0, 0)-+----/    |        |   |
+     +----------+  |  | ...              |         |        |   |
+     |          |  |  | GetUpvalue(0, 1)-+---------/        |   |
+                   |  | ...              |                  |   |
+                   |  +------------------+                  |   |
+                   |                                      *-+-+-+-+--
+                   \--------------&gt;+-FuncProto-------+    | i |ic |
+                                  |byte_codes:       |    *-^-+-^-+--
+                                  | GetUpvalue(0, 0)-+-----/    |
+                                  | ...              |          |
+                                  | GetUpvalue(0, 1)-+----------/
+                                  | ...              |
+                                  +------------------+
+</code></pre>
+<p>上图略显复杂，但大部分跟之前的方案是一样的。最左边仍然是栈。然后看<code>producer()</code>函数指向的内容仍然是函数原型和对应的Upvalue列表。由于这个函数用到了两个Upvalue，所以列出了两条字节码。然后就是不一样的地方了：对于的Upvalue列表中，并不直接是Upvalue，而是Upvalue的地址。而真正的Upvalue是单独在堆上分配的，也就是图中的<code>Open(0)</code>、<code>Open(1)</code>和<code>Open(2)</code>。这3个Upvalue通过索引可以访问栈上的局部变量。最后的<code>consumer()</code>函数类似，区别是引用了不同的Upvalue。</p>
+<p>当<code>foo()</code>函数结束，关闭所有Upvalue引用的局部变量时，上图中的<code>Open(0)</code>、<code>Open(1)</code>和<code>Open(2)</code>分别被替换为<code>Closed(i)</code>、<code>Closed(ip)</code>和<code>Closed(ic)</code>。此时，<code>producer()</code>和<code>consumer()</code>函数对应的Upvalue列表中都有的<code>i</code>指向的是同一个<code>Closed(i)</code>。如此一来，在外层<code>foo()</code>函数退出后，这两个函数仍然可以访问同一个<code>i</code>了。只是替换3个Upvalue，改动相对较小，这里就省去关闭后的图了。</p>
+<h2 id="闭包的定义"><a class="header" href="#闭包的定义">闭包的定义</a></h2>
+<p>在继续介绍更多的Upvalue使用场景前，我们先基于上述方案，引入闭包的概念。</p>
+<p>依照上面的方案，返回的<code>retf</code>并不只是一个函数原型了，还要包括对应的Upvalue列表。而函数原型加上Upvalue，就是<strong>闭包</strong>！在<code>Value</code>中增加Lua闭包类型：</p>
+<pre><code class="language-rust ignore">pub enum Upvalue { // 上图中的Upvalue中介
+    Open(usize),
+    Closed(Value),
+}
+pub struct LuaClosure {
+    proto: Rc&lt;FuncProto&gt;,
+    upvalues: Vec&lt;Rc&lt;RefCell&lt;Upvalue&gt;&gt;&gt;,
+}
+pub enum Value {
+    LuaFunction(Rc&lt;FuncProto&gt;),  // Lua函数
+    LuaClosure(Rc&lt;LuaClosure&gt;),  // Lua闭包
+</code></pre>
+<p>这样一来，多次调用<code>newCounter()</code>函数返回的不同闭包，虽然共享同一个函数原型，但是各自拥有独立的Upvalue。这也是本节开头两个计数器c1、c2可以独立计数的原因。</p>
+<p>下图展示两个计数器的示意图：</p>
+<pre><code>             +-LuaClosure--+
+|      |     |       proto-+----------------------+--&gt;+-FuncProto--------+
++------+     |    upvalues-+---&gt;+---+--           |   |byte_codes:       |
+|  c1  +----&gt;+-------------+    | i |             |   | GetUpvalue(0, 0) |
++------+                        +-+-+--           |   | ...              |
+|  c2  +-\                        |               |   +------------------+
++------+ |                        V=========+     |
+|      | |                        |Closed(i)|     |
+         |                        +=========+     |
+         \--&gt;+-LuaClosure--+                      |
+             |       proto-+----------------------/
+             |    upvalues-+---&gt;+---+--
+             +-------------+    | i |
+                                +-+-+--
+                                  |
+                                  V=========+
+                                  |Closed(i)|
+                                  +=========+
+</code></pre>
+<p>类似的，我们也改造下上面共享Upvalue例子中的示意图。清晰起见，删掉<code>FuncProto</code>的具体内容；然后把函数原型和Upvalue列表合并为<code>LuaClosure</code>。如下图。</p>
+<pre><code>     |          |
+     +----------+     +=======+
+base |    foo   |     |Open(0)|&lt;========+----------\
+     +----------+     +=======+         |          |
+   0 |    i     |&lt;- -/  +=======+       |          |
+     +----------+       |Open(1)|&lt;------|---\      |
+   1 |    ip    |&lt;- - - +=======+       |   |      |
+     +----------+         +=======+     |   |      |
+   2 |    ic    |&lt;- - - - |Open(2)|&lt;----|---|------|---\
+     +----------+         +=======+     |   |      |   |
+   3 | producer +----&gt;+-LuaClosure--+   |   |      |   |
+     +----------+     | proto       |   |   |      |   |
+   4 | consumer +--\  | upvalues   -+&gt;*-+-+-+-+--  |   |
+     +----------+  |  +-------------+ | i |ip |    |   |
+     |          |  |                  *---+---+--  |   |
+                   |                               |   |
+                   \------------&gt;+-LuaClosure--+   |   |
+                                 | proto       |   |   |
+                                 | upvalues   -+&gt;*-+-+-+-+--
+                                 +-------------+ | i |ic |
+                                                 *---+---+--
+</code></pre>
+<p>由图可见，相比于上一章定义的Lua函数<code>LuaFunction</code>而言，闭包<code>LuaClosure</code>虽然可以拥有独立的Upvalue列表，但是多了一次内存分配和指针跳转。这里就面临一个选择：是用闭包完全代替函数，还是两者并存？Lua官方实现中是前者，这也是“Lua中所有函数都是闭包”这句话的来源。代替的好处是少一个类型，代码稍微简单一点点；并存的好处是函数类型毕竟少分配一点内存少一次指针跳转。除了这两点个优缺点之外，还有一个更大的影响行为的区别。比如下面的示例代码：</p>
+<pre><code class="language-lua">local function foo()
+    return function () print &quot;hello, world!&quot; end
+end
+local f1 = foo()
+local f2 = foo()
+print(f1 == f2)  -- true or false？
+</code></pre>
+<p>这里调用<code>foo()</code>返回的匿名函数不包括Upvalue。那么问题来了，两次调用<code>foo()</code>的两个返回值相等吗？</p>
+<ul>
+<li>
+<p>如果保留<code>LuaFunction</code>类型，那么返回值就是<code>LuaFunction</code>类型，<code>f1</code>和<code>f2</code>就只涉及函数原型，就是相等的。可以用上一章的代码执行验证。</p>
+</li>
+<li>
+<p>如果不保留<code>LuaFunction</code>类型，那么返回的函数就是<code>LuaClosure</code>类型。虽然不包含Upvalue，但是也是两个不同的闭包，<code>f1</code>和<code>f2</code>就是不等的。</p>
+</li>
+</ul>
+<p>那么上述哪个行为是符合<a href="https://www.lua.org/manual/5.4/manual.html#3.4.4">Lua语言</a>要求的呢？答案是：都可以。Lua手册中对函数比较的描述如下：</p>
+<blockquote>
+<p>Functions created at different times but with no detectable differences may be classified as equal or not (depending on internal caching details).</p>
+</blockquote>
+<p>也就是无所谓，并没有对此做规定。那我们也就可以随便选择了。这个项目里，我们最开始是选择闭包代替函数的，后来又把函数类型加了回来。感觉区别不大。</p>
+<h2 id="闭包的语法分析"><a class="header" href="#闭包的语法分析">闭包的语法分析</a></h2>
+<p>之前没有闭包，还是LuaFunction的时候，对于函数定义的处理很直观：</p>
+<ul>
+<li>解析函数定义，并生成函数原型FuncProto；</li>
+<li>把FuncProto用<code>Value::LuaFunction</code>包装下，放到常量表里；</li>
+<li>生成<code>LoadConst</code>等读取常量表的字节码。</li>
+</ul>
+<p>对函数定义的处理，就跟其他类型的常量的处理方式类似。回忆一下，相关代码如下：</p>
+<pre><code class="language-rust ignore">    fn funcbody(&amp;mut self, with_self: bool) -&gt; ExpDesc {
+        // 省略准备工作
+
+        // chunk()函数返回的proto就是FuncProto类型
+        let proto = chunk(self.lex, has_varargs, params, Token::End);
+        ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
+    }
+    fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+        let code = match desc {
+            // 省略其他类型
+
+            // 把函数原因加入到常量表中，并生成LoadConst字节码
+            ExpDesc::Function(f) =&gt; ByteCode::LoadConst(dst as u8, self.add_const(f) as u16),
+</code></pre>
+<p>现在为了支持闭包，需要做如下改进：</p>
+<ul>
+<li>
+<p>相关Value类型定义改成了<code>LuaClosure(Rc&lt;LuaClosure&gt;)</code>，所以解析出的函数原型FuncProto没法直接放到常量表里了。虽然也能间接放，但不直观。不如在函数原型FuncProto中再加个表专门保存内层函数的原型列表。</p>
+</li>
+<li>
+<p>虚拟机执行函数定义时，除了函数原型外还要生成Upvalue。那么类似<code>LoadConst</code>之类的直接读取常量表的字节码也不满足需求了。需要新增一个专门的字节码，把函数原型和生成的Upvalue聚合为闭包。</p>
+</li>
+<li>
+<p>另外，在生成Upvalue的时候，需要知道这个函数用到了上层函数的哪些局部变量。所以函数原型中还要新增Upvalue引用上层局部索引的列表。</p>
+</li>
+</ul>
+<p>综上，新增的创建闭包的字节码如下：</p>
+<pre><code class="language-rust ignore">pub enum ByteCode {
+    Closure(u8, u16),
+</code></pre>
+<p>这个字节码关联的两个参数类似<code>LoadConst</code>字节码，分别是栈上目标地址，和内部函数原型列表<code>inner_funcs</code>的索引。</p>
+<p>另外，需要在函数原型中新增两个成员如下：</p>
+<pre><code class="language-rust ignore">pub struct FuncProto {
+    pub upindexes: Vec&lt;usize&gt;,
+    pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,
+</code></pre>
+<p>其中<code>inner_funcs</code>是函数内部定义的内层函数的原型列表。<code>upindexes</code>是当前函数引用上层函数的局部变量的索引，这个成员后续需要改造。需要说明的是，<code>inner_funcs</code>是当前函数作为外层函数的角色时使用的，而<code>upindexes</code>是当前函数作为内存函数的角色时使用的。</p>
+<p>我们在后面介绍完Upvalue完整的特性后，再来介绍对Upvalue索引<code>upindexes</code>的解析。</p>
+<p>在介绍完闭包的定义和语法分析后，接着看Upvalue的其他场景。</p>
+<h2 id="改进对upvalue的引用"><a class="header" href="#改进对upvalue的引用">改进：对Upvalue的引用</a></h2>
+<p>之前介绍的Upvalue都是对上层函数的局部变量的引用，现在来看对上层函数的Upvalue的引用。对本节最开头的计数闭包示例做下改造，把递增的代码<code>i = i + 1</code>再放到一层函数中：</p>
+<pre><code class="language-lua">local function newCounter()
+    local i = 0
+    return function ()
+        print(i)  -- upvalue
+        local function increase()
+            i = i + 1  -- where does `i` refer?
+        end
+        increase()
+    end
+end
+
+local c1 = newCounter()
+c1()
+</code></pre>
+<p>这个示例中<code>newCounter()</code>函数返回的匿名函数的第1行print语句中的<code>i</code>是之前已经介绍的普通的Upvalue，指向上层函数的局部变量。而内部函数<code>increase()</code>函数中的<code>i</code>是什么？也是Upvalue。那这个Upvalue是对谁的引用呢？</p>
+<p>可以看做是对最外层<code>newCounter()</code>函数中局部变量<code>i</code>的 <strong>跨层</strong> 引用吗？不可以，因为虚拟机执行时不能实现。当匿名函数返回时，内部的<code>increase()</code>函数还没有创建；只有当在更外面调用匿名函数时，内部的<code>increase()</code>函数才会被创建并执行；而此时最外层的<code>newCounter()</code>已经结束了，其中的局部变量<code>i</code>也已经不存在了，也就无法对其进行引用了。</p>
+<p>既然不能是对最外层<code>newCounter()</code>函数中局部变量<code>i</code>的 <strong>跨层</strong> 引用，那就只能是对外层的匿名函数中的Upvalue <code>i</code>的引用了。</p>
+<p>为了支持对Upvalue的引用，首先，要修改刚才<code>FuncProto</code>中Upvalue列表的定义，从只支持局部变量修改为也支持Upvalue：</p>
+<pre><code class="language-rust ignore">pub enum UpIndex {
+    Local(usize), // index of local variables in upper functions
+    Upvalue(usize), // index of upvalues in upper functions
+}
+
+pub struct FuncProto {
+    pub upindexes: Vec&lt;UpIndex&gt;,  // 从usize修改为UpIndex
+    pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,
+</code></pre>
+<p>然后，来看上面例子中，在执行返回的匿名函数计数器<code>c1</code>时，在调用内部<code>increase()</code>函数时的示意图：</p>
+<pre><code>|          |
++----------+
+|    c1    +--------------------&gt;+-LuaClosure--+
++----------+                     | proto       |
+| increase |                     | upvalues    +---&gt;+---+--
++----------+                     +-------------+    | i |
+| increase +--&gt;+-LuaClosure--+                      +-+-+--
++----------+   | proto       |                        |
+|          |   | upvalues    +---&gt;+---+--             |
+               +-------------+    | i |               |
+                                  +-+-+--             V=========+
+                                    \----------------&gt;|Closed(i)|
+                                                      +=========+
+</code></pre>
+<p>左边是栈。其中<code>c1</code>是函数调用入口，对应的闭包中包含的Upvalue <code>i</code>是print语句中引用的。</p>
+<p>栈的下面第一个<code>increase</code>是<code>c1</code>中的局部变量。第二个<code>increase</code>是函数调用入口，对应的闭包中包含的Upvalue <code>i</code>是执行递增操作的语句中引用的。在函数原型中，这个Upvalue应该对应上层函数的第0个Upvalue，即<code>UpIndex::Upvalue(0)</code>，所以在虚拟机执行生成这个闭包时，这个Upvalue就指向<code>c1</code>的第0个Upvalue，即图中的<code>Closed(i)</code>。这样一来，在这个函数中对<code>i</code>的递增操作也会反应在<code>c1</code>函数的print语句中了。</p>
+<h2 id="改进跨多层函数引用"><a class="header" href="#改进跨多层函数引用">改进：跨多层函数引用</a></h2>
+<p>再来看另外一种场景：跨层引用。稍微修改一下上面的用例，把<code>print</code>语句放到递增操作之后，得到下面的示例代码：</p>
+<pre><code class="language-lua">local function newCounter()
+    local i = 0
+    return function ()
+        local function increase()
+            i = i + 1  -- upvalue of upper-upper local
+        end
+        increase()
+        print(i)  -- upvalue
+    end
+end
+</code></pre>
+<p>这个例子跟上面那个例子的区别在于，在解析到<code>increase()</code>函数的时候，要返回的匿名函数中还没有生成Upvalue <code>i</code>，那么<code>increase()</code>函数中的<code>i</code>要指向谁？总结下之前的Upvalue类型：要么是指向上层函数的局部变量，要么是上层函数的Upvalue，并且分析了不能跨多层函数引用。所以，只有一个解决办法了：在中间层函数创造一个Upvalue。这个Upvalue在当前函数（暂时）并不使用，只是用来给内层函数引用。</p>
+<p>刚才说的当前函数“暂时”不使用这个创造出来的Upvalue，是指的在语法分析解析到内部函数的时候，暂时还不使用。在后续的解析过程中，还是可能用上的。比如上面这个例子后，后面的print语句就用到了这个Upvalue。</p>
+<p>这个例子里，两个函数的原型和执行时的示意图，都跟上面的例子一样。这里省略。</p>
+<p>至此，终于介绍完全部的Upvalue特性，并给出最终的方案。这期间也对语法分析和虚拟机执行部分有所涉及，下面根据最终方案，再对语法分析和虚拟机执行做简单的整理。</p>
+<h2 id="upvalue索引的语法分析"><a class="header" href="#upvalue索引的语法分析">Upvalue索引的语法分析</a></h2>
+<p>上面在介绍<a href="#%E9%97%AD%E5%8C%85%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90">闭包的语法分析</a>时，指出在函数原型<code>FuncProto</code>中需要新增成员<code>upindexes</code>来表示当前函数的Upvalue索引。</p>
+<p>在<a href="./ch09-01.upvalue.html#%E5%8F%98%E9%87%8F%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B">上一节</a>中，罗列了变量的解析流程：</p>
+<ol>
+<li>在当前函数的局部变量中匹配，如果找到则是局部变量；</li>
+<li>在上层函数的局部变量中匹配，如果找到则是Upvalue；</li>
+<li>否则是全局变量。</li>
+</ol>
+<p>根据本节前面对Upvalue完整特性的介绍，对上述的第2步扩展更详细的Upvalue索引的解析步骤，变量解析的最终流程如下：</p>
+<ol>
+<li>在当前函数的局部变量中匹配，如果找到则是局部变量；</li>
+<li>在当前函数的Upvalue列表中匹配，如果找到则是已有Upvalue；（复用Upvalue）</li>
+<li>在外层函数的局部变量中匹配，如果找到则新增Upvalue；（普通Upvalue）</li>
+<li>在外层函数的Upvalue中匹配，如果找到则新增Upvalue；（对上层函数中Upvalue的引用）</li>
+<li>在更外层函数的局部变量中匹配，如果找到则在所有中间层函数中创建Upvalue，并新增Upvalue；（跨多层函数的引用）</li>
+<li>在更外层函数的Upvalue中匹配，如果找到则在所有中间层函数中创建Upvalue，并新增Upvalue；（跨多层函数的Upvalue的引用）</li>
+<li>循环上述第5,6步，如果到达最外层函数仍未匹配，则是全局变量。</li>
+</ol>
+<p>这个流程中明显有很多重复的地方。最明显的是第3,4步是第5,6步的特殊情况，即没有中间层函数的情况，所以可以去掉3,4步。另外在代码实现时，第1,2步也可以作为特殊情况而省略。由于本节内容太多，这里就不贴具体代码了。</p>
+<p>上一节的语法分析，为了支持Upvalue需要访问上层函数的局部变量列表，所以新增了上下文<code>ParseContext</code>数据结构，包含各级函数的局部变量列表。本节介绍了Upvalue也可以引用上层函数的Upvalue，所以就也需要在<code>ParseContext</code>中增加各级函数的Upvalue列表。</p>
+<pre><code class="language-rust ignore">struct ParseContext&lt;R: Read&gt; {
+    all_locals: Vec&lt;Vec&lt;String&gt;&gt;,
+    all_upvalues: Vec&lt;Vec&lt;(String, UpIndex)&gt;&gt;,  // 新增
+    lex: Lex&lt;R&gt;,
+}
+
+pub struct FuncProto {
+    pub upindexes: Vec&lt;UpIndex&gt;,
+</code></pre>
+<p>上面代码中，<code>ParseContext</code>是语法分析上下文，是语法分析的内部数据结构，其Upvalue列表<code>all_upvalues</code>的成员类型是<code>(String, UpIndex)</code>，其中String是Upvalue变量名，用来上面第2,4,6步的匹配；UpIndex是Upvalue的索引。</p>
+<p>而<code>FuncProto</code>是语法分析阶段的输出，是交由虚拟机执行阶段使用的，此时并不需要Upvalue变量名了，只需要UpIndex索引即可。</p>
+<h2 id="虚拟机执行"><a class="header" href="#虚拟机执行">虚拟机执行</a></h2>
+<p>本节前面部分在介绍Upvalue设计方案的时候，基本是按照虚拟机执行阶段来介绍的，这里再完整过一遍。</p>
+<p>首先，是创建闭包，也就是定义函数。为此引入了新的字节码<code>ByteCode::Closure</code>，其职责是生成Upvalue，并将其和函数原型一起打包为闭包，并加载到栈上。</p>
+<p>这里需要说明的是，在语法分析阶段为了能访问上层函数的局部变量，需要引入<code>ParseContext</code>上下文；但是，在虚拟机执行阶段，Upvalue虽然也要访问上层函数的栈空间，但是并不需要做语法分析那样类似的改造。这是因为在创建闭包的时候，Upvalue列表是由外层函数生成并传入闭包的，内层函数就可以通过Upvalue列表间接访问外层函数的栈空间。</p>
+<p>另外，生成的Upvalue列表除了传入闭包外，外层函数自己也需要把列表维护起来的，目的有二：</p>
+<ul>
+<li>
+<p>上面<a href="#%E6%94%B9%E8%BF%9B%E5%85%B1%E4%BA%ABupvalue">共享Upvalue</a>部分有介绍，如果一个函数中包含多个闭包，那么这些闭包的Upvalue是要共享局部变量的。所以，在创建Upvalue的时候，要先检查这个局部变量关联的Upvalue是否已经创建了。如果是，则共享；否则才创建新的。</p>
+<p>这里有个小问题，这个是否已经创建的检查是在虚拟机执行阶段进行的。Upvalue列表一般不会很多，所以不至于使用hash表，而使用Vec的话这个匹配检查的时间复杂度就是O(n)，当Upvalue很多的时候这里可能影响性能。那能不能把这个匹配检查放在语法分析阶段呢？下一节再详细介绍这个问题。</p>
+</li>
+<li>
+<p>外层函数在退出的时候，需要关闭Upvalue。</p>
+<p>需要说明的是，理论上讲，只需要关闭逃逸的Upvalue；而不需要关闭没有逃逸的Upvalue。但是，在语法阶段确定一个Upvalue是否逃逸是非常困难的，除了上述例子中比较明显的把内部函数作为返回值的逃逸情况，还有比如把内部函数赋值给一个外部的表这种情况。在虚拟机阶段判断是否逃逸也很麻烦。所以为了简单起见，我们这里参考Lua官方实现，在函数结束时关闭所有Upvalue，而不区分是否逃逸。</p>
+</li>
+</ul>
+<p>关闭Upvalue的时机是所有函数退出的地方，包括<code>Return</code>、<code>Return0</code>和<code>TailCall</code>字节码。具体的关闭代码这里就省略了。</p>
+<h2 id="小节"><a class="header" href="#小节">小节</a></h2>
+<p>本节介绍了Upvalue的逃逸，并新增了闭包类型。但主要介绍的都是如何设计和管理Upvalue，而并没有讲具体的操作，包括如何创建、读写、和关闭Upvalue。不过设计方案讲明白后，这些具体的操作相对也就很简单了。本节篇幅已经很长了，就省略这部分的介绍和代码。</p>
+<h2 id="rust的dst"><a class="header" href="#rust的dst">Rust的DST</a></h2>
+<p>现在介绍Rust语言的一个特征，DST。</p>
+<p>本节前面对闭包数据结构<code>LuaClosure</code>的定义如下：</p>
+<pre><code class="language-rust ignore">pub struct LuaClosure {
+    proto: Rc&lt;FuncProto&gt;,
+    upvalues: Vec&lt;Rc&lt;RefCell&lt;Upvalue&gt;&gt;&gt;,
+}
+</code></pre>
+<p>这里忽略其中的函数原型<code>proto</code>字段，而只关注Upvalue列表<code>upvalues</code>字段。为了能存储任意个Upvalue，这里的upvalues定义为一个列表Vec。这样就需要再额外分配一段内存。整个闭包的内存布局如下：</p>
+<pre><code>+-LuaClosure--+
+| proto       |
+| upvalues:   |    Upvalue列表
+|   ptr     --+---&gt;+------+------+-
+|   capacity  |    |      |      |
+|   length    |    +------+------+-
++-------------+
+</code></pre>
+<p>上图中，左边是闭包<code>LuaClosure</code>，其中<code>ptr</code>指向的右边额外的内存，是Upvalue列表Vec的实际存储空间。这样额外再分配一段内存的缺点有三个：</p>
+<ul>
+<li>浪费内存，每一段内存都需要额外的管理空间和因为对齐造成的浪费；</li>
+<li>在申请内存时，需要多执行一次分配，影响性能；</li>
+<li>在访问Upvalue时，需要多一次指针跳转，也影响性能。</li>
+</ul>
+<p>而对于这种不定长数组的需求，在C语言中经典的做法是：在数据结构中定义零长数组，然后在实际分配内存的时候按需指定实际长度。示例代码如下：</p>
+<pre><code class="language-c">// 定义数据结构
+struct lua_closure {
+    struct func_proto *proto;
+    int n_upavlue;  // 实际个数
+    struct upvalue upvalues[0];  // 零长数组
+}
+
+// 申请内存
+struct lua_closure *c = malloc(sizeof(struct lua_closure)  // 基本空间
+        + sizeof(struct upvalue) * n_upvalue);  // 额外空间
+
+// 初始化
+c-&gt;n_upvalue = n_upvalue;
+for (int i = 0; i &lt; n_upvalue; i++) {
+    c-&gt;upvalues[i] = ...
+}
+</code></pre>
+<p>相应的内存布局如下：</p>
+<pre><code>+-------------+
+| proto       |
+| n_upvalue   |
+:             : \
+:             :  + Upvalue列表
+:             : /
++-------------+
+</code></pre>
+<p>这种做法可以避免上述的3个缺点。那在Rust中能这么做吗？比如如下定义：</p>
+<pre><code class="language-rust ignore">pub struct LuaClosure {
+    proto: Rc&lt;FuncProto&gt;,
+    upvalues: [Rc&lt;RefCell&lt;Upvalue&gt;&gt;], // slice
+}
+</code></pre>
+<p>这个定义中，upvalues的类型从列表Vec变成了slice []。好消息是Rust是支持DST类型（即这里的slice）作为数据结构的最后一个字段的，也就是说上述定义是合法的。坏消息是，这样的数据结构没法初始化。一个没法初始化的数据结构，自然也就没法使用了。引用<a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html">The Rustonomicon</a>的话就是：custom DSTs are a largely half-baked feature for now。</p>
+<p>我们可以想想为什么没法初始化？比如<code>Rc</code>有<code>Rc::new_uninit_slice()</code> API可以创建slice，那能不能加一个类似的API来创建这种包含slice的数据结构？另外，还可以参考<a href="https://docs.rs/dyn_struct/latest/dyn_struct/struct.DynStruct.html">dyn_struct</a>。</p>
+<p>不过，即便可以初始化了，上述数据结构的定义可以使用了，但是还会有另外一个问题：由于upvalues字段是DST，那么整个<code>LuaClosure</code>也跟着变成了DST，所以指针也就会变成胖指针，要包括slice的实际长度，<code>Rc&lt;LuaClosure&gt;</code>就变成了2个word，进而导致<code>enum Value</code>从2个word变成3个word。这也就不满足我们的要求了，就跟之前不能使用<code>Rc&lt;str&gt;</code>来定义字符串类型一样。</p>
+<p>既然不能用slice，那有没有其他解决办法？可以用固定长度的数组。比如修改定义如下：</p>
+<pre><code class="language-rust ignore">enum VarUpvalues {
+    One(Rc&lt;RefCell&lt;Upvalue&gt;&gt;),         // 1个Upvalue
+    Two([Rc&lt;RefCell&lt;Upvalue&gt;&gt;; 2]),    // 2个Upvalue
+    Three([Rc&lt;RefCell&lt;Upvalue&gt;&gt;; 3]),  // 3个Upvalue
+    Four([Rc&lt;RefCell&lt;Upvalue&gt;&gt;; 4]),   // 4个Upvalue
+    More(Vec&lt;Rc&lt;RefCell&lt;Upvalue&gt;&gt;&gt;),   // 更多个Upvalue
+}
+
+pub struct LuaClosure {
+    proto: Rc&lt;FuncProto&gt;,
+    upvalues: VarUpvalues,
+}
+</code></pre>
+<p>这样的话对于不多于4个Upvalue的闭包，就可以避免额外的内存分配了。这应该满足了大多数情况。而对于更多个Upvalue的情况，再分配一块内存的浪费相对就没那么大了。这个方案的另外一个优点是不涉及unsafe。当然，这个方案的问题是会带来编码的复杂。由于创建<code>LuaClosure</code>只是在创建闭包的时候一次性生成，不是一个高频操作，也就没必要搞这么复杂了。所以，最终绕一圈回来还是使用最开始的Vec方案。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch09-01.upvalue.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch09-03.escape_from_block_and_goto.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch09-01.upvalue.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch09-03.escape_from_block_and_goto.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

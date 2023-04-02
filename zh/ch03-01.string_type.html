@@ -1,0 +1,444 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>字符串定义 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html" class="active"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="字符串定义"><a class="header" href="#字符串定义">字符串定义</a></h1>
+<p>这节暂时不添加新功能，而是停下来讨论和优化字符串类型。</p>
+<p>《Rust程序设计语言》书中<a href="https://kaisery.github.io/trpl-zh-cn/ch04-01-what-is-ownership.html">所有权</a>一节以字符串为例介绍了堆和栈的概念，以及其和所有权的关系；在<a href="https://kaisery.github.io/trpl-zh-cn/ch08-02-strings.html">字符串String</a>一节提到了Rust的字符串是复杂的。我们现在就通过字符串来探索Rust对堆和栈的分配，并初步体验字符串的复杂。</p>
+<h2 id="堆和栈"><a class="header" href="#堆和栈">堆和栈</a></h2>
+<p><a href="https://kaisery.github.io/trpl-zh-cn/ch04-01-what-is-ownership.html">《Rust程序设计语言》</a>中以字符串为例介绍了堆和栈的概念，以及堆栈与所有权之间的关系。这里简单复述一遍。Rust的String包括两部分：</p>
+<ol>
+<li>元数据，一般位于栈上，包括3个字段：指向内存块的指针、字符串长度、内存块的容量。下面分别用<code>buffer</code>、<code>len</code>和<code>cap</code>表示。</li>
+<li>用来存储字符串内容的私有内存块，在堆上申请。由字符串拥有，所以在字符串结束时被释放。正因为拥有堆上的这块内存，所以String就不是<code>Copy</code>的，进而导致<code>Value</code>不是<code>Copy</code>的。为了复制<code>Value</code>就只能将其定义为<code>Clone</code>的。</li>
+</ol>
+<p>比如内容为&quot;hello, world!&quot;的String，内存布局如下。左边是栈上的元数据，其中<code>buffer</code>指向堆上的内存块，<code>len</code>为字符串的长度，是13，<code>cap</code>为内存块的容量，很有可能对齐为16。右边是位于堆上的存储字符串内容的内存块。</p>
+<pre><code>        栈             堆
+    +--------+
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+</code></pre>
+<p>这里需要说明的是，上面说元数据“一般”位于栈上，是对于简单类型而言。但对于复杂点的类型，比如<code>Vec&lt;String&gt;</code>，那String元数据部分作为数组的内容就也存在堆上了（类似String的内存块部分）。下面就是一个有2个字符串成员的数组Vec。数组本身的元数据在栈上，但字符串的元数据就在堆上了。</p>
+<pre><code>        栈             堆
+    +--------+
+    | buffer +-------&gt;+-------------+-------------+----
+    |--------|        | buf|len|cap | buf|len|cap | ...
+    | len=2  |        +--+----------+--+----------+----
+    |--------|           |             V
+    | cap=4  |           V             +----------------+
+    +--------+        +--------+       |hello, world!   |
+                      |print   |       +----------------+
+                      +--------+
+</code></pre>
+<p>这种情况下，元数据数组部分虽然是在堆上，但是仍然有栈的特点，包括后进先出，通过索引快速访问，固定已知大小，无需管理（申请和释放）。事实上，我们Lua解释器的虚拟机的栈是就是类似的<code>Vec&lt;Value&gt;</code>类型。同样的，其数据虽然是在堆上，但有栈的特点。“栈”这个名词在这里有2个意思：Rust层面的栈，和Lua虚拟机的栈。后者是位于Rust层面的堆上。本文下面所讲到的“栈”，都是后一种意思，即Lua虚拟机的栈。不过当成Rust的栈去理解，也不影响。</p>
+<h2 id="使用string"><a class="header" href="#使用string">使用String</a></h2>
+<p>目前Value的字符串类型是直接使用的Rust标准库中的字符串String：</p>
+<pre><code class="language-rust ignore">#[derive(Clone)]
+struct Value {
+    String(String),
+</code></pre>
+<p>这样定义的最大问题是，如果要复制一个字符串的Value，就要深度复制字符串，即Clone。下图表示了复制一个字符串的内存布局：</p>
+<pre><code>        栈             堆
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+    :        :
+    :        :
+    +--------+
+    |t|      |
+    |-+------|
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+    |        |
+</code></pre>
+<p>图中左边是Lua虚拟机的栈，每行代表一个字。由于我们基于64位系统开发，所以一个字是8字节。</p>
+<p>第1行的<code>t</code>代表<code>enum Value</code>的tag。由于我们的Value类型小于256种，1个字节就可以表示，所以t占用1个字节。紧接着的3行<code>buffer</code>、<code>len</code>和<code>cap</code>构成一个Rust标准库的String。每个字段都占用一个字。<code>buffer</code>是8字节对齐，所以跟<code>t</code>之间就空了7个字节，这部分是空洞，不可用。这4行（图中四个<code>+</code>包围起来的矩形）总共构成一个字符串类型的Value。</p>
+<blockquote>
+<p>Rust中并没有规定enum的默认布局（虽然可以指定）。我们这里只是列出一种布局的可能性。这并不影响本节的讨论。</p>
+</blockquote>
+<p>深度复制这个字符串Value，就需要复制栈上的元数据和堆上的内存块，对性能和内存都是很大的浪费。Rust中解决这个问题最直接的方法就是使用<code>Rc</code>。</p>
+<h2 id="使用rcstring"><a class="header" href="#使用rcstring">使用Rc&lt;String&gt;</a></h2>
+<p>为了快速复制字符串String，就需要允许字符串同时存在多个所有者。Rust的<a href="https://kaisery.github.io/trpl-zh-cn/ch15-04-rc.html">Rc</a>提供了这个特性。在String外面封装<code>Rc</code>，在复制时只需要更新Rc计数即可。定义如下：</p>
+<pre><code class="language-rust ignore">#[derive(Clone)]
+struct Value {
+    String(Rc&lt;String&gt;),
+</code></pre>
+<p>内存布局如下：</p>
+<pre><code>        栈             堆
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+--------+--------+--------+
+    +--------+    |   |count=2 | weak=0 | buffer | len=13 | cap=16 |
+    :        :    |   +--------+--------+-+------+--------+--------+
+    :        :    |                       |
+    +--------+    |                       V
+    |t|      |    |                       +----------------+
+    |-+------|    |                       |hello, world!   |
+    |   Rc   +----/                       +----------------+
+    +--------+ 
+    |        |
+</code></pre>
+<p>图中右边的<code>count</code>和<code>weak</code>就是<code>Rc</code>的封装。由于当前有2个Value指向这个字符串，所以<code>count</code>为2。</p>
+<p>使用<code>Rc</code>，直接导致了这个解释器要使用引用计数法来实现垃圾回收。在<a href="./ch03-05.gc_vs_rc.html">下面小节</a>中会专门讨论这个影响重大的决定。</p>
+<p>这个方案虽然解决了复制的问题，但也带来了一个新问题，就是访问字符串的内容需要2次指针跳转。这会浪费内存并影响执行性能。下面介绍一些优化方案。</p>
+<h2 id="使用rcstr"><a class="header" href="#使用rcstr">使用Rc&lt;str&gt;</a></h2>
+<p>Lua中的字符串有个特点，是只读的！如果要对字符串做处理，比如截断、连接、替换等，都会生成新的字符串。而Rust的String是为可变字符串设计的，所以用来表示只读字符串有点浪费，比如可以省掉元数据里的<code>cap</code>字段，也不用为了可能的修改而预留内存。比如上述例子里，&quot;hello, world!&quot;长度只有13，但申请了16的内存块。Rust中更适合表示只读字符串的是<code>&amp;str</code>，即<code>String</code>的<a href="https://kaisery.github.io/trpl-zh-cn/ch04-03-slices.html">slice</a>。但<code>&amp;str</code>是个引用，并没有对字符串的所有权，而需要依附在某个字符串上。不过它有不是字符串String的引用（字符串的引用是<code>&amp;String</code>），直观看上去，应该是<code>str</code>的引用。那<code>str</code>是个什么？好像从来没有单独出现过。</p>
+<p>举例说明。对于如下代码：</p>
+<pre><code class="language-rust ignore">let s = String::from(&quot;hello, world!&quot;);  // String
+let r = s[7..12];   // &amp;str
+</code></pre>
+<p>其中<code>r</code>是<code>&amp;str</code>类型，内存布局如下：</p>
+<pre><code>        栈             堆
+s:  +--------+
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +-------^--------+
+    |--------|                |
+    | cap=16 |                |
+    +--------+                |
+                              |
+r:  +--------+                |
+    | buffer +----------------/
+    |--------|
+    | len=5  |
+    +--------+
+</code></pre>
+<p>那对<code>&amp;str</code>解引用，得到的就是&quot;world&quot;这段内存。不过一般的引用就是个地址，但这里还附加了长度信息，说明<code>str</code>除了内存，还包括了长度信息。只不过这个长度信息并不像String那样在原始数据上，而是跟随引用在一起。事实上，<code>str</code>确实不能独立存在，必须跟随引用（比如<code>&amp;str</code>）或者指针（比如<code>Box(str)</code>）。这种属于<a href="https://kaisery.github.io/trpl-zh-cn/ch19-04-advanced-types.html#%E5%8A%A8%E6%80%81%E5%A4%A7%E5%B0%8F%E7%B1%BB%E5%9E%8B%E5%92%8C-sized-trait">动态大小类型</a>。</p>
+<p>而<code>Rc</code>也是一种指针，所以就可以定义<code>Rc&lt;str&gt;</code>。定义如下：</p>
+<pre><code class="language-rust ignore">#[derive(Clone)]
+struct Value {
+    String(Rc&lt;str&gt;),
+</code></pre>
+<p>内存布局如下：</p>
+<pre><code>        栈             堆
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+-------------+
+    |--------|    |   |count=2 | weak=0 |hello, world!|
+    | len=13 |    |   +--------+--------+-------------+
+    +--------+    |
+    :        :    |
+    :        :    |
+    +--------+    |
+    |t|      |    |
+    |-+------|    |
+    |   Rc   +----/
+    +--------+
+    | len=13 |
+    +--------+
+    |        |
+</code></pre>
+<p>其中&quot;hello, world!&quot;是原始数据，被Rc封装。而长度信息<code>len=13</code>跟随<code>Rc</code>一起存储在栈上。</p>
+<p>这个方案看上去非常好！相对于上面的<code>Rc&lt;String&gt;</code>方案，这个方案去掉了没用的<code>cap</code>字段，无需预留内存，而且还省去了一层指针跳转。但这个方案也有2个问题：</p>
+<p>首先，创建字符串时需要复制内容。之前的方案只需要复制字符串的元数据部分即可，只有3个字的长度。而这个方案要把字符串内容复制到新创建的Rc包内。想象要创建一个1M长的字符串，这个复制就很影响性能了。</p>
+<p>其次，就是在栈上占用2个字的空间。虽然在最早的直接使用String的方案里占用3个字的空间，问题更严重，但是可以理解为我们现在的标准提高了。目前，Value里的其他类型都最多只占用1个字（加上tag就一共是2个字），可以剧透的是后续要增加的表、UserData等类型也都只占用1个字，所以如果单独因为字符串类型而让Value的大小从2变成3，那就是浪费了。不仅占用更多内存，而且还对CPU缓存不友好。</p>
+<p>这个问题的关键就在于<code>len</code>跟随<code>Rc</code>一起，而不是跟随数据一起。如果能把<code>len</code>放到堆上，比如在图中<code>weak</code>和&quot;hello, world!&quot;之间，那就完美了。对于C语言这是很简单的，但Rust并不支持。原因在于<code>str</code>是动态大小类型。那如果选一个固定大小类型的，是不是就可以实现？比如数组。</p>
+<h2 id="使用rcu8-u8-47"><a class="header" href="#使用rcu8-u8-47">使用Rc&lt;(u8, [u8; 47])&gt;</a></h2>
+<p>Rust中的数组是有内在的大小信息的，比如<code>[u8; 10]</code>和<code>[u8; 20]</code>的大小就分别是10和20，这个长度是编译时期就知道的，无需跟随指针存储。两个长度不同的数组就是不同的类型，比如<code>[u8; 10]</code>和<code>[u8; 20]</code>就是不同的类型。所以数组是固定大小类型，可以解决上一小节的问题，也就是栈上只需要1个word即可。</p>
+<p>既然是固定长度，那就只能存储小于这个长度的字符串，所以这个方案不完整，只能是是一个性能优化的补充方案。不过Lua中遇到的字符串大部分都很短，至少我的经验如此，所以这个优化还是很有意义的。为此我们需要定义2种字符串类型，一个是固定长度数组，用于优化短字符串，另一个是之前的<code>Rc&lt;String&gt;</code>方案，用于存储长字符串。固定长度数组的第一个字节用来表示字符串的实际长度，所以数组可以拆成2部分。我们先假设使用总长度48的数组（1个字节表示长度，47个字节存储字符串内容），则定义如下：</p>
+<pre><code class="language-rust ignore">struct Value {
+    FixStr(Rc&lt;(u8, [u8; 47])&gt;), // len&lt;=47
+    String(Rc&lt;String&gt;), // len&gt;47
+</code></pre>
+<p>短字符串的内存布局如下：</p>
+<pre><code>        栈             堆
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+----------------------------+
+    +--------+    |   |count=2 | weak=0 |len|hello, world!           |
+    :        :    |   +--------+--------+----------------------------+
+    :        :    |
+    +--------+    |
+    |t|      |    |
+    |-+------|    |
+    |   Rc   +----/
+    +--------+
+    |        |
+</code></pre>
+<p>图中右边的数组部分开头第一个字节<code>len</code>表示后面字符串的实际长度。后面的47个字节可以用于存储字符串内容。</p>
+<p>这个方案跟上述的<code>Rc&lt;str&gt;</code>一样，都需要复制字符串内容，所以不适合长字符串。这个问题不大，本来这个方案就是为了优化短字符串的。然后即便是短字符串，数组长度的选取也很关键。如果很长，则对短字符串而言空间浪费严重；如果很短，则覆盖比例不高。不过在这个方案上还可以继续优化，采用多级长度的数组，比如16、32、48、64等。不过这也会造成一些复杂性。</p>
+<p>另外，数组长度的选取还依赖Rust使用的内存管理库。比如我们选择长度为48，加上Rc封装的2个计数字段16字节，那么上图中右边堆上的内存块长度为64字节，是个很“规整”的长度。比如内存管理库jemalloc对小内存块的管理就是分为16、32、48、64、128等长度，那么上述总长度64的内存申请就没有浪费。假如我们选择数组长度为40，内存块总长度就是56，仍然会匹配到64的分类中，就会浪费64-56=8字节。当然，依赖其他库的具体实现来做决定，这是很不好的行为，不过好在这个影响并不大。</p>
+<p>我们这里选择数组长度为48，也就是只能表示长度从0到47的字符串。</p>
+<p>然后跟<code>Rc&lt;String&gt;</code>方案对比下，看看优化效果如何。首先，这个方案最大的优点是只需一次内存分配，在执行时也就只需一次指针跳转。</p>
+<p>其次，对比下分配的内存大小。在<code>Rc&lt;String&gt;</code>方案中需要申请2块内存：一是Rc计数和字符串元数据，固定2+3=5个字，40字节，按照jemalloc的内存策略，会占用48字节内存；二是字符串内容部分，所占内存大小跟字符串长度相关，也取决于Rust String的内存管理策略和底层库的实现，比如对于长度为1的字符串，可能占用16字节内存；对于长度为47的字符串，可能占用48字节，也可能占用64字节内存。两块内存加起来要占用64到112字节，大于或等于这个固定长度数组的方案。</p>
+<p>我们沿着“优化短字符串”的思路，看下一个方案。</p>
+<h2 id="使用内联数组"><a class="header" href="#使用内联数组">使用内联数组</a></h2>
+<p>上一个方案相对于<code>Rc&lt;String&gt;</code>而言减少了一层指针跳转。下面这个方案更进一步，直接去掉堆上存储，而把字符串完全存储在栈上。</p>
+<p>我们希望<code>Value</code>类型的大小是2个字，即16个字节。其中1个用于tag，1个用于字符串长度，那么就还有14个字节的剩余，这部分空间可以用来存储长度小于14的字符串。这个方案跟上一个一样，也是补充方案，也要跟一个长字符串定义配合使用。具体如下：</p>
+<pre><code class="language-rust ignore">// sizeof(Value) - 1(tag) - 1(len)
+const INLSTR_MAX: usize = 14;
+
+struct Value {
+    InlineStr(u8, [u8; INLSTR_MAX]), // len&lt;=14
+    String(Rc&lt;String&gt;), // len&gt;14
+</code></pre>
+<p>其中短字符串<code>InlineStr</code>关联两个参数：<code>u8</code>类型的字符串长度，和长度为14的<code>u8</code>数组，这也充分利用了之前一直被浪费的<code>t</code>后面7个字节的空洞。而长字符串<code>String</code>仍然使用<code>Rc&lt;String&gt;</code>方案。</p>
+<p>短字符串的内存布局如下：</p>
+<pre><code>        栈
+    |        |
+    +vv------+
+    |tlhello,|
+    |--------|
+    | world! |
+    +--------+
+    :        :
+    :        :
+    +vv------+
+    |tlhello,|
+    |--------|
+    | world! |
+    +--------+
+    |        |
+</code></pre>
+<p>其中格子上的箭头<code>v</code>指向的<code>t</code>和<code>l</code>分别代表1个字节的tag和长度。实际的字符串内容跨了2个字。如果横着画栈，看上去更清晰些：</p>
+<pre><code>栈：
+    --+-+-+--------------+......+-+-+--------------+--
+      |t|l|hello, world! |      |t|l|hello, world! |
+    --+------------------+......+------------------+--
+</code></pre>
+<p>这个方案性能最优，但能力最差，只能处理长度不大于14的字符串。Lua中字符串类型的使用场景有3个：全局变量名、表索引、和字符串值。前两者绝大部分的都不大于14字节，所以应该可以覆盖大部分情况。</p>
+<p>还可以再进一步优化，再增加一种类型，专门存储长度为15的字符串，因为长度已知，所以原来存储长度的一个字节也可以用来存储字符串内容。但这个方案带来的优化感觉不明显，小于带来的复杂度，所以不采用。定义如下。</p>
+<pre><code class="language-rust ignore">struct Value {
+    InlineStr(u8, [u8; INLSTR_MAX]), // len&lt;=14
+    Len15Str([u8; 15]), // len=15
+    String(Rc&lt;String&gt;), // len&gt;15
+</code></pre>
+<h2 id="总结和选择"><a class="header" href="#总结和选择">总结和选择</a></h2>
+<p>这一节里，我们依次使用并分析了<code>String</code>、<code>Rc&lt;String&gt;</code>、<code>Rc&lt;str&gt;</code>、<code>Rc&lt;(u8, [u8; 47])&gt;</code>和内联<code>(u8, [u8; 14])</code>等几种方案。各有优缺点。合理的做法是区分对待长短字符串，用短字符串优化，用长字符串兜底。可选的3个方案：</p>
+<ul>
+<li>为了保证<code>Value</code>类型的长度，长字符串只能使用<code>Rc&lt;String&gt;</code>。</li>
+<li>对于短字符串，最后的内联方案完全不用堆上内存，优化效果最好。</li>
+<li>倒数第2个固定长度数组方案，属于上述两个方案的折中，略显鸡肋。不过缺点也只有一个，就是引入更大的复杂性，字符串需要处理3种类型。下一节通过泛型来屏蔽这3种类型，就解决了这个缺点。</li>
+</ul>
+<p>最终方案如下：</p>
+<pre><code class="language-rust ignore">const SHORT_STR_MAX: usize = 14;  // sizeof(Value) - 1(tag) - 1(len)
+const MID_STR_MAX: usize = 48 - 1;
+
+struct Value {
+    ShortStr(u8, [u8; SHORT_STR_MAX]),
+    MidStr(Rc&lt;(u8, [u8; MID_STR_MAX])&gt;),
+    LongStr(Rc&lt;Vec&lt;u8&gt;&gt;),
+</code></pre>
+<p>原来的<code>InlineStr</code>和<code>FixStr</code>都是代表具体实现方案，而对外表现的特征就是长和短，所以改名为<code>ShortStr</code>、<code>MidStr</code>和<code>LongStr</code>，更直观。</p>
+<p>这样，对于大部分情况（短字符串）可以快速处理，而对于小部分情况（长字符串）虽然慢但也可以正确处理，并且不影响全局（比如<code>Rc&lt;str&gt;</code>就占用了2个字，直接使得<code>Value</code>也变大，就算是影响了全局），最终提升整体的处理效率，这是很常见并且很有效的优化思路。我们这个方案通过区分2套定义实现优化，是个典型的例子。如果能不区分定义，而只用一套定义、一套算法就能达到这个目的，就更优美了。后面在<a href="">赋值语句</a>的语法分析时，会遇到这样的例子。</p>
+<p>区分长短字符串后，也带来两个新问题：</p>
+<ol>
+<li>
+<p>生成字符串类型<code>Value</code>时，要根据字符串长度来选择<code>ShortStr</code>、<code>MidStr</code>还是<code>LongStr</code>。这个选择应该是自动实现的，而不应该由调用者实现，否则一是麻烦二是可能出错。比如现在语法分析的代码中出现多次的 <code>self.add_const(Value::String(var))</code> 语句，就需要改进。</p>
+</li>
+<li>
+<p>字符串，顾名思义是“字符”组成，但<code>ShortStr</code>和<code>MidStr</code>都是由<code>u8</code>组成，区别在哪里？<code>u8</code>如何正确表达Unicode？如何处理非法字符？</p>
+</li>
+</ol>
+<p>接下来的几节讨论这两个问题。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-00.optimize_string.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch03-02.from_trait.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-00.optimize_string.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch03-02.from_trait.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>输入类型 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html" class="active"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="输入类型"><a class="header" href="#输入类型">输入类型</a></h1>
+<p>上一节中我们定义了一个带泛型的函数。实际中我们对泛型“使用”的多，“定义”的少。本章再讨论一个“使用”的示例，就是整个解释器的输入类型，即词法分析模块读取源代码。</p>
+<p>目前只支持从文件中读取源代码，并且Rust的文件类型<code>std::fs::File</code>还不包括标准输入。词法分析数据结构Lex的定义如下：</p>
+<pre><code class="language-rust ignore">pub struct Lex {
+    input: File,
+    // 省略其他成员
+</code></pre>
+<p>读字符的方法<code>read_char()</code>定义如下：</p>
+<pre><code class="language-rust ignore">impl Lex {
+    fn read_char(&amp;mut self) -&gt; char {
+        let mut buf: [u8; 1] = [0];
+        self.input.read(&amp;mut buf).unwrap();
+        buf[0] as char
+    }
+</code></pre>
+<p>这里只关注其中的<code>self.input.read()</code>调用即可。</p>
+<h2 id="使用read"><a class="header" href="#使用read">使用Read</a></h2>
+<p>而Lua官方实现是支持文件（包括标准输入）和字符串这两种类型作为源代码输入的。按照Rust泛型的思路，我们要支持的输入可以不限于<strong>某些具体的类型</strong>，而是<strong>某类支持某些特性（即trait）的类型</strong>。也就是说，只要是字符流，可以逐个读取字符就行。这个特性很常见，所以Rust标准库中提供了<a href="https://doc.rust-lang.org/std/io/trait.Read.html"><code>std::io::Read</code> trait</a>。所以修改Lex的定义如下：</p>
+<pre><code class="language-rust ignore">pub struct Lex&lt;R&gt; {
+    input: R,
+</code></pre>
+<p>这里有两个改动：</p>
+<ul>
+<li>把原来的<code>Lex</code>改成了<code>Lex&lt;R&gt;</code>，说明Lex是基于泛型<code>R</code>，</li>
+<li>把原来的字段input的类型<code>File</code>改成了<code>R</code>。</li>
+</ul>
+<p>相应的，实现部分也要改：</p>
+<pre><code class="language-rust ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {
+</code></pre>
+<p>加入了<code>&lt;R: Read&gt;</code>，表示<code>&lt;R&gt;</code>的约束是<code>Read</code>，即类型R必须支持<code>Read</code> trait。这是因为<code>read_char()</code>的方法中，用到了<code>input.read()</code>函数。</p>
+<p>而<code>read_char()</code>方法本身不用修改，其中的<code>input.read()</code>函数仍然可以正常使用，只不过其含义发生了细微变化：</p>
+<ul>
+<li>之前input使用<code>File</code>类型时，调用的<code>read()</code>函数，是<code>File</code>类型实现了<code>Read</code> trait的方法；</li>
+<li>现在调用的<code>read()</code>函数，是所有实现了<code>Read</code> trait的类型要求的方法。</li>
+</ul>
+<p>这里说法比较绕，不理解的话可以忽略。</p>
+<p>另外，其他使用到了Lex的地方都要添加泛型的定义，比如ParseProto定义修改如下：</p>
+<pre><code class="language-rust ignore">pub struct ParseProto&lt;R&gt; {
+</code></pre>
+<p>其<code>load()</code>方法的参数也从<code>File</code>修改为<code>R</code>：</p>
+<pre><code class="language-rust ignore">    pub fn load(input: R) -&gt; Self {
+</code></pre>
+<p>支持了<code>Read</code>后，就可以使用文件以外的类型了。接下来看看使用标准输入类似和字符串类型。</p>
+<h2 id="使用标准输入类型"><a class="header" href="#使用标准输入类型">使用标准输入类型</a></h2>
+<p>标准输入<a href="https://doc.rust-lang.org/std/io/struct.Stdin.html"><code>std::io::Stdin</code>类型</a>是实现了<code>Read</code> trait，所以可以直接使用。修改<code>main()</code>函数，使用标准输入：</p>
+<pre><code class="language-rust ignore">fn main() {
+    let input = std::io::stdin();  // 标准输入
+    let proto = parse::ParseProto::load(input);
+    vm::ExeState::new().execute(&amp;proto);
+}
+</code></pre>
+<p>测试来自标准输入的源代码：</p>
+<pre><code class="language-bash">echo 'print &quot;i am from stdin!&quot;' | cargo r
+</code></pre>
+<h2 id="使用字符串类型"><a class="header" href="#使用字符串类型">使用字符串类型</a></h2>
+<p>字符串类型并没有直接支持<code>Read</code> trait，这是因为字符串类型本身没有记录读位置的功能。可以通过封装<a href="https://doc.rust-lang.org/std/io/struct.Cursor.html"><code>std::io::Cursor</code>类型</a>来实现<code>Read</code>，这个类型功能就是对所有<code>AsRef&lt;[u8]&gt;</code>的类型封装一个位置记录功能。其<a href="https://doc.rust-lang.org/src/std/io/cursor.rs.html#74-77">定义</a>很明确：</p>
+<pre><code class="language-rust ignore">pub struct Cursor&lt;T&gt; {
+    inner: T,
+    pos: u64,
+}
+</code></pre>
+<p>这个类型自然是实现了<code>Read</code> trait的。修改<code>main()</code>函数使用字符串作为源代码输入：</p>
+<pre><code class="language-rust ignore">fn main() {
+    let input = std::io::Cursor::new(&quot;print \&quot;i am from string!\&quot;&quot;);  // 字符串+Cursor
+    let proto = parse::ParseProto::load(input);
+    vm::ExeState::new().execute(&amp;proto);
+}
+</code></pre>
+<h2 id="使用bufreader"><a class="header" href="#使用bufreader">使用BufReader</a></h2>
+<p>直接读写文件是很消耗性能的操作。上述实现中每次只读一个字节，这对于文件类型是非常低效的。这种频繁且少量读取文件的操作，外面需要一层缓存。Rust标准库中的<a href="https://doc.rust-lang.org/std/io/struct.BufReader.html"><code>std::io::BufReader</code>类型</a>提供这个功能。这个类型自然也实现了<code>Read</code> trait，并且还利用缓存另外实现了<code>BufRead</code> trait，提供了更多的方法。</p>
+<p>我最开始是把Lex的input字段定义为<code>BufReader&lt;R&gt;</code>类型，代替上面的<code>R</code>类型。但后来发现不妥，因为<code>BufReader</code>在读取数据时，是先从源读到内部缓存，然后再返回。虽然对于文件类型很实用，但对于字符串类型，这个内部缓存就没必要了，多了一次无谓的内存复制。并且还发现标准输入<code>std::io::Stdin</code>也是自带缓存的，也无需再加一层。所以在Lex内部还是不使用<code>BufReader</code>，而是让调用者根据需要（比如针对<code>File</code>类型）自行添加。</p>
+<p>下面修改<code>main()</code>函数，在原有的<code>File</code>类型外面封装<code>BufReader</code>：</p>
+<pre><code class="language-rust ignore">fn main() {
+    // 省略参数处理
+    let file = File::open(&amp;args[1]).unwrap();
+
+    let input = BufReader::new(file);  // 封装BufReader
+    let proto = parse::ParseProto::load(input);
+    vm::ExeState::new().execute(&amp;proto);
+}
+</code></pre>
+<h2 id="放弃seek"><a class="header" href="#放弃seek">放弃Seek</a></h2>
+<p>本节开头说，我们只要求输入类型支持逐个字符读取即可。事实上并不正确，我们还要求可以修改读位置，即<code>Seek</code> trait。这是原来的<code>putback_char()</code>方法要求的，使用了<code>input.seek()</code>方法：</p>
+<pre><code class="language-rust ignore">    fn putback_char(&amp;mut self) {
+        self.input.seek(SeekFrom::Current(-1)).unwrap();
+    }
+</code></pre>
+<p>这个函数的应用场景是，在词法分析中，有时候需要根据下一个字符来判断当前字符的类型，比如在读到字符<code>-</code>后，如果下一个字符还是<code>-</code>，那就是注释；否则就是减法，此时下一个字符就要放回到输入源中，作为下个Token。<a href="./ch02-03.assignment.html">之前</a>介绍过，在语法分析中读取Token也是这样，要根据下一个Token来判断当前语句类型。当时是在Lex中增加了<code>peek()</code>函数，可以“看”一眼下个Token而不消费。这里的<code>peek()</code>和上面的<code>putback_char()</code>是处理这种情况的2种方式，伪代码分别如下：</p>
+<pre><code>// 方式一：peek()
+if input.peek() == xxx then
+    input.next() // 消费掉刚peek的
+    handle(xxx)
+end
+
+// 方式二：put_back()
+if input.next() == xxx then
+    handle(xxx)
+else
+    input.put_back() // 塞回去，下次读取
+end
+</code></pre>
+<p>之前使用<code>File</code>类型时，因为支持<code>seek()</code>函数，很容易支持后面的<code>put_back</code>函数，所以就采用了第二种方式。但现在input改为了<code>Read</code>类型，如果还要使用<code>input.seek()</code>，那就要求input也有<code>std::io::Seek</code> trait约束了。上面我们已经测试的3种类型中，带缓存的文件<code>BufReader&lt;File&gt;</code>和字符串<code>Cursor&lt;String&gt;</code>都支持<code>Seek</code>，但标准输入<code>std::io::Stdin</code>是不支持的，而且可能还有其他支持<code>Read</code>而不支持<code>Seek</code>的输入类型（比如<code>std::net::TcpStream</code>），如果我们这里增加<code>Seek</code>约束，就把路走窄了。</p>
+<p>既然不能用<code>Seek</code>，那就不用必须使用第二种方式了。也可以考虑第一种方式，这样至少跟Token的<code>peek()</code>函数方式保持了一致。</p>
+<p>比较直白的做法是，在Lex中增加一个<code>ahead_char: char</code>字段，保存peek到的字符，类似<code>peek()</code>函数和对应的<code>ahead: Token</code>字段。这么做比较简单，但是Rust标准库中有更通用的做法，使用Peekable。在介绍Peekable之前，先看下其依赖的Bytes类型。</p>
+<h2 id="使用bytes"><a class="header" href="#使用bytes">使用Bytes</a></h2>
+<p>本节开头列出的<code>read_char()</code>函数的实现，相对于其目的（读一个字符）而言，有点复杂了。我后来发现了个更抽象的方法，<code>Read</code> triat的<code>bytes()</code>方法，返回一个迭代器<code>Bytes</code>，每次调用<code>next()</code>返回一个字节。修改Lex定义如下：</p>
+<pre><code class="language-rust ignore">pub struct Lex&lt;R&gt; {
+    input: Bytes::&lt;R&gt;,
+</code></pre>
+<p>相应的修改构造函数和<code>read_char()</code>函数。</p>
+<pre><code class="language-rust ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {
+    pub fn new(input: R) -&gt; Self {
+        Lex {
+            input: input.bytes(),  // 生成迭代器Bytes
+            ahead: Token::Eos,
+        }
+    }
+    fn read_char(&amp;mut self) -&gt; char {
+        match self.input.next() {  // 只调用next()，更简单
+            Some(Ok(ch)) =&gt; ch as char,
+            Some(_) =&gt; panic!(&quot;lex read error&quot;),
+            None =&gt; '\0',
+        }
+    }
+</code></pre>
+<p>这里<code>read_char()</code>的代码似乎并没有变少。但是其主体只是<code>input.next()</code>调用，剩下的都是返回值的处理，后续增加错误处理后，这些判断处理就会更有用。</p>
+<h2 id="使用peekable"><a class="header" href="#使用peekable">使用Peekable</a></h2>
+<p>然后在<code>Bytes</code>的文档中发现了<code>peekable()</code>方法，返回<code>Peekable</code>类型，刚好就是我们的需求，即在迭代器的基础上，可以向前“看”一个数据。其<a href="https://doc.rust-lang.org/src/core/iter/adapters/peekable.rs.html#15-19">定义</a>很明确：</p>
+<pre><code class="language-rust ignore">pub struct Peekable&lt;I: Iterator&gt; {
+    iter: I,
+    /// Remember a peeked value, even if it was None.
+    peeked: Option&lt;Option&lt;I::Item&gt;&gt;,
+}
+</code></pre>
+<p>为此，再修改Lex的定义如下：</p>
+<pre><code class="language-rust ignore">pub struct Lex&lt;R&gt; {
+    input: Peekable::&lt;Bytes::&lt;R&gt;&gt;,
+</code></pre>
+<p>相应的修改构造函数，并新增<code>peek_char()</code>函数：</p>
+<pre><code class="language-rust ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {
+    pub fn new(input: R) -&gt; Self {
+        Lex {
+            input: input.bytes().peekable(),  // 生成迭代器Bytes
+            ahead: Token::Eos,
+        }
+    }
+    fn peek_char(&amp;mut self) -&gt; char {
+        match self.input.peek() {
+            Some(Ok(ch)) =&gt; *ch as char,
+            Some(_) =&gt; panic!(&quot;lex peek error&quot;),
+            None =&gt; '\0',
+        }
+    }
+</code></pre>
+<p>这里<code>input.peek()</code>跟上面的<code>input.next()</code>基本一样，区别是返回类型是引用。这跟<code>Lex::peek()</code>函数返回<code>&amp;Token</code>的原因一样，因为返回的值的所有者还是input，并没有move出来，而只是“看”一下。不过我们这里是<code>char</code>类型，是Copy的，所以直接解引用<code>*ch</code>，最终返回char类型。</p>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>至此，我们完成了输入类型的优化，从最开始只支持<code>File</code>类型，到最后支持<code>Read</code> trait。整理下来内容并不多，但在开始的实现和探索过程中，东撞西撞，费了不少劲。这个过程中也彻底搞清楚了标准库中的一些基本类型，比如<code>Read</code>、<code>BufRead</code>、<code>BufReader</code>，也发现并学习了<code>Cursor</code>和<code>Peekable</code>类型，另外也更加了解了官网文档的组织方式。通过实践来学习Rust语言，正是这个项目的最终目的。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-02.from_trait.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch03-04.unicode_utf8.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-02.from_trait.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch03-04.unicode_utf8.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ExpDesc概念 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html" class="active"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="expdesc概念"><a class="header" href="#expdesc概念">ExpDesc概念</a></h1>
+<p>在介绍表的读写之前，本节先引入<code>ExpDesc</code>这个语法分析的核心数据结构。</p>
+<h2 id="表构造的问题"><a class="header" href="#表构造的问题">表构造的问题</a></h2>
+<p>上一节实现的表的构造存在一个性能问题。比如，对于通用式<code>[ exp ] = exp</code>，会依次把key和value对应的表达式通过<code>load_exp()</code>函数加载到栈顶，作为临时变量；然后再生成<code>SetTable</code>字节码，包含栈顶的两个临时变量的索引。代码如下：</p>
+<pre><code class="language-rust ignore">    Token::SqurL =&gt; { // `[` exp `]` `=` exp
+        nmap += 1;
+        self.lex.next();
+
+        self.load_exp(sp); // 加载key到栈顶
+        self.lex.expect(Token::SqurR); // `]`
+        self.lex.expect(Token::Assign); // `=`
+        self.load_exp(sp + 1); // 加载value到栈顶
+
+        self.byte_codes.push(ByteCode::SetTable(table, sp as u8, sp as u8 + 1));
+    },
+</code></pre>
+<p>这就造成了浪费，因为某些表达式类型，比如局部变量、临时变量和常量，都可以直接引用，而无需加载到栈上。比如下面的Lua代码：</p>
+<pre><code class="language-lua">local k = 'kkk'
+local v = 'vvv'
+local t = { [k] = v }
+</code></pre>
+<p>按照现在的实现方式，运行时的栈和字节码序列如下：</p>
+<pre><code>    +---------+
+  0 |  &quot;kkk&quot;  |---\[1] Move 3 0
+    +---------+   |
+  1 |  &quot;vvv&quot;  |---|-\[2] Move 4 1
+    +---------+   | |
+  2 |   { }   |&lt;--|-|---------\
+    +---------+   | |         |
+  3 |  &quot;kkk&quot;  |&lt;--/ |   --\   |
+    +---------+     |      &gt;--/[3] SetTable 2 3 4
+  4 |  &quot;vvv&quot;  |&lt;----/   --/
+    +---------+
+    |         |
+</code></pre>
+<p>而实际上这两个临时变量都不需要，而是只需要1条字节码即可：<code>SetTable 2 0 1</code>，其中的3个参数分别是表、key和value在栈上的索引。这也是Lua官方实现的方式，即尽量直接引用索引，而避免无谓的临时变量。运行时的栈和字节码序列如下：</p>
+<pre><code>    +---------+
+  0 |  &quot;kkk&quot;  |---\
+    +---------+    &gt;--\[1] SetTable 2 0 1
+  1 |  &quot;vvv&quot;  |---/   |
+    +---------+       |
+  2 |   { }   |&lt;------/
+    +---------+
+    |         |
+</code></pre>
+<p>这两种方式（是否引入临时变量）对应虚拟机的两种类型，基于栈的和基于寄存器的。</p>
+<h2 id="基于栈和基于寄存器"><a class="header" href="#基于栈和基于寄存器">基于栈和基于寄存器</a></h2>
+<p>先罗列一下上面例子中，现在实现方式的字节码：</p>
+<pre><code>Move 3 0  # 把k加载到3位置。此时3是栈顶
+Move 4 1  # 把v加载到4位置。此时4是栈顶
+SetTable 2 3 4
+</code></pre>
+<p>在现在的实现方式中，我们可以确定key和value是要加载到栈顶，所以两条<code>Move</code>字节码中的第一个参数（即目标地址）是可以省略的；另外我们也可以确定在设置表时，key和value一定在栈顶，所以<code>SetTable</code>字节码的后面两个参数也是可以省略的。所以字节码序列可以简化如下：</p>
+<pre><code>Push 0   # 把k加载到栈顶
+Push 1   # 把v加载到栈顶
+SetTable 2  # 把栈顶的两个值作为key和value，设置给2位置的表
+</code></pre>
+<p>这种通过栈顶来操作参数的方式，称为<strong>基于栈</strong>的虚拟机。很多脚本语言如Java、Python等的虚拟机都是基于栈的。而在字节码中直接索引参数的方式（比如<code>SetTable 2 0 1</code>），称为<strong>基于寄存器</strong>的虚拟机。这里的“寄存器”并不是计算机CPU中的寄存器，而是一个虚拟的概念，比如在我们的Lua解释器中，就是用栈和常量表来实现的寄存器。Lua是第一个（官方的虚拟机）基于寄存器的主流语言。</p>
+<p>上面是通过表的写语句作为例子。下面再介绍一个更容易理解的例子，即加法语句（虽然我们现在还没有实现加法，但确实更容易理解）。对于如下Lua代码：</p>
+<pre><code class="language-lua">local r
+local a = 1
+local b = 2
+r = a + b
+</code></pre>
+<p>基于栈的虚拟机生成的字节码可能如下：</p>
+<pre><code>Push 1  # 把a加载到栈顶
+Push 2  # 把b加载到栈顶
+Add     # 把栈顶的2个数弹出并相加，并把结果压到栈顶
+Pop 0   # 把栈顶的结果弹出，并赋值给r
+</code></pre>
+<p>基于寄存器的虚拟机生成的字节码可能如下：</p>
+<pre><code>Add 0 1 2
+</code></pre>
+<p>可以直观地看到，基于寄存器虚拟机的字节码序列，条数少，但每条字节码更长。一般认为基于寄存器的字节码性能略优，但实现较复杂。这两种类型更详细的说明和比较已经超出本文讨论范围，并且我也没能力介绍。我之所以在这个项目里选择了基于寄存器，仅仅是因为Lua官方实现就是这么做的。我甚至是项目写了一部分后，才知道有这两种方式。接下来只要继续按照基于寄存器的方式即可，而不去纠结基于栈的方式。</p>
+<p>需要说明的一点是，基于寄存器的方式，也只是<strong>尽量</strong>避免使用栈顶的临时变量。在必要的时候也是需要的。如何选择寄存器还是临时变量，这一点在后面会详细介绍。</p>
+<h2 id="中介expdesc"><a class="header" href="#中介expdesc">中介ExpDesc</a></h2>
+<p>既然我们要按照基于寄存器方式，但为什么上一节表的构造里，要把key和value都加载到栈顶，使用基于栈的方式呢？是因为我们目前还无法实现基于寄存器的方式。现在<code>load_exp()</code>函数在遇到Token后，是直接生成字节码加载到栈的指定位置的。代码如下：</p>
+<pre><code class="language-rust ignore">    fn load_exp(&amp;mut self, dst: usize) {
+        let code = match self.lex.next() {
+            Token::Nil =&gt; ByteCode::LoadNil(dst as u8),
+            Token::True =&gt; ByteCode::LoadBool(dst as u8, true),
+            Token::False =&gt; ByteCode::LoadBool(dst as u8, false),
+            Token::Float(f) =&gt; self.load_const(dst, f),
+            Token::String(s) =&gt; self.load_const(dst, s),
+            // 省略其他Token
+        };
+        self.byte_codes.push(code);
+    }
+</code></pre>
+<p>所以在解析上面的表的通用式写语句时，遇到key和value的表达式时，就立即加载到栈顶了，就成为了基于栈的方式。</p>
+<p>而如果要实现基于寄存器方式，生成<code>SetTable 2 0 1</code>这样的字节码，那在遇到key或value的表达式时，就不能立即生成字节码，而是需要暂时保存起来，等待时机成熟时，再按情况处理。还是用本节开头的Lua代码为例：</p>
+<pre><code class="language-lua">local k = 'kkk'
+local v = 'vvv'
+local t = { [k] = v }
+</code></pre>
+<p>第3行的表构造语句，解析过程如下：</p>
+<ul>
+<li><code>[</code>，确定为通用式；</li>
+<li><code>k</code>，作为Name，先确定是局部变量，索引是0，然后作为key保存起来；</li>
+<li><code>]</code>和<code>=</code>，预期中；</li>
+<li><code>v</code>，作为Name，也确定是局部变量，索引是1，然后作为value保存起来；</li>
+<li>此时，一条初始化语句完成，之前保存的key和value的索引分别是0和1，于是就可以生成字节码<code>SetTable 2 0 1</code>。</li>
+</ul>
+<p>这里的关键是“把key/value保存起来”。我们现在就要增加这种暂存的机制。一个解决方法是直接保存读到的Token。比如这个例子中，key和value分别保存为<code>Token::Name(&quot;k&quot;)</code>和<code>Token::Name(&quot;v&quot;)</code>。但这样做有几个问题：</p>
+<ul>
+<li>一个小问题是Name可能是局部变量或者全局变量，我们后续会看到对这两种变量的处理方式是不一样的，而用<code>Token::Name</code>无法区分这两个类型。</li>
+<li>稍大的问题是，有的表达式是更复杂的，不止包含一个Token，比如<code>t.k</code>、<code>a+1</code>、<code>foo()</code>等，这些不能用一个Token来代表。这一章支持表，就要支持<code>t.k</code>甚至<code>t.k.x.y</code>这种表达式语句。</li>
+<li>更大的问题是，表的读语句<code>t.k</code>至少还可以用基于栈的方式来实现，但表的写语句就不行了。比如<code>t.k = 1</code>，就是赋值语句的左边部分，在解析时，必须要先保存起来，然后再解析右值表达式，最后再执行赋值。要支持表的写语句，就必须先增加这种暂存的机制。这也是在接下来支持表的读写功能之前，必须要先插入这一节的原因。</li>
+</ul>
+<p>所以，我们需要一种新类型来保存中间结果。为此我们引入<code>ExpDesc</code>（名字来自Lua官方实现代码）：</p>
+<pre><code class="language-rust ignore">#[derive(Debug, PartialEq)]
+enum ExpDesc {
+    Nil,
+    Boolean(bool),
+    Integer(i64),
+    Float(f64),
+    String(Vec&lt;u8&gt;),
+    Local(usize), // on stack, including local and temprary variables
+    Global(usize), // global variable
+}
+</code></pre>
+<p>现在看上去其类型，就是表达式目前支持的类型，只是把<code>Token::Name</code>拆成了<code>Local</code>和<code>Global</code>，为此引入这个类型有点小题大做。但在下一节支持表的读写时，以及后续的运算表达式、条件跳转等语句时，ExpDesc就会大显身手！</p>
+<p>原来的解析过程是从Token直接生成字节码：</p>
+<pre><code>    Token::Integer  -&gt;  ByteCode::LoadInt
+    Token::String   -&gt;  ByteCode::LoadConst
+    Token::Name     -&gt;  ByteCode::Move | ByteCode::GetGlobal
+    ...
+</code></pre>
+<p>现在中间增加了ExpDesc这层，解析过程就变成：</p>
+<pre><code>    Token::Integer  -&gt;  ExpDesc::Integer  -&gt;  ByteCode::LoadInt
+    Token::String   -&gt;  ExpDesc::String   -&gt;  ByteCode::LoadConst
+    Token::Name     -&gt;  ExpDesc::Local    -&gt;  ByteCode::Move
+    Token::Name     -&gt;  ExpDesc::Global   -&gt;  ByteCode::GetGlobal
+    ...
+</code></pre>
+<h2 id="语义分析和expdesc"><a class="header" href="#语义分析和expdesc">语义分析和ExpDesc</a></h2>
+<p>ExpDesc是非常重要的，这里换个角度再介绍一次。</p>
+<p><a href="./ch01-01.principles.html">第1.1节</a>基础的编译原理中介绍了通用的编译流程：</p>
+<pre><code>       词法分析           语法分析         语义分析
+字符流 --------&gt; Token流 --------&gt; 语法树 --------&gt; 中间代码 ...
+</code></pre>
+<p>我们仍然用上面的加法代码来举例：</p>
+<pre><code class="language-lua">local r
+local a = 1
+local b = 2
+r = a + b
+</code></pre>
+<p>按照上述通用编译流程，对于最后一行的加法语句，语法分析会得到语法树：</p>
+<pre><code>    |
+    V
+    +
+   / \
+  a   b
+</code></pre>
+<p>然后在语义分析时，先看到<code>+</code>，得知这是一条加法的语句，于是可以很直接地生成字节码：<code>Add ? 1 2</code>。其中<code>?</code>是加法的目标地址，由赋值语句处理，这里忽略；<code>1</code>和<code>2</code>分别是两个加数的栈索引。</p>
+<p>但我们目前的做法，也是Lua官方实现的做法，是省略了“语义分析”这一步，从语法分析直接生成中间代码，边分析边生成代码。那么在语法分析时，就不能像上述语义分析那样有全局的视角。比如对于加法语句<code>a+b</code>，在读到<code>a</code>时，还不知道这是一条加法语句，只能先存起来。读到<code>+</code>时才确定是加法语句，然后再读第二个加数，然后生成字节码。我们为此引入了<code>ExpDesc</code>这个中间层。所以ExpDesc就相当于是通用流程中的“语法树”的作用。只不过语法树是全局的，而ExpDesc是局部的，而且是最小粒度的局部。</p>
+<pre><code>       词法分析               语法分析
+字符流 --------&gt; Token流 ----(ExpDesc)---&gt; 中间代码 ...
+</code></pre>
+<p>可以直观地看到，Lua的这种方式省去了语义分析步骤，速度应该略快，但由于没有全局视角，所以实现相对复杂。这两种方式更详细的说明和对比已经超出了本文的讨论范围。我们选择按照Lua官方实现的方式，选择语法分析直接生成字节码的方式。</p>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>本节引入了ExpDesc的概念，并介绍了其作用和角色。下一节，基于ExpDesc对现有代码做改造。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-02.table_constructor.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch04-04.expdesc_rewrite.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-02.table_constructor.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch04-04.expdesc_rewrite.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

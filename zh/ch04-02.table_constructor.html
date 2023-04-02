@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>表的构造 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html" class="active"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="表的构造"><a class="header" href="#表的构造">表的构造</a></h1>
+<p>本节介绍表的构造。表的构造支持3种类型：列表式、记录式、和通用式。分别见如下示例代码：</p>
+<pre><code class="language-lua">local key = &quot;kkk&quot;
+print { 100, 200, 300;  -- list style
+        x=&quot;hello&quot;, y=&quot;world&quot;;  -- record style
+        [key]=&quot;vvv&quot;;  -- general style
+}
+</code></pre>
+<p>先来看下Lua官方实现中是如何处理表的构造的。luac的输出如下：</p>
+<pre><code class="language-shell">$ luac -l test_lua/table.lua
+
+main &lt;test_lua/table.lua:0,0&gt; (14 instructions at 0x600001820080)
+0+ params, 6 slots, 1 upvalue, 1 local, 7 constants, 0 functions
+	1	[1]	VARARGPREP	0
+	2	[1]	LOADK    	0 0	; &quot;kkk&quot;
+	3	[2]	GETTABUP 	1 0 1	; _ENV &quot;print&quot;
+	4	[2]	NEWTABLE 	2 3 3	; 3
+	5	[2]	EXTRAARG 	0
+	6	[2]	LOADI    	3 100
+	7	[2]	LOADI    	4 200
+	8	[2]	LOADI    	5 300
+	9	[3]	SETFIELD 	2 2 3k	; &quot;x&quot; &quot;hello&quot;
+	10	[3]	SETFIELD 	2 4 5k	; &quot;y&quot; &quot;world&quot;
+	11	[4]	SETTABLE 	2 0 6k	; &quot;vvv&quot;
+	12	[5]	SETLIST  	2 3 0
+	13	[2]	CALL     	1 2 1	; 1 in 0 out
+	14	[5]	RETURN   	1 1 1	; 0 out
+</code></pre>
+<p>跟表的构造相关的字节码是第4到第12行：</p>
+<ul>
+<li>第4行，NEWTABLE，用以创建一个表。一共3个参数，分别是新表在栈上位置，数组部分长度，和散列表部分长度。</li>
+<li>第5行，看不懂，暂时忽略。</li>
+<li>第6，7，8行，三个LOADI，分别加载数组部分的值100,200,300到栈上，供后面使用。</li>
+<li>第9，10行，字节码SETFIELD，分别向散列表部分插入x和y。</li>
+<li>第11行，字节码SETTABLE，向散列表部分插入key。</li>
+<li>第12行，SETLIST，把上述第6-8行加载到栈上的数据，一次性插入到数组中。</li>
+</ul>
+<p>每个字节码的执行对应的栈情况如下：</p>
+<pre><code>           |       |        /&lt;--- 9.SETFILED
+           +-------+        |&lt;---10.SETFILED
+4.NEWTABLE |  { }  |&lt;----+--+&lt;---11.SETTABLE
+           +-------+     |
+   6.LOADI |  100  |----&gt;|
+           +-------+     |12.SETLIST
+   7.LOADI |  200  |----&gt;|
+           +-------+     |
+   8.LOADI |  300  |----&gt;/
+           +-------+
+           |       |
+</code></pre>
+<p>首先可以看到，表的构造是在虚拟机执行过程中，通过插入逐个成员，实时构造出来的。这一点有点出乎我的意料（虽然之前并没有想过应该是什么过程）。我以前写过类似如下的代码：</p>
+<pre><code class="language-lua">local function day_of_week(day)
+    local days = {
+        &quot;Sunday&quot;=0, &quot;Monday&quot;=1, &quot;Tuesday&quot;=2,
+        &quot;Wednesday&quot;=3, &quot;Thursday&quot;=4, &quot;Friday&quot;=5,
+        &quot;Saturday&quot;=6,
+    }
+    return days[day]
+end
+</code></pre>
+<p>代码中把<code>days</code>放在函数内部是很自然的，因为这个变量只在这个函数内部使用。但是根据上面表的构造的实现，每次调用这个函数都会实时构建这个表，也就是把这7个日期插入到表里，这个代价就有点大了（需要8次字符串hash和1次字符串比较，至少需要9条字节码，还有创建表带来的不止一次的内存分配）。感觉上甚至不如逐个星期名比较来的快（平均需要4次字符串比较，每次比较2条字节码一共8条）。更好的方法是把<code>days</code>这个变量放到函数外面（就是以后介绍的<a href="./ch09-01.upvalue.html">UpValue</a>），每次进入函数就不需要构造表，但这样就把一个函数内部变量放到外面，不是好的编程习惯。另外一种做法（Lua的官方实现并不支持）就是对于这种全部由常量组成的表，在解析阶段就构建好，后续只要引用即可，但这么做会带来一些复杂性，后续看有没有精力完成。</p>
+<p>回到表的构造，对于数组部分和散列表部分的处理方式是不同的：</p>
+<ul>
+<li>数组部分，是先把值依次加载到栈上，最后一次性插入到数组中；</li>
+<li>散列表部分，是每次直接插入到散列表中。</li>
+</ul>
+<p>一个是批量的一个是逐次的。采用不同方式的原因猜测如下：</p>
+<ul>
+<li>
+<p>数组部分如果也逐一插入，那么插入某些类型的表达式就需要2条字节码。比如对于全局变量，就需要先用<code>GetGlobal</code>字节码加载到栈上，然后再用一个类似<code>AppendTable</code>的字节码插入到数组中，那么插入N个值最多就需要2N条字节码。如果批量插入，N个值就只需要N+1条字节码。所以批量插入更适合数组部分。</p>
+</li>
+<li>
+<p>而对于散列表部分，每条数据有key和value两个值，如果也采用批量的方式，把两个值都加载到栈上就需要2条字节码。而如果是逐个插入，很多情况下只需要1条字节码即可。比如上述示例代码中的后面3项都只分别对应1条字节码。这么一来，批量的方式反而需要更多字节码了，所以逐个插入更适合散列表部分。</p>
+</li>
+</ul>
+<p>这一节按照Lua官方实现方法，对应增加下面等4个字节码：</p>
+<pre><code class="language-rust ignore">pub enum ByteCode {
+    NewTable(u8, u8, u8),
+    SetTable(u8, u8, u8),  // key在栈上
+    SetField(u8, u8, u8),  // key是字符串常量
+    SetList(u8, u8),
+</code></pre>
+<p>不过中间的两个字节码并不支持值是常量的情况，只支持栈上索引。我们在后面小节会加入对常量的优化。</p>
+<h2 id="语法分析"><a class="header" href="#语法分析">语法分析</a></h2>
+<p>在介绍完表构造的原理后，现在来看具体实现。先看语法分析部分。代码很长，但都只是依照上面的介绍，逻辑很简单。把代码贴在这里仅作参考，没兴趣的读者可以跳过这里。</p>
+<pre><code class="language-rust ignore">fn table_constructor(&amp;mut self, dst: usize) {
+    let table = dst as u8;
+    let inew = self.byte_codes.len();
+    self.byte_codes.push(ByteCode::NewTable(table, 0, 0));  // 新建表
+
+    let mut narray = 0;
+    let mut nmap = 0;
+    let mut sp = dst + 1;
+    loop {
+        match self.lex.peek() {
+            Token::CurlyR =&gt; { // `}`
+                self.lex.next();
+                break;
+            }
+            Token::SqurL =&gt; { // `[` exp `]` `=` exp，通用式
+                nmap += 1;
+                self.lex.next();
+
+                self.load_exp(sp); // key
+                self.lex.expect(Token::SqurR); // `]`
+                self.lex.expect(Token::Assign); // `=`
+                self.load_exp(sp + 1); // value
+
+                self.byte_codes.push(ByteCode::SetTable(table, sp as u8, sp as u8 + 1));
+            },
+            Token::Name(_) =&gt; { // Name `=` exp | Name
+                nmap += 1;
+                let key = if let Token::Name(key) = self.lex.next() {
+                    self.add_const(key)
+                };
+                if self.lex.peek() == &amp;Token::Assign { // Name `=` exp，记录式
+                    self.lex.next();
+                    self.load_exp(sp); // value
+                    self.byte_codes.push(ByteCode::SetField(table, key as u8, sp as u8));
+                } else {
+                    narray += 1;
+                    self.load_exp_with_ahead(sp, Token::Name(key)); // exp，列表式
+
+                    sp += 1;
+                    if sp - (dst + 1) &gt; 50 { // too many, reset it
+                        self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+                        sp = dst + 1;
+                    }
+                }
+            },
+            _ =&gt; { // exp，列表式
+                narray += 1;
+                self.load_exp(sp);
+
+                sp += 1;
+                if sp - (dst + 1) &gt; 50 { // too many, reset it
+                    self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+                    sp = dst + 1;
+                }
+            },
+        }
+
+        match self.lex.next() {
+            Token::SemiColon | Token::Comma =&gt; (),
+            Token::CurlyR =&gt; break,
+            t =&gt; panic!(&quot;invalid table {t:?}&quot;),
+        }
+    }
+
+    if sp &gt; dst + 1 {
+        self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+    }
+
+    // reset narray and nmap
+    self.byte_codes[inew] = ByteCode::NewTable(table, narray, nmap);
+}            
+</code></pre>
+<p>函数开头生成<code>NewTable</code>字节码，但由于目前还不知道数组和散列表的成员数量，所以后面两个参数暂时填0。并记下这个字节码的位置，在函数最后修改参数。</p>
+<p>中间循环就是遍历表的所有成员。一共3种语法类型：</p>
+<ul>
+<li>
+<p>通用式，<code>[ exp ] = exp</code>，key和value都是表达式，通过<code>load_exp()</code>函数分别加载到栈的sp和sp+1的位置，然后生成<code>SetTable</code>字节码；</p>
+</li>
+<li>
+<p>记录式，<code>Name = exp</code>，key是Name即字符串常量，加入到常量表中，value是表达式，最后生成<code>SetField</code>字节码。这里有个地方跟Rust的所有权机制相关，就是通过<code>match self.lex.peek()</code>的模式分支<code>Token::Name(key)</code>匹配拿到的<code>key</code>是不能直接通过<code>add_const(*key)</code>添加到常量表中的。这是因为<code>peek()</code>返回的不是<code>Token</code>本身，而是<code>Token</code>的引用，这个引用是<code>self.lex.peek()</code>返回的，所以关联的<code>self.lex</code>和<code>self</code>也都处于被引用的状态；而调用<code>self.add_const()</code>也是对<code>self</code>的mut引用，就违反了引用规则。正确的做法是放弃<code>peek()</code>的返回值，而是调用<code>self.lex.next()</code>返回Token并重新匹配。这时Rust的检查显得过于严格，因为<code>self.lex.peek()</code>返回的Token引用并不会影响<code>self.add_const()</code>。应该是Rust没有能力确定这两者间没有影响。</p>
+</li>
+<li>
+<p>列表式，<code>exp</code>，加载到栈的<code>sp</code>位置，并更新<code>sp</code>，以待最后的<code>SetList</code>执行插入。但不能无限向栈上加载数据，因为这会导致栈一直重分配内存，所以如果当前栈上数据超过50，就生成一次<code>SetList</code>字节码，清理栈。</p>
+</li>
+</ul>
+<p>这里需要说明的一点是，在解析到<code>Name</code>的时候，既可能是记录式也可能是列表式，需要再peek下一个Token才能区分两者：如果下一个Token是<code>=</code>则是记录式，否则是列表式。这里的问题是，<code>Name</code>已经是peek的了，而词法分析由于<a href="./ch03-03.read_input.html#%E4%BD%BF%E7%94%A8peekable">使用了<code>Peekable</code></a>所以只支持peek一个Token，于是就只能修改表达式解析的函数<code>load_exp()</code>，支持一个提前读取的Token，为此新增<code>load_exp_with_ahead()</code>函数。整个Lua语法中，只有这一个地方需要向前看两个Token。</p>
+<blockquote>
+<p>这种需要向前看两个Token才能确定表达式的行为，不知道是不是叫<a href="https://en.wikipedia.org/wiki/LL_parser">LL(2)</a>？</p>
+</blockquote>
+<h2 id="虚拟机执行"><a class="header" href="#虚拟机执行">虚拟机执行</a></h2>
+<p>下面是新增的4个字节码的虚拟机执行代码，同样很简单，可以跳过：</p>
+<pre><code class="language-rust ignore">    ByteCode::NewTable(dst, narray, nmap) =&gt; {
+        let table = Table::new(narray as usize, nmap as usize);
+        self.set_stack(dst, Value::Table(Rc::new(RefCell::new(table))));
+    }
+    ByteCode::SetTable(table, key, value) =&gt; {
+        let key = self.stack[key as usize].clone();
+        let value = self.stack[value as usize].clone();
+        if let Value::Table(table) = &amp;self.stack[table as usize] {
+            table.borrow_mut().map.insert(key, value);
+        } else {
+            panic!(&quot;not table&quot;);
+        }
+    }
+    ByteCode::SetField(table, key, value) =&gt; {
+        let key = proto.constants[key as usize].clone();
+        let value = self.stack[value as usize].clone();
+        if let Value::Table(table) = &amp;self.stack[table as usize] {
+            table.borrow_mut().map.insert(key, value);
+        } else {
+            panic!(&quot;not table&quot;);
+        }
+    }
+    ByteCode::SetList(table, n) =&gt; {
+        let ivalue = table as usize + 1;
+        if let Value::Table(table) = self.stack[table as usize].clone() {
+            let values = self.stack.drain(ivalue .. ivalue + n as usize);
+            table.borrow_mut().array.extend(values);
+        } else {
+            panic!(&quot;not table&quot;);
+        }
+    }
+</code></pre>
+<p>第一个字节码<code>NewTable</code>很简单，不做介绍。后面两个字节码<code>SetTable</code>和<code>SetField</code>类似，都需要通过<code>borrow_mut()</code>来获取表的mut引用。最后的字节码<code>SetList</code>再次遇到Rust的所有权问题，需要对栈上的表显式调用<code>clone()</code>函数，创建一个独立的表的指针。如果不调用<code>clone()</code>的话，那么第一行<code>if let</code>语句匹配得到的<code>table</code>变量是对栈上成员的引用，也就是对栈的引用，并且这个引用还需要持续到第三行，所以不能提前释放；第二行调用<code>stack.drain()</code>是需要获取栈的可变引用，就跟前面第一行<code>table</code>变量获取的引用出现冲突了。所以需要<code>clone()</code>出一个独立的表的指针，这样第一行匹配的<code>table</code>变量就只是对表的引用，而脱离了对栈的引用，从而避免了冲突。</p>
+<p>这里强制的<code>clone()</code>增加了性能消耗，但也避免了潜在bug。比如这个table所在的栈位置，是可能被后续的<code>stack.drain()</code>包括的，从而地址失效，那么后续第三行向table中插入数据的操作就会异常。当然，在<code>SetList</code>这个场景下，语法分析会保证<code>stack.drain()</code>清理的栈位置不包括table，但Rust编译器并不知道，而且也不能保证以后不会包括。所以这里的<code>clone()</code>彻底杜绝了这个隐患，是值得的。</p>
+<p>至此，我们完成了表的构造，后面几节介绍表的读写。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-01.table_definition.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch04-03.expdesc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-01.table_definition.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch04-03.expdesc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

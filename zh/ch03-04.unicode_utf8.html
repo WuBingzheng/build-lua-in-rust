@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Unicode和UTF-8 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html" class="active"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="unicode和utf-8"><a class="header" href="#unicode和utf-8">Unicode和UTF-8</a></h1>
+<p>本章的前面三节优化了字符串相关内容，理清了一些问题，但也引入了一些混乱。比如<code>Value</code>中的3个字符串类型的定义，有的是<code>[u8]</code>类型，有的是<code>String</code>类型：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    ShortStr(u8, [u8; SHORT_STR_MAX]),  // [u8]类型
+    MidStr(Rc&lt;(u8, [u8; MID_STR_MAX])&gt;),  // [u8]类型
+    LongStr(Rc&lt;String&gt;),  // String类型
+</code></pre>
+<p>再比如上一节中“字节”和“字符”混用。词法分析的代码也是这样，从输入字符流中读取字节<code>u8</code>类型，但通过<code>as</code>转换为字符<code>char</code>类型。</p>
+<pre><code class="language-rust ignore">    fn read_char(&amp;mut self) -&gt; char {
+        match self.input.next() {
+            Some(Ok(ch)) =&gt; ch as char,  // u8 -&gt; char
+</code></pre>
+<p>目前这些混乱之所以还没有造成问题，是因为我们的测试程序只涉及了ASCII字符。如果涉及其他字符，就会出问题。比如对于如下Lua代码：</p>
+<pre><code class="language-lua">print &quot;你好&quot;
+</code></pre>
+<p>执行结果就是错误的：</p>
+<pre><code class="language-bash">$ cargo r -q --  test_lua/nihao.lua
+constants: [print, ä½ å¥½]
+byte_codes:
+  GetGlobal(0, 0)
+  LoadConst(1, 1)
+  Call(0, 1)
+ä½ å¥½
+</code></pre>
+<p>输出的结果并不是预期中的<code>你好</code>，而是<code>ä½ å¥½</code>。有没有想起“手持两把锟斤拷，口中疾呼烫烫烫”？下面就来解释这个“乱码”出现的原因，并修复这个问题。</p>
+<h2 id="unicode和utf-8概念"><a class="header" href="#unicode和utf-8概念">Unicode和UTF-8概念</a></h2>
+<p>这两个都是非常通用的概念，这里只做最基本的介绍。</p>
+<p>Unicode对世界上大部分文字进行了统一的编码。其中为了跟ASCII码兼容，对ASCII字符集的编码保持一致。比如英文字母<code>p</code>的ASCII和Unicode编码都是0x70，按照Unicode的方式写作<code>U+0070</code>。中文<code>你</code>的Unicode编码是<code>U+4F60</code>。</p>
+<p>Unicode只是对文字编了号，至于计算机怎么存储就是另外一回事。最简单的方式就是按照Unicode编码直接存储。由于Unicode目前已经支持14万多个文字（仍然在持续增加），那至少需要3个字节来表示，所以英文字母<code>p</code>就是<code>00 00 70</code>，中文<code>你</code>就是<code>00 4F 60</code>。这种方式的问题是，对于ASCII部分也需要3个字节表示，（对于英文而言）造成浪费。所以就有其他的编码方式，UTF-8就是其中一种。UTF-8是一种变长编码，比如每个ASCII字符只占用1个字节，比如英文字母<code>p</code>编码仍然是0x70，按照UTF-8的方式写作<code>\x70</code>；而每个中文占3个字节，比如中文<code>你</code>的UTF-8编码是<code>\xE4\xBD\xA0</code>。UTF-8更详细的编码规则这里省略。下面是几个例子：</p>
+<pre><code>字符 | Unicode编号 | UTF-8编码
+----+------------+---------------
+p   |  U+0070    | \x70
+r   |  U+0072    | \x72
+你  |  U+4F60    | \xE4\xBD\xA0
+好  |  U+597D    | \xE5\xA5\xBD
+</code></pre>
+<h2 id="乱码分析"><a class="header" href="#乱码分析">乱码分析</a></h2>
+<p>介绍完编码概念，再来分析本节开头的Lua测试代码出现乱码的原因。用hexdump查看源码文件：</p>
+<pre><code class="language-bash">$ hexdump -C test_lua/nihao.lua
+00000000  70 72 69 6e 74 20 22 e4  bd a0 e5 a5 bd 22 0a     |print &quot;......&quot;.|
+#         p  r  i  n  t     &quot;  |--你---| |--好---| &quot;
+</code></pre>
+<p>其中最后一行是我添加的注释，表示出每个Unicode文字。可以看到<code>p</code>和<code>你</code>的编码，跟上面介绍的UTF-8编码一致。说明这个文件是UTF-8编码的。文件的编码方式取决于使用的文字编辑器和操作系统。</p>
+<p>我们目前的词法分析是逐个“字节”读取的，所以对于中文<code>你</code>，就被词法分析认为是3个独立的字节，分别是<code>e4</code>、<code>bd</code>和<code>a0</code>。然后再用<code>as</code>转换为<code>char</code>。Rust的<code>char</code>是Unicode编码的，所以就得到了3个Unicode文字，通过查询Unicode可以得到这3个文字分别是<code>ä</code>、<code>½</code>和<code> </code>（最后一个是个空白字符），这就是我们开头遇到的“乱码”的前半部分。后面的<code>好</code>对应乱码的后半部分。这6个字节代表的6个文字，被依次push到<code>Token::String</code>（Rust的<code>String</code>类型）中，最终被<code>println!</code>打印出来。Rust的<code>String</code>类型是UTF-8编码的，不过这个倒是不影响输出结果。</p>
+<p>概括下乱码出现的过程：</p>
+<ul>
+<li>源文件是UTF-8编码；</li>
+<li>逐个字节读取，此时UTF-8编码已被支离；</li>
+<li>每个字节被解释为Unicode，导致乱码；</li>
+<li>存储和打印。</li>
+</ul>
+<p>还可以通过Rust编码再次验证下：</p>
+<pre><pre class="playground"><code class="language-rust editable"><span class="boring">fn main() {
+</span>    let s = String::from(&quot;print 你好&quot;);  // Rust的String是UTF-8编码，所以可以模拟Lua源文件
+    println!(&quot;string: {}&quot;, &amp;s);  // 正常输出
+    println!(&quot;bytes in UTF-8: {:x?}&quot;, s.as_bytes());  // 查看UTF-8编码
+
+    print!(&quot;Unicode: &quot;);
+    for ch in s.chars() {  // 逐个“字符”读取，查看Unicode编码
+        print!(&quot;{:x} &quot;, ch as u32);
+    }
+    println!(&quot;&quot;);
+
+    let mut x = String::new();
+    for b in s.as_bytes().iter() {  // 逐个“字节”读取
+        x.push(*b as char);  // as char，字节被解释为Unicode，导致乱码
+    }
+    println!(&quot;wrong: {}&quot;, x);
+<span class="boring">}
+</span></code></pre></pre>
+<p>点击右上角可以运行看结果。</p>
+<p>乱码问题的核心在于“字节”到“字符char”的转换。所以有2种解决方法：</p>
+<ol>
+<li>
+<p>读取源代码时，修改为逐个“字符char”读取。这个方案问题比较大：</p>
+<ul>
+<li>上一节中我们介绍的Lex的输入类型是<code>Read</code> trait，只支持按照“字节”读取。如果要按照“字符char”读取，那就需要首先转换为<code>String</code>类型，就需要<code>BufRead</code> trait了，对输入的要求更严格了，比如字符串外封装的<code>Cursor&lt;T&gt;</code>就不支持。</li>
+<li>假如源代码输入是UTF-8编码，最后Rust的存储也是UTF-8编码，如果按照Unicode编码的“字符char”读取，那就需要UTF-8到Unicode再到UTF-8的两次无谓的转换。</li>
+<li>还有一个最重要的原因，接下来马上就会讨论的，Lua的字符串是可以包含任意数据，而不一定是合法的UTF-8内容，也就不一定能正确转换为“字符char”。</li>
+</ul>
+</li>
+<li>
+<p>读取源代码时，仍然逐个字节读取；在保存时，不再转换为“字符char”，而是直接按照“字节”保存。这就不能继续使用Rust的<code>String</code>类型来保存了，具体方案见下。</p>
+</li>
+</ol>
+<p>显而易见（只是现在看来显而易见，当初也是一头雾水，尝试了很久）应该选择第2个方案。</p>
+<h2 id="字符串定义"><a class="header" href="#字符串定义">字符串定义</a></h2>
+<p>现在看下Lua和Rust语言中字符串内容的区别。</p>
+<p><a href="https://www.lua.org/manual/5.4/manual.html#3.1">Lua中</a>关于字符串的介绍：We can specify any byte in a short literal string。也就是说Lua的字符串可以表示任意数据。与其叫字符串，不如说就是一串连续的数据，而并不关心数据的内容。</p>
+<p>而Rust字符串<code>String</code>类型的<a href="https://doc.rust-lang.org/std/string/struct.String.html">介绍</a>：A UTF-8–encoded, growable string。简单明了。两个特点：UTF-8编码，可增长。Lua的字符串是不可变的，Rust的可增长，但这个区别不是现在要讨论的。现在关注的是前一个特点，即UTF-8编码，也就是说Rust字符串不能存储任意数据。通过Rust的字符串的定义，可以更好的观察到这点：</p>
+<pre><code class="language-rust ignore">pub struct String {
+    vec: Vec&lt;u8&gt;,
+}
+</code></pre>
+<p>可以看到<code>String</code>就是对<code>Vec&lt;u8&gt;</code>类型的封装。正是通过这个封装，保证了<code>vec</code>中的数据是合法的UTF-8编码，而不会混进任意数据。如果允许任意数据，那直接定义别名<code>type String = Vec&lt;u8&gt;;</code>就行了。</p>
+<p>综上，Rust的字符串<code>String</code>只是Lua字符串的子集；跟Lua字符串类型相对应的Rust类型不是<code>String</code>，而是可以存储任意数据的<code>Vec&lt;u8&gt;</code>。</p>
+<h2 id="修改代码"><a class="header" href="#修改代码">修改代码</a></h2>
+<p>现在弄清了乱码的原因，也分析了Rust和Lua字符串的区别，就可以着手修改解释器代码了。需要修改的地方如下：</p>
+<ul>
+<li>
+<p>词法分析中<code>Token::String</code>关联的类型由<code>String</code>改为<code>Vec&lt;u8&gt;</code>，以支持任意数据，而不限于合法的UTF-8编码数据。</p>
+</li>
+<li>
+<p>对应的，<code>Value::LongStr</code>关联的类型也由<code>String</code>改为<code>Vec&lt;u8&gt;</code>。这也就跟另外两个字符串类型ShortStr和MidStr保持了一致。</p>
+</li>
+<li>
+<p>词法分析中，原来的读取函数<code>peek_char()</code>和<code>read_char()</code>分别改成<code>peek_byte()</code>和<code>next_byte()</code>，返回类型由“字符char”改成“字节”。原来虽然名字里是<code>char</code>，但实际上是逐个“字节”读取，所以这次不用修改函数内容。</p>
+</li>
+<li>
+<p>代码中原来匹配的字符常量如<code>'a'</code>，要改成字节常量如<code>b'a'</code>。</p>
+</li>
+<li>
+<p>原来的<code>read_char()</code>如果读取到结束，则返回<code>\0</code>，因为当时认为<code>\0</code>是特殊字符。现在Lua的字符串可以包含任意值，包括<code>\0</code>，所以<code>\0</code>就不能用来表示读到结束。此时就需要Rust的<code>Option</code>了，返回值类型定义为<code>Option&lt;u8&gt;</code>。</p>
+<p>但这就导致调用这个函数的地方不太方便，每次都需要模式匹配（<code>if let Some(b) =</code>）才能取出字节。好在这个函数调用的地方不多。但是另外一个函数<code>peek_byte()</code>调用的地方就很多了。照理说这个函数的返回值也应该改成<code>Option&lt;u8&gt;</code>，但实际上这个函数返回的字节都是用来“看一看”，只要跟几个可能路径都不匹配，就可以认为没有产生效果。所以这个函数读到结束时，仍然可以返回<code>\0</code>，因为<code>\0</code>不会匹配任何可能路径。如果真的读到结尾，那么就留给下一次的<code>next_byte()</code>去处理就行。</p>
+<blockquote>
+<p>正是<code>Option</code>带来的这个不方便（必须通过匹配才能取出值），才提现了其价值。我在C语言编程经历中，对于这种函数返回特殊情况的处理，一般都用一个特殊值来表示，比如指针类型就用<code>NULL</code>，int类型就用<code>0</code>或<code>-1</code>。这带来2个问题：一是调用者可能没有处理这种特殊值，会直接导致bug；二是这些特殊值后续可能就变成普通值了（比如我们这次的<code>\0</code>就是个典型例子），那所有调用这个函数的地方都要修改。而Rust的<code>Option</code>就完美解决了这两个问题。</p>
+</blockquote>
+</li>
+<li>
+<p>词法分析中，字符串支持escape。这部分都是无趣的字符处理，这里省略介绍。</p>
+</li>
+<li>
+<p>增加<code>impl From&lt;Vec&lt;u8&gt;&gt; for Value</code>，用以将<code>Token::String(Vec&lt;u8&gt;)</code>中的字符串常量转换为<code>Value</code>类型。这个又涉及很多Vec和字符串的细节，非常繁琐，且跟主线关系不大，下面再开两个小节专门介绍。</p>
+</li>
+</ul>
+<h2 id="str-string-u8-vec到value的转换"><a class="header" href="#str-string-u8-vec到value的转换">&amp;str, String, &amp;[u8], Vec<u8>到Value的转换</a></h2>
+<p>之前已经实现了<code>String</code>和<code>&amp;str</code>到<code>Value</code>的转换。现在要增加<code>Vec&lt;u8&gt;</code>和<code>&amp;[u8]</code>到<code>Value</code>的转换。这4个类型间的关系如下：</p>
+<pre><code>           slice
+  &amp;[u8] &lt;---------&gt; Vec&lt;u8&gt;
+                      ^
+                      |封装
+           slice      |
+  &amp;str  &lt;---------&gt; String
+</code></pre>
+<ul>
+<li><code>String</code>是对<code>Vec&lt;u8&gt;</code>的一层封装。可以通过<code>into_bytes()</code>返回封装的<code>Vec&lt;u8&gt;</code>。</li>
+<li><code>&amp;str</code>是<code>String</code>的slice（可以认为是引用？）。</li>
+<li><code>&amp;[u8]</code>是<code>Vec&lt;u8&gt;</code>的slice。</li>
+</ul>
+<p>所以<code>String</code>和<code>&amp;str</code>可以分别依赖<code>Vec&lt;u8&gt;</code>和<code>&amp;[u8]</code>。而且看上去<code>Vec&lt;u8&gt;</code>和<code>&amp;[u8]</code>之间也可以相互依赖，即只直接实现其中之一到<code>Value</code>的转换即可。不过这样会损失性能。分析如下：</p>
+<ul>
+<li>源类型：<code>Vec&lt;u8&gt;</code>是拥有所有权的，而<code>&amp;[u8]</code>没有。</li>
+<li>目的类型：<code>Value::ShortStr/MidStr</code>只需要复制字符串内容（分别到Value和Rc内部），无需获取源数据的所有权。而<code>Value::LongStr</code>需要获取<code>Vec</code>的所有权。</li>
+</ul>
+<p>2个源类型，2个目的类型，可得4种转换组合：</p>
+<pre><code>         | Value::ShortStr/MidStr | Value::LongStr
+---------+------------------------+-----------------
+ &amp;[u8]   |  1.复制字符串内容        | 2.创建Vec，申请内存
+ Vec&lt;u8&gt; |  3.复制字符串内容        | 4.转移所有权
+</code></pre>
+<p>如果我们直接实现<code>Vec&lt;u8&gt;</code>，而对于<code>&amp;[8]</code>就先通过<code>.to_vec()</code>创建<code>Vec&lt;u8&gt;</code>再间接转换为<code>Value</code>。那么对于上述第1种情况，本来只需要复制字符串内容即可，而通过<code>.to_vec()</code>创建的Vec就浪费了。</p>
+<p>如果我们直接实现<code>&amp;[8]</code>，而对于<code>Vec&lt;u8&gt;</code>就先通过引用来转换为<code>&amp;[u8]</code>再间接转换为<code>Value</code>。那么对于上述的第4种情况，就要先取引用转换为<code>&amp;u[8]</code>，然后再通过<code>.to_vec()</code>创建Vec来获得所有权。多了一次无谓的创建。</p>
+<p>所以为了效率，还是直接实现<code>Vec&lt;u8&gt;</code>和<code>&amp;[u8]</code>到<code>Value</code>的转换。不过，也许编译器会优化这些的，上述考虑都是瞎操心。但是，这可以帮助我们更深刻理解<code>Vec&lt;u8&gt;</code>和<code>&amp;[u8]</code>这两个类型，和Rust所有权的概念。最终转换代码如下：</p>
+<pre><code class="language-rust ignore">// convert &amp;[u8], Vec&lt;u8&gt;, &amp;str and String into Value
+impl From&lt;&amp;[u8]&gt; for Value {
+    fn from(v: &amp;[u8]) -&gt; Self {
+        vec_to_short_mid_str(v).unwrap_or(Value::LongStr(Rc::new(v.to_vec())))
+    }
+}
+impl From&lt;&amp;str&gt; for Value {
+    fn from(s: &amp;str) -&gt; Self {
+        s.as_bytes().into() // &amp;[u8]
+    }
+}
+
+impl From&lt;Vec&lt;u8&gt;&gt; for Value {
+    fn from(v: Vec&lt;u8&gt;) -&gt; Self {
+        vec_to_short_mid_str(&amp;v).unwrap_or(Value::LongStr(Rc::new(v)))
+    }
+}
+impl From&lt;String&gt; for Value {
+    fn from(s: String) -&gt; Self {
+        s.into_bytes().into() // Vec&lt;u8&gt;
+    }
+}
+
+fn vec_to_short_mid_str(v: &amp;[u8]) -&gt; Option&lt;Value&gt; {
+    let len = v.len();
+    if len &lt;= SHORT_STR_MAX {
+        let mut buf = [0; SHORT_STR_MAX];
+        buf[..len].copy_from_slice(&amp;v);
+        Some(Value::ShortStr(len as u8, buf))
+
+    } else if len &lt;= MID_STR_MAX {
+        let mut buf = [0; MID_STR_MAX];
+        buf[..len].copy_from_slice(&amp;v);
+        Some(Value::MidStr(Rc::new((len as u8, buf))))
+
+    } else {
+        None
+    }
+}
+</code></pre>
+<h2 id="反向转换"><a class="header" href="#反向转换">反向转换</a></h2>
+<p>之前已经实现了<code>Value</code>到<code>String</code>和<code>&amp;str</code>的转换。现在要增加到<code>Vec&lt;u8&gt;</code>的转换。先列出代码：</p>
+<pre><code class="language-rust ignore">impl&lt;'a&gt; From&lt;&amp;'a Value&gt; for &amp;'a [u8] {
+    fn from(v: &amp;'a Value) -&gt; Self {
+        match v {
+            Value::ShortStr(len, buf) =&gt; &amp;buf[..*len as usize],
+            Value::MidStr(s) =&gt; &amp;s.1[..s.0 as usize],
+            Value::LongStr(s) =&gt; s,
+            _ =&gt; panic!(&quot;invalid string Value&quot;),
+        }
+    }
+}
+
+impl&lt;'a&gt; From&lt;&amp;'a Value&gt; for &amp;'a str {
+    fn from(v: &amp;'a Value) -&gt; Self {
+        std::str::from_utf8(v.into()).unwrap()
+    }
+}
+
+impl From&lt;&amp;Value&gt; for String {
+    fn from(v: &amp;Value) -&gt; Self {
+        String::from_utf8_lossy(v.into()).to_string()
+    }
+}
+</code></pre>
+<ul>
+<li>
+<p>由于现在<code>Value</code>的3种字符串都是连续<code>u8</code>序列了，所以转换为<code>&amp;[u8]</code>很简单。</p>
+</li>
+<li>
+<p>到<code>&amp;str</code>的转换，需要通过<code>std::str::from_utf8()</code>处理刚才得到的<code>&amp;[u8]</code>类型。这个函数不涉及新的内存分配，只是验证下UTF-8编码的合法性。如果非法则失败，我们这里直接通过<code>unwrap()</code>来panic。</p>
+</li>
+<li>
+<p>到<code>String</code>的转换，通过<code>String::from_utf8_lossy()</code>处理刚才得到的<code>&amp;[u8]</code>类型。这个函数也是验证UTF-8编码的合法性，但如果验证失败则会用一个特殊字符<code>u+FFFD</code>来替换非法数据。但又不能直接修改原有数据，所以就会创建一个新的字符串。如果验证成功，则无需新创建数据，只返回原有数据的索引即可。这个函数的返回类型<code>Cow</code>也是值得学习。</p>
+</li>
+</ul>
+<p>上述两个函数的不同处理方式，是由于<code>&amp;str</code>没有所有权，所以就不能创建新数据，而只能报错。可见所有权在Rust语言中非常关键。</p>
+<p><code>Value</code>到<code>String</code>的转换，目前的需求只是需要设置全局变量表时使用。可以看到这个转换总是会调用<code>.to_string()</code>来创建一个新字符串。这个使得我们这一章对字符串的优化（主要是<a href="./ch03-01.string_type.html">第1节</a>）都失去了意义。后续在介绍到Lua的表结构后，会把全局变量表的索引类型从<code>String</code>改为<code>Value</code>，届时操作全局变量表就无需这个转换了。不过在其他地方还是会用到这个转换。</p>
+<h2 id="测试"><a class="header" href="#测试">测试</a></h2>
+<p>至此，Lua字符串的功能更加完整了。本节开头的测试代码也可以正常输出了。通过escape还可以处理更多的方式，用如下测试代码验证：</p>
+<pre><code class="language-lua">print &quot;tab:\thi&quot; -- tab
+print &quot;\xE4\xBD\xA0\xE5\xA5\xBD&quot; -- 你好
+print &quot;\xE4\xBD&quot; -- invalid UTF-8
+print &quot;\72\101\108\108\111&quot; -- Hello
+print &quot;null: \0.&quot; -- '\0'
+</code></pre>
+<h2 id="总结"><a class="header" href="#总结">总结</a></h2>
+<p>本章学习了Rust字符串类型，涉及到所有权、内存分配、Unicode和UTF-8编码等，深刻体会到了《Rust程序设计语言》中说的：Rust的字符串是复杂的，因为字符串本身是复杂的。通过这些学习，优化了Lua的字符串类型，还涉及到泛型和<code>From</code> trait。虽然没有给我们的Lua解释器增加新特性，但也收获满满。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-03.read_input.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch03-05.gc_vs_rc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-03.read_input.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch03-05.gc_vs_rc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

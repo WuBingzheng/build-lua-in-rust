@@ -1,0 +1,510 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>表的读写和BNF - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html" class="active"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="表的读写和bnf"><a class="header" href="#表的读写和bnf">表的读写和BNF</a></h1>
+<p>在前面两节引入ExpDesc并对现有语法分析进行改造之后，本节实现表的读写。</p>
+<p>Lua中表的索引支持两种方式，分别举例如下：<code>t[&quot;k&quot;]</code>和<code>t.k</code>，其中后者是前者的特殊形式。表的读写操作都需要用到表的索引。需要在ExpDesc中增加表索引的类型。</p>
+<p>表的读写操作本身并不复杂，但会使得其他语句突然变得复杂起来：</p>
+<ul>
+<li>
+<p>表的读操作可能有连续多级，比如<code>t.x.y</code>，那么在解析表达式时无法立即判断结束，而需要peek下一个Token来判断。</p>
+</li>
+<li>
+<p>表的写操作，即赋值语句。现在的赋值语句只支持“变量”的赋值，即左值只支持一个Token::Name。如要增加表索引的支持，对左值的处理要重新实现。只解析一个Token不行，而是要解析完一个左值才行。那怎么才算一个完整的左值？比如并不是所有的表达式都可以作为左值，比如函数调用或者表构造都不行。</p>
+</li>
+<li>
+<p>之前区分赋值语句和函数调用语句，是根据第2个Token，如果是等号<code>=</code>就是赋值语句。现在要支持表的写操作，比如<code>t.k = 123</code>，那么第2个Token是点<code>.</code>，而不是等号<code>=</code>，但仍然是赋值语句。之前的判断方法就失效了。那有什么新的办法来区分赋值语句和函数调用语句呢？</p>
+</li>
+</ul>
+<p>第一个读操作问题好解决。后面两个写操作相关的问题就很难了，我们现在无法准确地回答，只能猜测答案。这就引申出一个更大的问题，就是之前的语法分析都是靠猜的！比如局部变量的定义语句的格式等，都是根据使用Lua语言的经验猜测的，而不能保证其是否准确、完整。但之前都比较简单，可以猜个大概。另外为了不打断整个项目的节奏，也就没有深究这个问题。现在要引入表的读写，语句变得复杂了，靠猜不能继续混下去了，有必要引入形式化的语法描述了。</p>
+<h2 id="bnf"><a class="header" href="#bnf">BNF</a></h2>
+<p>Lua手册的最后一章名字就叫：<a href="https://www.lua.org/manual/5.4/manual.html#9">Lua的完整语法</a>，内容主要是一套BNF描述。我们并不需要知道BNF这个术语的含义，只需要知道这是一种形式化的语法描述方式，在这里就可以完整且准确地描述Lua语法。BNF本身的语法规则也很简单，大部分一目了然，这里只列两个：</p>
+<ul>
+<li><code>{A}</code> 代表0个或多个A</li>
+<li><code>[A]</code> 代表可选的1个A</li>
+</ul>
+<p>Lua的代码段称为<code>chunk</code>，所以以<code>chunk</code>的定义为入口，列出几条描述：</p>
+<pre><code>chunk ::= block
+
+block ::= {stat} [retstat]
+
+stat ::=  ‘;’ | 
+	 varlist ‘=’ explist | 
+	 functioncall | 
+	 label | 
+	 break | 
+	 goto Name | 
+	 do block end | 
+     while exp do block end | 
+	 repeat block until exp | 
+	 if exp then block {elseif exp then block} [else block] end | 
+	 for Name ‘=’ exp ‘,’ exp [‘,’ exp] do block end | 
+	 for namelist in explist do block end | 
+	 function funcname funcbody | 
+	 local function Name funcbody | 
+	 local attnamelist [‘=’ explist] 
+</code></pre>
+<p>由这些规则可以得到：一个<code>chunk</code>包含一个<code>block</code>。一个<code>block</code>包含0个或多个<code>stat</code>和一个可选的<code>retstat</code>。一个<code>stat</code>有很多种类型的语句。这其中我们已经实现了<code>functioncall</code>和<code>local</code>两个语句，后续把剩下的类型逐个实现就完成了Lua的全部语法（虽然离完整的Lua语言还差很远）。</p>
+<blockquote>
+<p>我不太理解这里<code>chunk</code>和<code>block</code>的区别是什么？为什么要单独列两个？</p>
+</blockquote>
+<p>就是说，我们后续就按照这套规范来实现解释器，再也不用靠猜的了!挑几条跟我们之前的对比下，比如局部变量定义语句，就可以发现应该要支持多变量，多初始化表达式，甚至没有初始化表达式。这就看出来我们之前的语句解析是非常不完善的。这节后面会根据BNF来完善我们已经支持的语句。当下先从中找出跟表索引相关的规则：</p>
+<pre><code>var ::=  Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name 
+
+exp ::=  nil | false | true | Numeral | LiteralString | ‘...’ | functiondef | 
+	 prefixexp | tableconstructor | exp binop exp | unop exp 
+
+prefixexp ::= var | functioncall | ‘(’ exp ‘)’
+
+functioncall ::=  prefixexp args | prefixexp ‘:’ Name args 
+</code></pre>
+<p>一眼看上去有些复杂。以<code>var</code>为例分析下。这里<code>var</code>推导出3种情况，第一个<code>Name</code>是简单变量，后面两个就是表索引，分别是通用方式和字符串索引语法糖。涉及到了<code>prefixexp</code>和<code>exp</code>。其中<code>exp</code>跟我们目前实现的<code>exp()</code>函数很类似了，只是我们还缺少了一些情况，也是需要后续补上的。另外<code>Name</code>是直接在<code>exp()</code>函数里的，现在要挪到<code>var</code>里。</p>
+<h2 id="消除左递归"><a class="header" href="#消除左递归">消除左递归</a></h2>
+<p>这里有个大问题，上述3条规则是有递归引用的。比如：</p>
+<ul>
+<li><code>var</code>引用了<code>prefixexp</code>而后者又引用了<code>var</code>；</li>
+<li><code>exp</code>引用了<code>prefixexp</code>而后者又引用了<code>exp</code>。</li>
+</ul>
+<p>但这两个例子又有本质区别。</p>
+<p>对于第一个例子，带入var后展开下，就是</p>
+<pre><code>prefixexp ::= Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name | prefixexp args | prefixexp ‘:’ Name args | ‘(’ exp ‘)’
+</code></pre>
+<p>问题在于推导规则的第2和第3项也是<code>prefixexp</code>开头的。那在语法分析时，比如读到一个Name，即可以匹配第1项，也可以匹配第2和第3项，这就无法判断应该选择哪条规则了。这就很头疼，我当时花了两天时间在这个问题上，想了各种土办法也没有解决。后来上网搜索发现了“消除左递归”这个概念，才隐约回忆起来这是编译原理课程上的必考题目。而且消除是有标准方法的：对于包含左递归的规则，都可以表达为如下形式：</p>
+<pre><code>A := Aα | β
+</code></pre>
+<p>然后就可以改写为如下形式：</p>
+<pre><code>A := βA’
+A’ := αA’ | ε
+</code></pre>
+<p>其中<code>ε</code>是未匹配。这样就消除了左递归。拿上面的<code>prefixexp</code>举例，先套用上述标准形式，可得：</p>
+<pre><code>α = ‘[’ exp ‘]’ | ‘.’ Name | args | ‘:’ Name args
+β = Name | ‘(’ exp ‘)’
+</code></pre>
+<p>然后再带入上述改写公式，可得：</p>
+<pre><code>prefixexp := ( Name | ‘(’ exp ‘)’ ) A’
+A’ := ( ‘[’ exp ‘]’ | ‘.’ Name | args | ‘:’ Name args ) A’ |  ε
+</code></pre>
+<p>这样我们就得到了没有左递归的规则。</p>
+<p>而本小节最开始的第二个例子，关于<code>exp</code>的，虽然也有递归引用，但不是“左”递归，所以没有这个问题。</p>
+<h2 id="表的读操作和prefixexp"><a class="header" href="#表的读操作和prefixexp">表的读操作和prefixexp</a></h2>
+<p>使用BNF规则的好处是，不需要想着Lua的语法，只需要照着规则实现即可。</p>
+<p>得到上述BNF规则后，就可以完成prefixexp的解析：</p>
+<pre><code class="language-rust ignore">    fn prefixexp(&amp;mut self, ahead: Token) -&gt; ExpDesc {
+        let sp0 = self.sp;
+
+        // beta
+        let mut desc = match ahead {
+            Token::Name(name) =&gt; self.simple_name(name),
+            Token::ParL =&gt; { // `(` exp `)`
+                let desc = self.exp();
+                self.lex.expect(Token::ParR);
+                desc
+            }
+            t =&gt; panic!(&quot;invalid prefixexp {t:?}&quot;),
+        };
+
+        // A' = alpha A'
+        loop {
+            match self.lex.peek() {
+                Token::SqurL =&gt; { // `[` exp `]`
+                    self.lex.next();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = match self.exp() {
+                        ExpDesc::String(s) =&gt; ExpDesc::IndexField(itable, self.add_const(s)),
+                        ExpDesc::Integer(i) if u8::try_from(i).is_ok() =&gt; ExpDesc::IndexInt(itable, u8::try_from(i).unwrap()),
+                        key =&gt; ExpDesc::Index(itable, self.discharge_top(key)),
+                    };
+
+                    self.lex.expect(Token::SqurR);
+                }
+                Token::Dot =&gt; { // .Name
+                    self.lex.next();
+                    let name = self.read_name();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = ExpDesc::IndexField(itable, self.add_const(name));
+                }
+                Token::Colon =&gt; todo!(&quot;args&quot;), // :Name args
+                Token::ParL | Token::CurlyL | Token::String(_) =&gt; { // args
+                    self.discharge(sp0, desc);
+                    desc = self.args();
+                }
+                _ =&gt; { // Epsilon
+                    return desc;
+                }
+            }
+        }
+    }
+</code></pre>
+<p>代码第一段对应上述的<code>β</code>，即<code>Name | ‘(’ exp ‘)’</code>。</p>
+<p>第二段的循环对应的是上述的<code>A’ := αA’ | ε</code>，如果匹配的是<code>α</code>部分即<code>‘[’ exp ‘]’ | ‘.’ Name | args | ‘:’ Name args</code>，那么解析完后循环继续；如果没有匹配，则对应<code>ε</code>，就退出循环。这里这个循环支持了很多连续的操作，比如<code>t.f()</code>，就是一个表索引接一个函数调用。或者更多的连续操作如<code>t.t.t.k</code>和<code>f()()()</code>。如果按照之前章节的土方法，想到一个功能就做一个功能，要支持这种连续操作就很难了，很难实现也很难想到。但按照BNF来，就可以正确且完整地实现。</p>
+<p>对应表的构造时的3类字节码，即key为栈上变量、字符串常量和小整型，这里也新增3个ExpDesc的类型，分别为<code>Index</code>、<code>IndexField</code>和<code>IndexInt</code>。在discharge时，新增3个对应的字节码，<code>GetTable</code>、<code>GetField</code>和<code>GetInt</code>。这样自然而然就解决了本节开头的第一个问题，也就是实现了表的读操作，而且是正确且完整地实现！</p>
+<p>依照BNF规则来编码的另一个特点是，就只能看懂每个匹配分支内部的处理逻辑了，而看不清楚每个分支间的整体关系了。这就像解物理应用题，首先分析物理原理，列出方程，其中的每一项都有对应的物理含义；但是之后在求解方程时，具体求解步骤就已经完全脱离了物理对应关系，就是一个数学工具。</p>
+<p>上面列出了<code>prefixexp()</code>函数，另外<code>exp()</code>函数的实现也类似，这里省略。</p>
+<h2 id="表的写操作和赋值语句"><a class="header" href="#表的写操作和赋值语句">表的写操作和赋值语句</a></h2>
+<p>在按照BNF实现了prefixexp和exp后，就可以解决本节开头的关于表的写操作的问题。按照BNF重新实现赋值语句，即可解决问题。这次要实现的是“完整的赋值语句”，终于不用再强调是“变量赋值语句”了。</p>
+<p>赋值语句虽然看上去跟局部变量定义语句很像，但实际完全不一样，要复杂的多。BNF中赋值语句定义如下：</p>
+<pre><code>varlist ‘=’ explist
+varlist ::= var {‘,’ var}
+var ::=  Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name 
+</code></pre>
+<p>赋值符<code>=</code>左边是<code>var</code>列表。<code>var</code>展开为3个种类。第一个<code>Name</code>是变量，目前支持局部变量和全局变量，后续引入闭包后还会支持upvalue。后面两个都是表索引。由此可以看到赋值只支持这几种，而其他类型比如函数调用就不支持赋值。再看<code>=</code>右边，是表达式列表，直接使用已经完成的<code>exp()</code>函数解析。</p>
+<p>看完赋值语句的BNF语法规则，还有3个语义规则。</p>
+<p>首先，<code>=</code>左右两边的变量数跟表达式数不相等时的做法：</p>
+<ul>
+<li>如果两者相等，则逐一赋值；</li>
+<li>如果变量数小于表达式数，则变量列表跟对应的表达式列表逐一赋值，而额外多出的表达式忽略；</li>
+<li>如果变量数大于表达式数，则表达式列表跟对应的变量列表逐一赋值，而额外多出的变量被赋值为<code>nil</code>。</li>
+</ul>
+<p>其次，如果<code>=</code>右边最后一个表达式有多个值（比如函数调用和可变参数），则会尽量展开。不过我们现在还不支持这两个类型，所以暂时忽略这种情况。</p>
+<p>最后，先对<code>=</code>右边的所有表达式求值，然后再赋值。而不是边求值边赋值。比如下面Lua语句，应该先对右边两个表达式<code>b</code>和<code>a</code>求值得到<code>2</code>和<code>1</code>，然后再分别赋值给左边的<code>a</code>和<code>b</code>。于是完成了两个变量的交换。但是如果边求值边赋值，就是先对右边的<code>b</code>求值，得到<code>2</code>，赋值给<code>a</code>。然后再对右边的<code>a</code>求值，得到刚被赋值的<code>2</code>，再赋值给<code>b</code>。最终结果就是两个变量都会为<code>2</code>。</p>
+<pre><code class="language-lua">local a, b = 1, 2
+a, b = b, a  -- swap 2 variables !!!
+</code></pre>
+<p>下面的图描述了<strong>错误</strong>的执行过程：</p>
+<pre><code>            +-------+
+    /--(1)--|   a   |&lt;------\
+    |       +-------+       |
+    \------&gt;|   b   |--(2)--/
+            +-------+
+            |       |
+</code></pre>
+<p>既然要先全部求值，那求得的值就要先存到一个地方，自然就是栈顶，作为临时变量。下面的图描述了<strong>正确</strong>的执行过程：</p>
+<pre><code>             +-------+
+    /---(1)--|   a   |&lt;-------\
+    |        +-------+        |
+    |  /-(2)-|   b   |&lt;----\  |
+    |  |     +-------+     |  |
+    \-------&gt;|  tmp1 |-(3)-/  |
+       |     +-------+        |
+       \----&gt;|  tmp2 |--(4)---/
+             +-------+
+             |       |            
+</code></pre>
+<p>图中，(1)和(2)是对表达式求值，放到栈顶临时位置；(3)和(4)是赋值，把栈顶临时位置的值赋给变量。</p>
+<p>这种做法的功能是正确的，但性能比较差。因为每个赋值都需要2次操作，先求值再赋值，也就需要2条字节码。但是大部分情况下本来只需要1次操作即可，比如把一个局部变量赋值给另外一个局部变量，本来只需要一条<code>Move</code>字节码即可。尤其是程序中最常见的赋值语句是单个变量的赋值，单个变量就无所谓顺序了，也就不用先求值到临时变量了。所以上述这种先求值到栈顶然后再赋值的做法，就是<strong>为了少数情况的正确性，而牺牲了多数情况的性能</strong>。这种情况在编程中是比较常见的。通用的解决办法是，对<strong>多数情况</strong>增加一个quick path，比如我们现在的情况可以用如下逻辑：</p>
+<pre><code>if 单个变量 then
+    var = exp  // 直接赋值，quick path
+else // 多个变量
+    tmp_vars = exp_list  // 先全部求值到临时变量 
+    var_list = tmp_vars  // 再统一赋值
+</code></pre>
+<p>不过，对于这个具体问题，有更优雅的解决办法。这里的关键是，在多重赋值的情况里，最后一个变量的赋值是不依赖其他变量的赋值的，就可以直接赋值而无需先求值到临时变量的。所以新的方案是：对最后这个变量做特殊处理（直接赋值），其他变量仍然先求值再赋值。这样对于单个变量的赋值语句（单个变量自然就是最后一个变量）这种情况，就退变为直接赋值。这样即保证了多个变量的正确性，也保证了大多数情况（单个变量）的性能。漂亮！</p>
+<p>下图描述了这种方案：对于前面的变量<code>a</code>先求值到栈顶临时变量，对于最后一个变量<code>b</code>直接赋值，然后依次把栈顶临时变量赋值给对应变量。</p>
+<pre><code>             +-------+
+    /---(1)--|   a   |&lt;------\
+    |        +-------+       |
+    |        |   b   |--(2)--/
+    |        +-------+ &lt;-------\
+    \-------&gt;|  tmp1 |--(3)----/
+             +-------+
+             |       |
+</code></pre>
+<p>既然我们是最先执行的最后一个表达式的赋值，那么将错就错，前面的表达式也按照倒序来赋值。这样全部表达式就都是按照倒序赋值了。</p>
+<p>至此，介绍完了赋值语句的语法和语义规则。接下来就是重写<code>assignment()</code>函数。函数主体逻辑如下：</p>
+<ol>
+<li>调用<code>prefixexp()</code>读取左值列表，保存为ExpDesc；</li>
+<li>调用<code>exp()</code>读取右值表达式列表，最后一个表达式保留ExpDesc，剩余表达式均discharge到栈顶；</li>
+<li>对齐左值和右值的数量；</li>
+<li>赋值，先把最后一个表达式赋值给最后一个左值，然后把栈顶的临时变量依次赋值给对应的左值。</li>
+</ol>
+<p>具体代码这里省略。下面只详细介绍第4步，赋值。</p>
+<h2 id="执行赋值"><a class="header" href="#执行赋值">执行赋值</a></h2>
+<p>赋值语句由左值和右值组成：</p>
+<ul>
+<li>
+<p>每个左值由<code>prefixexp()</code>函数读取，返回ExpDesc类型。但由BNF可知赋值语句只支持变量和表索引，其中变量包括局部变量和全局变量，分别对应<code>Local</code>和<code>Global</code>这2个ExpDesc类型，表索引又有<code>Index</code>、<code>IndexField</code>和<code>IndexInt</code>这3个ExpDesc类型，加起来一共5种类型。</p>
+</li>
+<li>
+<p>每个右值由<code>exp()</code>函数读取，也返回ExpDesc类型，并且支持任意的ExpDesc类型。</p>
+</li>
+</ul>
+<p>综上，左边5种类型，右边N种类型（N是ExpDesc的全部类型数量），一共就有5N个组合。有点多，需要梳理下。</p>
+<p>首先，对于左值是局部变量的情况，赋值就相当于是把表达式discharge到局部变量的栈位置。调用<code>discharge()</code>函数即可。这个函数已经处理了ExpDesc的全部N种类型。</p>
+<p>剩下的4种左值类型就有些复杂了，不过这4种情况是类似的，下面先用全局变量<code>Global</code>类型为例介绍。</p>
+<p>在之前的<a href="./ch02-03.assignment.html#%E8%B5%8B%E5%80%BC%E7%9A%84%E7%BB%84%E5%90%88">赋值</a>小节中介绍了赋值的几种组合。对于左值是全局变量的情况，右值支持了3种表达式类型：常量、局部变量、和全局变量，当时为了简单起见，分别直接生成<code>SetGlobalConst</code>、<code>SetGlobal</code>、<code>SetGlobalGlobal</code>这3个字节码。现在可以预见后面会有更多类型的表达式，比如本节增加的表的读取（如<code>t.k</code>），还有后续要增加的如UpValue、运算（如<code>a+b</code>）等。如果每新增一种类型就新加一个字节码，会变得很复杂。</p>
+<p>而且表索引和运算这种表达式需要2个参数来表示，而这系列全局变量的赋值字节码，塞不进2个参数来表示赋值的源表达式（一个字节码最多支持3个u8类型的参数，这系列字节码需要1个参数来表示目的地址，看上去是可以用2个参数来表示源表达式的。但通过luac的输出可以看到Lua官方的全局变量赋值字节码<code>SETTABUP</code>是有3个参数，除了表示源和目的地址的2个参数外，还有1个额外参数。虽然现在还不清楚多出的那个参数的作用，但先假设后续我们也会用上那个参数，于是我们这系列字节码留给源表达式的也就只有1个参数位置了）。那么对这种复杂的表达式该如何处理？答案是先把这些复杂表达式求值到栈顶，作为临时变量，就是<code>Local</code>类型了，然后再使用<code>SetGlobal</code>来完成赋值。</p>
+<p>这就出现了两个极端：</p>
+<ul>
+<li>之前的做法是对每种源表达式类型都定义一个字节码；</li>
+<li>刚才讨论的方案是把所有类型都先discharge到栈上，然后只用一个<code>SetGlobal</code>字节码。</li>
+</ul>
+<p>在这两个极端中间，我们参考Lua官方实现的选择，即为常量类型（ExpDesc的<code>String</code>、<code>Float</code>等类型）定义一个字节码，而其他类型都先discharge到栈上，转换为<code>Local</code>类型。虽然常量类型实际上不是一种具体的类型（包括了<code>String</code>、<code>Float</code>等多个类型），但处理方式是一样的，通过<code>add_const()</code>函数加到常量表中，并用常量表索引来表示，所以在处理赋值语句时，可以看着是一个类型。于是，我们的右值表达式就简化为了两种类型：常量和栈上变量<code>Local</code>！Lua的官方实现中，全局变量赋值的<code>SETTABUP</code>字节码是通过1个bit来表示源表达式是常量还是栈上变量。我们的字节码的生成不方便精确操作bit，所以新增一个字节码<code>SetGlobalConst</code>来表示常量。</p>
+<p>Lua官方实现为什么对常量特殊对待，而对其他类型（如全局变量、UpValue、表索引等）却没有优化？个人猜测有两个原因：</p>
+<ul>
+<li>
+<p>如果一个全局变量或UpValue或表索引被频繁访问以至于有优化的必要，那么可以简单的创建一个局部变量来优化，比如<code>local print = print</code>。而对常量来说，很多时候赋值给局部变量是不合适的，比如把一条赋值语句<code>g = 100</code>修改为<code>local h = 100; g = a</code>就显得很别扭，多此一举。</p>
+</li>
+<li>
+<p>访问全局变量是根据变量名查表的，是相对比较耗时的操作，相比而言增加一条字节码的代价就不明显。访问其他类型也类似。而访问常量是通过索引直接引用的，增加一条字节码的代价相对就很大了。</p>
+</li>
+</ul>
+<p>至此，介绍完了全局变量的赋值，而表索引的赋值（即表的写操作）是类似的，对于3种类型<code>Index</code>、<code>IndexField</code>和<code>IndexInt</code>，分别定义<code>SetTable</code>、<code>SetField</code>、<code>SetInt</code>和<code>SetTableConst</code>、<code>SetFieldConst</code>、<code>SetIntConst</code>共6个字节码。</p>
+<p>最终，赋值的代码如下：</p>
+<pre><code class="language-rust ignore">    // process assignment: var = value
+    fn assign_var(&amp;mut self, var: ExpDesc, value: ExpDesc) {
+        if let ExpDesc::Local(i) = var {
+            // self.sp will be set to i+1 in self.discharge(), which is
+            // NOT expected, but it's ok because self.sp will not be used
+            // before next statement.
+            self.discharge(i, value);
+        } else {
+            match self.discharge_const(value) {
+                ConstStack::Const(i) =&gt; self.assign_from_const(var, i),
+                ConstStack::Stack(i) =&gt; self.assign_from_stack(var, i),
+            }
+        }
+    }
+
+    fn assign_from_stack(&amp;mut self, var: ExpDesc, value: usize) {
+        let code = match var {
+            ExpDesc::Local(i) =&gt; ByteCode::Move(i as u8, value as u8),
+            ExpDesc::Global(name) =&gt; ByteCode::SetGlobal(name as u8, value as u8),
+            ExpDesc::Index(t, key) =&gt; ByteCode::SetTable(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) =&gt; ByteCode::SetField(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) =&gt; ByteCode::SetInt(t as u8, key, value as u8),
+            _ =&gt; panic!(&quot;assign from stack&quot;),
+        };
+        self.byte_codes.push(code);
+    }
+
+    fn assign_from_const(&amp;mut self, var: ExpDesc, value: usize) {
+        let code = match var {
+            ExpDesc::Global(name) =&gt; ByteCode::SetGlobalConst(name as u8, value as u8),
+            ExpDesc::Index(t, key) =&gt; ByteCode::SetTableConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) =&gt; ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) =&gt; ByteCode::SetIntConst(t as u8, key, value as u8),
+            _ =&gt; panic!(&quot;assign from const&quot;),
+        };
+        self.byte_codes.push(code);
+    }
+</code></pre>
+<p>至此，按照BNF重新了赋值语句，自然也就支持了表的读写操作。</p>
+<h2 id="赋值语句和函数调用语句"><a class="header" href="#赋值语句和函数调用语句">赋值语句和函数调用语句</a></h2>
+<p>现在回过头来看本节最开始提出的3个问题的最后一个问题，即语法分析时如何区分赋值语句和函数调用语句。</p>
+<p>先来开赋值语句的BNF表示：</p>
+<pre><code>varlist ‘=’ explist
+varlist ::= var {‘,’ var}
+var ::=  Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name 
+</code></pre>
+<p>语句开头是<code>varlist</code>，展开后是变量<code>var</code>，再展开是<code>Name</code>和<code>prefixexp</code>。<code>Name</code>对应<code>Token::Name</code>，但<code>prefixexp</code>还需要继续展开。下面是其定义：</p>
+<pre><code>prefixexp ::= var | functioncall | ‘(’ exp ‘)’
+functioncall ::=  prefixexp args | prefixexp ‘:’ Name args 
+</code></pre>
+<p>其中第一个<code>var</code>又回到刚才赋值语句的开头，循环引用了，忽略。最后一个是<code>(</code>开头，也很简单。中间的<code>functioncall</code>展开后也是<code>prefixexp</code>开头，也是循环引用，但这次不能忽略，因为<code>functioncall</code>本身也是一条完整的语句，就是说如果一个语句以<code>prefixexp</code>开头，那既可能是赋值语句，也可能是函数调用语句。这两个语句如何区分？在上一节里说明了，赋值语句的左值只能是变量和表索引这两种类型，而函数调用不能作为左值。这就是区分的关键！</p>
+<p>综上，最终的解析逻辑是：如果是<code>Name</code>或<code>(</code>开头，则按照<code>prefixexp</code>解析，并判断解析结果：</p>
+<ul>
+<li>如果是函数调用，则认为是一个完整的<code>functioncall</code>语句；</li>
+<li>否则，就认为是赋值语句，而本次解析结果只是赋值语句的第一个<code>var</code>。</li>
+</ul>
+<p>为此，在ExpDesc中新增函数调用类型<code>Call</code>并让函数调用语句<code>args()</code>返回。在<code>load()</code>函数里，这部分的代码如下：</p>
+<pre><code class="language-rust ignore">            match self.lex.next() {
+                Token::SemiColon =&gt; (),
+                t@Token::Name(_) | t@Token::ParL =&gt; {
+                    // functioncall and var-assignment both begin with
+                    // `prefixexp` which begins with `Name` or `(`.
+                    let desc = self.prefixexp(t);
+                    if desc == ExpDesc::Call {
+                        // prefixexp() matches the whole functioncall
+                        // statement, so nothing more to do
+                    } else {
+                        // prefixexp() matches only the first variable, so we
+                        // continue the statement
+                        self.assignment(desc);
+                    }
+                }
+</code></pre>
+<h2 id="总结"><a class="header" href="#总结">总结</a></h2>
+<p>本节通过BNF重新了赋值语句的解析，最终实现了表的读写操作。另外还有局部变量定义的语句，也需要按照BNF重新，相对很简单，这里省略介绍。</p>
+<p>至此，本章完成了表的定义、构造和读写这些基本操作。并为此引入了非常重要的ExpDesc概念和BNF规则。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-04.expdesc_rewrite.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch05-00.arithmetic_ops.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-04.expdesc_rewrite.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch05-00.arithmetic_ops.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

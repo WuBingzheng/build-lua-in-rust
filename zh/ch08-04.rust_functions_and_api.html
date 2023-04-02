@@ -1,0 +1,341 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rust函数和API - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html" class="active"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="rust函数和api"><a class="header" href="#rust函数和api">Rust函数和API</a></h1>
+<p>本章前面三节介绍的是在Lua中定义的函数，本节来介绍在Rust中定义的函数。后续简单起见，分别称这两类函数为“Lua函数”和“Rust函数”。</p>
+<p>其实我们已经接触过Rust函数了，在第一章<code>hello, world!</code>版本的时候就已经支持的<code>print()</code>就是Rust函数。当时的解释器就实现了Rust函数的定义和调用流程。其中定义如下：</p>
+<pre><code class="language-rust ignore">pub enum Value {
+    RustFunction(fn (&amp;mut ExeState) -&gt; i32),
+</code></pre>
+<p>这里以<code>print()</code>函数的实现代码为例：</p>
+<pre><code class="language-rust ignore">fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
+    println!(&quot;{}&quot;, state.stack[state.base + 1]);
+    0
+}
+</code></pre>
+<p>而Rust函数的调用方法也跟Lua函数类似，也是在<code>Call</code>字节码中调用Rust函数：</p>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, _) =&gt; {
+        let func = &amp;self.stack[func as usize];
+        if let Value::Function(f) = func {
+            f(self);
+</code></pre>
+<p>上面罗列的代码都是已经实现的Rust函数的功能，不过也只是最基本的定义和调用，还是缺少参数和返回值。本节为Rust函数增加这两个特性。</p>
+<p>需要说明的一点是在Lua代码中，函数调用语句是不区分Lua函数和Rust函数的。换句话说，在语法分析阶段是不区分这两种类型的。只是在虚拟机执行阶段，才需要对两种类型区别处理。所以，本节下面介绍的都是虚拟机阶段。</p>
+<h2 id="参数"><a class="header" href="#参数">参数</a></h2>
+<p>Rust函数的参数也是通过栈来传递的。</p>
+<p>可以看到当前<code>print()</code>函数的实现只支持一个参数，是通过直接读取栈上数据：<code>state.stack[state.base + 1])</code>，其中<code>self.base</code>是函数入口地址，<code>+1</code>就是后面紧跟的地址，也就是第一个参数。</p>
+<p>现在要支持多个参数，就要通知Rust函数具体的参数个数。有两个方案：</p>
+<ul>
+<li>修改Rust函数原型定义，新增一个参数，表达参数的个数。这个方案实现简单，但是跟Lua官方的C函数原型不一致；</li>
+<li>采用之前Lua函数中可变参数的机制，即通过栈顶位置来确定参数个数。</li>
+</ul>
+<p>我们采取后面的方案。这需要在调用函数Rust前清理掉栈顶可能的临时变量：</p>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, narg_plus) =&gt; {
+        let func = &amp;self.stack[func as usize];
+        if let Value::Function(f) = func {
+            // narg_plus!=0，固定参数，需要清理栈顶可能的临时变量
+            // narg_plus==0，可变参数，无需清理
+            if narg_plus != 0 {
+                self.stack.truncate(self.base + narg_plus as usize - 1);
+            }
+
+            f(self);
+</code></pre>
+<p>在清理掉栈顶可能的临时变量后，在Rust函数中就可以通过栈顶来判断具体的参数个数了：<code>state.stack.len() - state.base</code>；也可以直接读取任意的参数，比如第N个参数：<code>state.stack[state.base + N])</code>。于是改造<code>print()</code>函数如下：</p>
+<pre><code class="language-rust ignore">fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
+    let narg = state.stack.len() - state.base; // 参数个数
+    for i in 0 .. narg {
+        if i != 0 {
+            print!(&quot;\t&quot;);
+        }
+        print!(&quot;{}&quot;, state.stack[state.base + i]); // 打印第i个参数
+    }
+    println!(&quot;&quot;);
+    0
+}
+</code></pre>
+<h2 id="返回值"><a class="header" href="#返回值">返回值</a></h2>
+<p>Rust函数的返回值也是通过栈来传递的。Rust函数在退出前把返回值放到栈顶，并返回数量，也就是Lua函数原型的<code>i32</code>类型返回值的功能。这跟上一节介绍的Lua函数的机制一样。只需要在<code>Call</code>字节码执行时，按照上一节中介绍的Lua函数返回值的方式来处理Rust函数的返回值即可：</p>
+<pre><code class="language-rust ignore">    ByteCode::Call(func, narg_plus) =&gt; {
+        let func = &amp;self.stack[func as usize];
+        if let Value::Function(f) = func {
+            if narg_plus != 0 {
+                self.stack.truncate(self.base + narg_plus as usize - 1);
+            }
+
+            // 返回Rust函数返回值的个数，跟Lua函数一致
+            f(self) as usize
+</code></pre>
+<p>把Rust函数<code>f()</code>的返回值从<code>i32</code>转换为<code>usize</code>类型并返回，表示返回值的个数。这里<code>i32</code>到<code>usize</code>的类型转换是扎眼的，这是因为Lua官方实现中C函数用返回负数来代表失败。我们到目前为止对所有的错误都是直接panic。后续章节会统一处理错误，届时使用<code>Option&lt;usize&gt;</code>来代替<code>i32</code>后，就会去掉这个扎眼的转换。</p>
+<p>之前的<code>print()</code>函数没有返回值，返回<code>0</code>，所以并没有体现出返回值这个特性。下面用带返回值的另一个Lua标准库函数<a href="https://www.lua.org/manual/5.4/manual.html#pdf-type"><code>type()</code></a>举例。这个函数的功能是返回第一个参数的类型，返回值的类型是字符串，比如&quot;nil&quot;、&quot;string&quot;、&quot;number&quot;等。</p>
+<pre><code class="language-rust ignore">fn lib_type(state: &amp;mut ExeState) -&gt; i32 {
+    let ty = state.stack[state.base + 1].ty();  // 第一个参数的类型
+    state.stack.push(ty);  // 把结果压到栈上
+    1  // 只有1个返回值
+}
+</code></pre>
+<p>这其中的<code>ty()</code>函数是对<code>Value</code>类型新增的方法，返回类型描述，这里省略具体代码。</p>
+<h2 id="rust-api"><a class="header" href="#rust-api">Rust API</a></h2>
+<p>至此实现了Rust函数的参数和返回值的特性。但是上面对参数和返回值的访问和处理方式太过直接，给Rust函数的能力太强，不仅可以访问当前函数的参数，还可以方法整个栈空间，甚至整个<code>state</code>状态。这是不合理的，也是危险的。需要限制Rust函数对<code>state</code>状态的访问，包括整个栈，这就需要通过API来提供Rust函数访问<code>state</code>的有限的能力。我们来到了一个新的世界：Rust API，当然在Lua官方实现中被称为<a href="https://www.lua.org/manual/5.4/manual.html#4">C API</a>。</p>
+<p>Rust API是由Lua解释器提供的，给Rust函数（Rust实现的Lua库）使用的API。其角色如下：</p>
+<pre><code>    +------------------+
+    |      Lua代码      |
+    +---+----------+---+
+        |          |
+        |   +------V------+
+        |   | 标准库（Rust）|
+        |   +------+------+
+        |          |
+        |          |Rust API
+        |          |
+    +---V----------V---+
+    |  Lua虚拟机（Rust） |
+    +------------------+
+</code></pre>
+<p>上面小节中Rust函数中有3个功能需求就都应该由API来完成：</p>
+<ul>
+<li>读取实际参数个数；</li>
+<li>读取指定参数；</li>
+<li>创建返回值</li>
+</ul>
+<p>下面依次介绍这3个需求。首先是读取实际参数个数的功能，对应Lua官方实现中<a href="https://www.lua.org/manual/5.4/manual.html#lua_gettop"><code>lua_gettop()</code></a> API。为此我们提供<code>get_top()</code> API：</p>
+<pre><code class="language-rust ignore">impl&lt;'a&gt; ExeState {
+    // 返回栈顶，即参数个数
+    pub fn get_top(&amp;self) -&gt; usize {
+        self.stack.len() - self.base
+    }
+</code></pre>
+<p>这个<code>get_top()</code>函数虽然也是<code>ExeState</code>结构的方法，但是是作为API提供给外部调用的。而<code>ExeState</code>之前的方法（比如<code>execute()</code>、<code>get_stack()</code>等）都是虚拟机执行调用的内部方法。为了区分这两类方法，我们给<code>ExeState</code>结构新增一个<code>impl</code>块单独用来实现API，以增加可读性。只不过Rust中不允许在不同文件内实现结构体的方法，所以不能拆到另外一个文件中。</p>
+<p>然后，读取指定参数的功能，这在Lua官方实现中并不是对应一个函数，而是一系列函数，比如<code>lua_toboolean()</code>、<code>lua_tolstring()</code>等，分别针对不同的类型。而借助Rust语言的泛型能力，我们就可以只提供一个API：</p>
+<pre><code class="language-rust ignore">    pub fn get&lt;T&gt;(&amp;'a self, i: isize) -&gt; T where T: From&lt;&amp;'a Value&gt; {
+        let narg = self.get_top();
+        if i &gt; 0 {  // 正数索引，从self.base计数
+            let i = i as usize;
+            if i &gt; narg {
+                panic!(&quot;invalid index: {i} {narg}&quot;);
+            }
+            (&amp;self.stack[self.base + i - 1]).into()
+        } else if i &lt; 0 {  // 负数索引，从栈顶计数
+            let i = -i as usize;
+            if i &gt; narg  {
+                panic!(&quot;invalid index: -{i} {narg}&quot;);
+            }
+            (&amp;self.stack[self.stack.len() - i]).into()
+        } else {
+            panic!(&quot;invalid 0 index&quot;);
+        }
+    }
+</code></pre>
+<p>可以看到这个API也支持负数索引，表示从栈顶开始倒数，这是Lua官方API的行为，也是很常见的使用方法。这也体现出API比直接访问栈的优势。</p>
+<p>但是，这里也有跟官方API不一致的行为：当索引超出栈范围时，官方会返回<code>nil</code>，但我们这里就直接panic。后续在介绍到错误处理时再详细讨论这里。</p>
+<p>基于上述两个API，就可以重新<code>print()</code>函数：</p>
+<pre><code class="language-rust ignore">fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
+    for i in 1 ..= state.get_top() {
+        if i != 1 {
+            print!(&quot;\t&quot;);
+        }
+        print!(&quot;{}&quot;, state.get::&lt;&amp;Value&gt;(i).to_string());
+    }
+    println!(&quot;&quot;);
+    0
+}
+</code></pre>
+<p>最后再来看最后一个功能，创建返回值。跟上面读取参数的API一样，在Lua官方实现里也对应一系列函数，比如<code>lua_pushboolean()</code>、<code>lua_pushlstring()</code>等。而这里也可以借助泛型只增加一个API：</p>
+<pre><code class="language-rust ignore">    pub fn push(&amp;mut self, v: impl Into&lt;Value&gt;) {
+        self.stack.push(v.into());
+    }
+</code></pre>
+<p>基于这个API，上面<code>type()</code>函数最后一行的<code>self.stack.push()</code>就可以修改为<code>self.push()</code>。</p>
+<p>虽然替换API后，<code>print()</code>和<code>type()</code>函数的实现并没有明显变化，但是API对<code>ExeState</code>提供了封装，在后续逐步增加库函数的过程中，会慢慢体现出方便性和安全性。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch08-03.results.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch08-05.tail_call.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch08-03.results.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch08-05.tail_call.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

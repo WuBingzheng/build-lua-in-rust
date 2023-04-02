@@ -1,0 +1,309 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>类型转换 - 用Rust实现Lua解释器</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">前言</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> 编译原理基础</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> 字节码</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> 值和类型</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> 动手实现</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> 变量和赋值</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> 更多类型</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> 局部变量</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> 变量赋值</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> 字符串优化</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> 字符串定义</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html" class="active"><strong aria-hidden="true">3.2.</strong> 类型转换</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> 输入类型</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode和UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> 垃圾回收和Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> 表和ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> 表的定义</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> 表的构造</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc概念</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc改造</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> 表的读写和BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> 数值运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> 一元运算</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> 二元运算</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> 整数和浮点数</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> 控制结构</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if语句</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif和else分支</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while和break语句</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat和continue语句</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> 数值型for语句</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto语句</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> 逻辑运算和关系运算</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> 条件判断中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> 求值中的逻辑运算</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> 条件判断中的关系运算</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> 求值中的关系运算</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> 函数</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> 定义和调用</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> 参数</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> 返回值</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust函数和API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> 尾调用</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> 闭包</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue的逃逸和闭包</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> block和goto的逃逸</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust闭包</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> 泛型for语句</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> 环境 _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">未完待续</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">参考文献</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">用Rust实现Lua解释器</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="类型转换"><a class="header" href="#类型转换">类型转换</a></h1>
+<p>上一节在<code>Value</code>类型中引入了3个字符串类型，在创建字符串类型时需要根据长度来生成不同类型。这个判断不应该交给调用者，而应该自动完成。比如现有的语句：</p>
+<pre><code class="language-rust ignore">    self.add_const(Value::String(var));
+</code></pre>
+<p>就应该改成：</p>
+<pre><code class="language-rust ignore">    self.add_const(str_to_value(var));
+</code></pre>
+<p>其中<code>str_to_value()</code>函数就把字符串<code>var</code>转换成<code>Value</code>对应的字符串类型。</p>
+<h2 id="from-trait"><a class="header" href="#from-trait">From trait</a></h2>
+<p>这种从一种类型转换（或者称为生成）另外一种类型的功能非常常见，所以Rust标准库中为此定义了<code>From</code>和<code>Into</code>trait。这两个互为相反操作，一般只需要实现<code>From</code>即可。下面就实现了字符串<code>String</code>类型到<code>Value</code>类型的转换：</p>
+<pre><code class="language-rust ignore">impl From&lt;String&gt; for Value {
+    fn from(s: String) -&gt; Self {
+        let len = s.len();
+        if len &lt;= SHORT_STR_MAX {
+            // 长度在[0-14]的字符串
+            let mut buf = [0; SHORT_STR_MAX];
+            buf[..len].copy_from_slice(s.as_bytes());
+            Value::ShortStr(len as u8, buf)
+
+        } else if len &lt;= MID_STR_MAX {
+            // 长度在[15-47]的字符串
+            let mut buf = [0; MID_STR_MAX];
+            buf[..len].copy_from_slice(s.as_bytes());
+            Value::MidStr(Rc::new((len as u8, buf)))
+
+        } else {
+            // 长度大于47的字符串
+            Value::LongStr(Rc::new(s))
+        }
+    }
+}
+</code></pre>
+<p>然后，本节开头的语句就可以改用<code>into()</code>函数：</p>
+<pre><code class="language-rust ignore">    self.add_const(var.into());
+</code></pre>
+<h2 id="泛型"><a class="header" href="#泛型">泛型</a></h2>
+<p>至此，本节开头的需求已经完成。不过既然字符串可以这么做，那其他类型也可以。而且其他类型的转换更直观。下面仅列出两个数字类型到<code>Value</code>类型的转换：</p>
+<pre><code class="language-rust ignore">impl From&lt;f64&gt; for Value {
+    fn from(n: f64) -&gt; Self {
+        Value::Float(n)
+    }
+}
+
+impl From&lt;i64&gt; for Value {
+    fn from(n: i64) -&gt; Self {
+        Value::Integer(n)
+    }
+}
+</code></pre>
+<p>然后，向常量表里添加数字类型的<code>Value</code>也可以通过<code>into()</code>函数：</p>
+<pre><code class="language-rust ignore">    let n = 1234_i64;
+    self.add_const(Value::Integer(n));  // 旧方式
+    self.add_const(n.into());  // 新方式
+</code></pre>
+<p>这么看上去似乎有点小题大做。但如果把所有可能转换为<code>Value</code>的类型都实现<code>From</code>，那么就可以把<code>.into()</code>放到<code>add_const()</code>内部了：</p>
+<pre><code class="language-rust ignore">    fn add_const(&amp;mut self, c: impl Into&lt;Value&gt;) -&gt; usize {
+        let c = c.into();
+</code></pre>
+<p>这里只列出了这个函数的前2行代码。下面就是添加常量的原有逻辑了，这里省略。</p>
+<p>先看第2行代码，把<code>.into()</code>放到<code>add_const()</code>函数内部，那么外部在调用的时候就不用<code>.into()</code>了。比如前面添加字符串和整数的语句可以简写成：</p>
+<pre><code class="language-rust ignore">    self.add_const(var);
+    self.add_const(n);
+</code></pre>
+<p>现有代码中很多地方都可以这么修改，就会变得清晰很多，那对这些类型实现<code>From</code> trait就很值得了。</p>
+<p>然而问题来了：上述的2行代码里，两次<code>add_const()</code>函数调用接受的参数的类型不一致！那函数定义中，这个参数类型怎么写？答案就在上面<code>add_const()</code>函数的定义中：<code>c: impl Into&lt;Value&gt;</code>。其完整写法如下：</p>
+<pre><code class="language-rust ignore">    fn add_const&lt;T: Into&lt;Value&gt;&gt;(&amp;mut self, c: T) -&gt; usize {
+</code></pre>
+<p>这个定义的意思是：参数类型为<code>T</code>，其约束为<code>Into&lt;Value&gt;</code>，即这个<code>T</code>需要能够转换为<code>Value</code>，而不能把随便一个什么类型或数据结构加到常量表里。</p>
+<p>这就是Rust语言中的<a href="https://kaisery.github.io/trpl-zh-cn/ch10-01-syntax.html">泛型</a>！我们并不完整地介绍泛型，很多书籍和文章里已经介绍的很清楚了。这里只是提供了一个泛型的应用场景，来具体体验泛型。其实我们很早就使用了泛型，比如全局变量表的定义：<code>HashMap&lt;String, Value&gt;</code>。大部分情况下，是由一些库来<strong>定义</strong>带泛型的类型和函数，而我们只是<strong>使用</strong>。而这里的<code>add_const()</code>是<strong>定义</strong>了一个带泛型的函数。下一节也会再介绍一个泛型的使用实例。</p>
+<h2 id="反向转换"><a class="header" href="#反向转换">反向转换</a></h2>
+<p>上面是把基础类型转换为<code>Value</code>类型。但在某些情况下需要反向的转换，即把<code>Value</code>类型转换为对应的基础类型。比如虚拟机的全局变量表是以字符串类型为索引的，而全局变量的名字是存储在<code>Value</code>类型的常量表中的，所以就需要把<code>Value</code>类型转换为字符串类型才能作为索引使用。其中对全局变量表的读操作和写操作，又有不同，其对应的HashMap的API分别如下：</p>
+<pre><code class="language-rust ignore">pub fn get&lt;Q: ?Sized&gt;(&amp;self, k: &amp;Q) -&gt; Option&lt;&amp;V&gt; // 省略了K,Q的约束
+pub fn insert(&amp;mut self, k: K, v: V) -&gt; Option&lt;V&gt;
+</code></pre>
+<p>读写的区别是，读<code>get()</code>函数的参数<code>k</code>是引用，而写<code>insert()</code>函数的参数<code>k</code>是索引本身。原因也简单，读时只是用一下索引，而写时是要把索引添加到字典里的，是要消费掉<code>k</code>的。所以我们要实现<code>Value</code>类型对字符串类型本身和其引用的转换，即<code>String</code>和<code>&amp;String</code>。但对于后者，我们用<a href="https://kaisery.github.io/trpl-zh-cn/ch04-03-slices.html#%E5%AD%97%E7%AC%A6%E4%B8%B2-slice-%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0">更通用的<code>&amp;str</code></a>来代替。</p>
+<pre><code class="language-rust ignore">impl&lt;'a&gt; From&lt;&amp;'a Value&gt; for &amp;'a str {
+    fn from(v: &amp;'a Value) -&gt; Self {
+        match v {
+            Value::ShortStr(len, buf) =&gt; std::str::from_utf8(&amp;buf[..*len as usize]).unwrap(),
+            Value::MidStr(s) =&gt; std::str::from_utf8(&amp;s.1[..s.0 as usize]).unwrap(),
+            Value::LongStr(s) =&gt; s,
+            _ =&gt; panic!(&quot;invalid string Value&quot;),
+        }
+    }
+}
+
+impl From&lt;&amp;Value&gt; for String {
+    fn from(v: &amp;Value) -&gt; Self {
+        match v {
+            Value::ShortStr(len, buf) =&gt; String::from_utf8_lossy(&amp;buf[..*len as usize]).to_string(),
+            Value::MidStr(s) =&gt; String::from_utf8_lossy(&amp;s.1[..s.0 as usize]).to_string(),
+            Value::LongStr(s) =&gt; s.as_ref().clone(),
+            _ =&gt; panic!(&quot;invalid string Value&quot;),
+        }
+    }
+}
+</code></pre>
+<p>这里的两个转换调用的函数名不一样，<code>std::str::from_utf8()</code>和<code>String::from_utf8_lossy()</code>。前者不带<code>_lossy</code>而后者带。其中原因在于UTF-8等，后续在介绍<a href="./ch03-04.unicode_utf8.html">UTF8</a>时详细介绍。</p>
+<p>另外，这个反向转换是可能失败的，比如把一个字符串的<code>Value</code>类型转换为一个整数类型。但这涉及到错误处理，我们在后续统一梳理错误处理后再做修改。这里仍然使用<code>panic!()</code>来处理可能的失败。</p>
+<blockquote>
+<p>后续在支持了<a href="./ch09-06.environment.html">环境</a>后，会用Lua的表类型和Upvalue来重新实现全局变量表，届时索引就直接是<code>Value</code>类型了，这里的转换也就没必要了。</p>
+</blockquote>
+<p>在虚拟机执行的代码中，读写全局变量表时，分别通过两次<code>into()</code>就完成<code>Value</code>类型到字符串的转换：</p>
+<pre><code class="language-rust ignore">                ByteCode::GetGlobal(dst, name) =&gt; {
+                    let name: &amp;str = (&amp;proto.constants[name as usize]).into();
+                    let v = self.globals.get(name).unwrap_or(&amp;Value::Nil).clone();
+                    self.set_stack(dst.into(), v);
+                }
+                ByteCode::SetGlobal(name, src) =&gt; {
+                    let name = &amp;proto.constants[name as usize];
+                    let value = self.stack[src as usize].clone();
+                    self.globals.insert(name.into(), value);
+                }
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-01.string_type.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="ch03-03.read_input.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-01.string_type.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="ch03-03.read_input.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
