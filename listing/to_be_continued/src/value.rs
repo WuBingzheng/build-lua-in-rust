@@ -213,13 +213,13 @@ impl Value {
     }
 
     pub fn concat(&self, v2: &Self) -> Self {
-        let s1: &[u8] = self.into();
+        let s1: &[u8] = self.as_ref();
 
         match v2 {
             Value::Integer(_) => todo!("int"),
             Value::Float(_) => todo!("float"),
             _ => {
-                let s2: &[u8] = v2.into();
+                let s2: &[u8] = v2.as_ref();
                 let l1 = s1.len();
                 let l2 = s2.len();
                 if l1 + l2 < MID_STR_MAX {
@@ -323,9 +323,9 @@ fn vec_to_short_mid_str(v: &[u8]) -> Option<Value> {
     }
 }
 
-impl<'a> From<&'a Value> for &'a [u8] {
-    fn from(v: &'a Value) -> Self {
-        match v {
+impl AsRef<[u8]> for Value {
+    fn as_ref(&self) -> &[u8] {
+        match self {
             Value::ShortStr(len, buf) => &buf[..*len as usize],
             Value::MidStr(s) => &s.1[..s.0 as usize],
             Value::LongStr(s) => s,
@@ -334,15 +334,9 @@ impl<'a> From<&'a Value> for &'a [u8] {
     }
 }
 
-impl<'a> From<&'a Value> for &'a str {
-    fn from(v: &'a Value) -> Self {
-        std::str::from_utf8(v.into()).unwrap()
-    }
-}
-
-impl From<&Value> for String {
-    fn from(v: &Value) -> Self {
-        String::from_utf8_lossy(v.into()).to_string()
+impl AsRef<str> for Value {
+    fn as_ref(&self) -> &str {
+        std::str::from_utf8(self.as_ref()).unwrap()
     }
 }
 
