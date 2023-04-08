@@ -11,5 +11,5 @@ git-repository-url = "https://github.com/WuBingzheng/build-lua-in-rust"
 [[output.i18n.translations]]
 language = "en"
 translators = ["Google Translate"]
-title = "Build a Lua interpreter in Rust"
+title = "Build a Lua Interpreter in Rust"
 src = "translations/en"
