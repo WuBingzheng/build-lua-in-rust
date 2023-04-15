@@ -1,6 +1,6 @@
 # Preface
 
-> This series was [written in Chinese](https://wubingzheng.github.io/build-lua-in-rust/zh/) originally. This Engine version is mainly translated by [Google Translate](https://translate.google.com/). So please forgive me for the terrible writing.
+> This series was [written in Chinese](https://wubingzheng.github.io/build-lua-in-rust/zh/) originally. This English version is mainly translated by [Google Translate](https://translate.google.com/). So please forgive me for the terrible writing.
 
 This series of articles introduces the implementation of a Lua interpreter from scratch in the Rust language.
 
