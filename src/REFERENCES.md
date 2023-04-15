@@ -8,7 +8,7 @@
 
 - 《自己动手实现Lua》，跟本系列文章很像，也是从零实现一个Lua解释器。但是这本书是以Lua官方实现里的字节码定义为出发点，先实现虚拟机去执行字节码，然后再实现编译器去生成字节码。而我们这系列文章是以Lua语言手册为出发点，设计并实现编译过程、虚拟机、字节码定义等。
 
-- [Why is there no continue statement?](https://www.luafaq.org/#T1.26)，对Lua中为什么没有continue语句的解释。但并不完整。
+- [Why is there no continue statement?](https://www.luafaq.org/#T1.26)，对Lua中为什么没有continue语句的解释。
 
 - [《Rust程序设计语言》](https://kaisery.github.io/trpl-zh-cn/)，Rust官方教程。
 
@@ -32,7 +32,7 @@
 
 - [A Survey of Rust Embeddable Scripting Languages](https://www.boringcactus.com/2020/09/16/survey-of-rust-embeddable-scripting-languages.html)，对几个可以在Rust中使用的脚本语言（包括Lua）在使用方式上的对比。
 
-- [Implement TryFrom for float to integer types](https://github.com/rust-lang/rust/pull/47857)，
+- [Implement TryFrom for float to integer types](https://github.com/rust-lang/rust/pull/47857)。
 
 - [Floating Point Arcade](https://gist.github.com/CrockAgile/09065649ae5a52629599ebc5645922d6)，把整型随机数转换为浮点数的介绍。
 

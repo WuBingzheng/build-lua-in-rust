@@ -1,8 +1,8 @@
 # Preface
 
-This series of articles introduces the implementation of a Lua interpreter from scratch in the Rust language.
+> This series was [written in Chinese](https://wubingzheng.github.io/build-lua-in-rust/zh/) originally. This Engine version is mainly translated by [Google Translate](https://translate.google.com/). So please forgive me for the terrible writing.
 
-> This series was originally [written in Chinese](https://wubingzheng.github.io/build-lua-in-rust/zh/). Here is the translated version with Google Translate.
+This series of articles introduces the implementation of a Lua interpreter from scratch in the Rust language.
 
 The Rust language has a distinctive personality and is also [widely popular](https://survey.stackoverflow.co/2022/?utm_source=so-owned&utm_medium=announcement-banner&utm_campaign=dev-survey-2022&utm_content=results#section-most-loved-dreaded-and-wanted-programming-scripting-and-markup-languages), however the learning curve is steep. After I finished reading ["Rust Programming Language"](https://doc.rust-lang.org/stable/book/title-page.html) and wrote some practice codes, I deeply felt that I had to go through a larger project practice to understand and master.
 

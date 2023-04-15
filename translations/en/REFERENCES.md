@@ -1,16 +1,12 @@
-# references
+# References
 
 - [Lua 5.4 Reference Manual](https://www.lua.org/manual/5.4/), which is also the requirements document for this project.
 
-- "Lua Programming (4th Edition)", the official Lua tutorial. Although it is based on the Lua 5.3 version, it has little impact due to the [not many changes] (http://www.lua.org/manual/5.4/readme.html#changes) of the 5.4 version.
-
-- "Lua Design and Implementation", it feels like a source code reading note of Lua's official implementation. It directly talks about the details of the code implementation, and it is very difficult to read when you first get started.
-
-- "Implementing Lua by Yourself", which is very similar to this series of articles, also implements a Lua interpreter from scratch. But this book is based on the bytecode definition in the official implementation of Lua as the starting point. First implement the virtual machine to execute the bytecode, and then implement the compiler to generate the bytecode. And our series of articles is based on the Lua language manual, designing and implementing the compilation process, virtual machine, bytecode definition, etc.
+- "Lua Programming (4th Edition)", the official Lua tutorial. Although it is based on the Lua 5.3 version, it has little impact due to the [not many changes](http://www.lua.org/manual/5.4/readme.html#changes) of the 5.4 version.
 
 - [Why is there no continue statement?](https://www.luafaq.org/#T1.26), an explanation of why there is no continue statement in Lua.
 
-- [《Rust Programming Language》](https://kaisery.github.io/trpl-zh-cn/), the official Rust tutorial.
+- [《Rust Programming Language》](https://doc.rust-lang.org/stable/book/title-page.html), the official Rust tutorial.
 
 - [Official Rust Documentation](https://doc.rust-lang.org/), mainly refer to the standard library part.
 
@@ -32,8 +28,12 @@
 
 - [A Survey of Rust Embeddable Scripting Languages](https://www.boringcactus.com/2020/09/16/survey-of-rust-embeddable-scripting-languages.html), for several that can be used in Rust A comparison of the usage of different scripting languages (including Lua).
 
-- [Implement TryFrom for float to integer types](https://github.com/rust-lang/rust/pull/47857),
+- [Implement TryFrom for float to integer types](https://github.com/rust-lang/rust/pull/47857).
 
 - [Floating Point Arcade](https://gist.github.com/CrockAgile/09065649ae5a52629599ebc5645922d6), an introduction to converting integer random numbers to floating point numbers.
 
 - [The Rust Performance Book](https://nnethercote.github.io/perf-book/title-page.html).
+
+- 《Lua设计与实现》, it feels like a source code reading note of Lua's official implementation. It directly talks about the details of the code implementation, and it is very difficult to read when you first get started.
+
+- 《自己动手实现Lua》, which is very similar to this series of articles, also implements a Lua interpreter from scratch. But this book is based on the bytecode definition in the official implementation of Lua as the starting point. First implement the virtual machine to execute the bytecode, and then implement the compiler to generate the bytecode. And our series of articles is based on the Lua language manual, designing and implementing the compilation process, virtual machine, bytecode definition, etc.
