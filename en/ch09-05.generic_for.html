@@ -1,0 +1,347 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>generic-for Statement - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html" class="active"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="generic-for-statement"><a class="header" href="#generic-for-statement">generic-for Statement</a></h1>
+<p>Closures were introduced in the previous sections of this chapter. The most typical application scenario of a closure is an iterator, and the most common place for an iterator is a <code>for</code> statement. So much so that &quot;Lua Programming&quot; and <a href="https://doc.rust-lang.org/stable/book/ch13-00-functional-features.html">&quot;Rust Programming Language&quot;</a> both put Closures, iterators, and the <code>for</code> statement introduced together. The <code>for</code> statement in the Lua language has two formats, numeric and generic. <a href="./ch06-05.numerical-for.html">Previously</a> has introduced the numerical-for statement, this section introduces the generic-for statement using iterators.</p>
+<p>After introducing closures, the concept of an iterator itself is straightforward. The counter closure that has been used as an example in the previous sections of this chapter can be regarded as an iterator, which generates an incremented number each time. Let's look at a slightly more complex iterator to traverse the array part of a table. This is also the function of the <code>ipairs()</code> function that comes with the Lua language:</p>
+<pre><code class="language-lua">function ipairs(t)
+     local i = 0
+     return function ()
+         i = i + 1
+         local v = t[i]
+         if v then
+             return i, v
+         end
+     end
+end
+</code></pre>
+<p>In the above code, <code>ipairs()</code> is a factory function that creates and returns a closure as an iterator. This iterator has 2 upvalues, one is the fixed table <code>t</code>, and the other is the traversed position <code>i</code>. We can call these two upvalues as &quot;iteration environments&quot;. During the traversal process, the iterator returns the index and value of the array; when the traversal ends, it does not return a value, and it can also be considered as returning <code>nil</code>.</p>
+<p>This iterator can be called directly, but is more commonly used in a generic-for statement:</p>
+<pre><code class="language-lua">-- call the iterator directly
+local iter = ipairs(t)
+while true do
+     local i, v = iter()
+     if not i then break end
+     block -- do something
+end
+
+-- used in a generic-for statement
+for i, v in ipairs(t) do
+     block -- do something
+end
+</code></pre>
+<p>The use of iterators is certainly very convenient, but the previous sections also introduced that creating a closure requires additional overhead compared to creating a normal function, that is, both Lua closures and Rust closures require 2 extra times Memory allocation and 2 pointer jumps. Therefore, the generic for statement in the Lua language is specially optimized for this purpose, that is, the generic for statement itself replaces the closure to save the &quot;iteration environment&quot; (that is, 2 upvalues). Since there is no need for upvalue, the iterator does not need to use closures, but only ordinary functions.</p>
+<p>Specifically, the <a href="https://www.lua.org/manual/5.4/manual.html#3.3.5">grammar</a> of the generic for statement is as follows:</p>
+<pre><code>stat ::= for namelist in explist do block end
+namelist ::= Name {‘,’ Name}
+</code></pre>
+<p>Its execution process is as follows:</p>
+<ul>
+<li>
+<p>At the beginning of the loop, <code>explist</code> is evaluated to get 3 values: the iteration function, the immutable state, and the control variable. In most cases, <code>explist</code> is a function call statement, so the evaluation follows the evaluation rules of the function return value, that is, if there are less than 3, it will be filled with nil, and if it exceeds 3, the excess will be discarded. Of course, instead of using a function call, you can directly list 3 values.</p>
+</li>
+<li>
+<p>Then, before each execution of the loop, use the latter two values (immutable state and control variables) as parameters to call the iteration function, and judge the first return value: if it is nil, terminate the loop; otherwise, assign the return value to <code>namelist</code>, and additionally assign the first return value to the control variable as a parameter for subsequent calls to the iteration function.</p>
+</li>
+</ul>
+<p>It can be seen that the three values returned by <code>explist</code> are put together to form a closure function: the iteration function is the function prototype, and the latter two are upvalues. It's just that the generic-for statement helps maintain these two upvalues. Using this feature of the generic-for statement, reimplement the above iterator for traversing the array as follows:</p>
+<pre><code class="language-lua">local function iter(t, i) -- both t and i are changed from upvalue to parameter
+     i = i + 1
+     local v = t[i]
+     if v then
+         return i, v
+     end
+end
+
+function ipairs(t)
+     return iter, t, 0
+end
+</code></pre>
+<p>Compared with the closure version above, here both <code>t</code> and <code>i</code> have changed from upvalue to parameters, and <code>iter</code> has become an ordinary function.</p>
+<p>From this point of view, the generic-for statement can be completed without the need for a closure (such as after the function was introduced in the previous chapter). But after all, this is an optimization based on closures. Only by mastering closures can we understand why we do this. That's why we implement the generic-for statement after introducing closures.</p>
+<p>In addition, the function call statement <code>ipairs(t)</code> here only returns 3 variables, and these 3 variables can also be listed directly in the generic for statement:</p>
+<pre><code class="language-lua">for i, v in ipairs(t) do ... end
+for i, v in iter, t, 0 do ... end -- directly list 3 variables
+</code></pre>
+<p>The following direct list method omits a function call, but it is inconvenient. So the first one is more common.</p>
+<p>After introducing the characteristics of the generic-for statement in Lua, let's start to implement it.</p>
+<h2 id="accomplish"><a class="header" href="#accomplish">Accomplish</a></h2>
+<p>According to the above introduction, the generic-for statement saves and maintains the iteration environment by itself. Where is that saved? Naturally, it is still on the stack. Just like the numerical-for statement will automatically create 3 variables (1 count variable and 2 anonymous variables) on the stack, the generic-for statement also needs to automatically create 3 anonymous variables, corresponding to the above iteration environment: iteration function, immutable state, control variables. These 3 variables are obtained after evaluating <code>explist</code>, as shown in the stack diagram shown in the left figure below:</p>
+<pre><code>|           |        |           |     |           |
++-----------+        +-----------+     +-----------+
+| iter func |entry   | iter func |     | iter func |
++-----------+        +-----------+     +-----------+
+| state     |\       | state     |     | state     |
++-----------+ 2args  +-----------+     +-----------+
+| ctrl var  |/       | ctrl var  |     | ctrl var  |&lt;--first return value
++-----------+        +-----------+   -&gt;+-----------+
+|           |        :           :  /  | name-     | i
+                     +-----------+ /   | list      | v
+                     | return-   |-    |           |
+                     | values    |
+                     |           |
+</code></pre>
+<p>Next, the loop is executed, including three steps: calling the iterative function, judging whether to continue the loop, and controlling variable assignment.</p>
+<p>First, the iteration function <code>iter func</code> is called with the immutable state <code>state</code> and the control variable <code>ctrl var</code> as two parameters. Look at the stack diagram in the left figure, it has just been arranged into a function call formation, so the function can be called directly;</p>
+<p>Secondly, after calling the function (the middle picture above), judge whether the first return value is nil, if so, exit the loop; if there is no return value, also exit the loop; otherwise, continue to execute the loop. Before executing the loop body, the return value needs to be processed (right picture above):</p>
+<ul>
+<li>
+<p>Assign the first return value to the control variable (ctrl-var in the above figure) as the parameter for the next call to the iterative function;</p>
+</li>
+<li>
+<p>Assign the return value to the variable list, which is <code>namelist</code> in the above BNF. For example, in the above example of traversing the array, it is <code>i, v</code>. If the number of return values is less than the variable list, it will be filled with nil. This padding operation is consistent with ordinary function calls. The inconsistency is that the return value of an ordinary function call will be moved to the function entry, which is the position of <code>iter func</code> in the above figure; but here it is shifted down by 3 positions.</p>
+</li>
+</ul>
+<p>One thing that needs to be explained here is that the control variable <code>ctrl-var</code> is the first name of <code>namelist</code>. So in fact, there is no need to reserve a place for <code>ctrl-var</code> on the stack; after calling the iterative function each time, just move all the return values directly to the place of <code>ctrl-var</code> in the figure, so that the first return value happens to be where <code>ctrl-var</code> is. The figure below is a comparison of the two schemes. The left picture is the original plan, which specially reserved the position for <code>ctrl-var</code>; the right picture is the new plan, which only needs 2 anonymous variables to save the iteration environment, and <code>ctrl-var</code> overlaps with the first name:</p>
+<pre><code> |           |      |           |
+ +-----------+      +-----------+
+ | iter func |      | iter func |
+ +-----------+      +-----------+
+ | state     |      | state     |
+ +-----------+      +-----------+
+ | ctrl var  |     i| name-     | &lt;--ctrl var
+ +-----------+     v| list      |
+i| name-     |      |           |
+v| list      |
+ |           |
+</code></pre>
+<p>The solution on the right is simpler, with one less variable assignment. And under normal circumstances, the functions of the two programs are the same. But in one case, the function will be different, that is, when the control variable is modified in the loop body. For example, the following sample code:</p>
+<pre><code class="language-lua">for i, v in ipairs(t) do
+     i = i + 1 -- modify the control variable `i`
+     print(i)
+end
+</code></pre>
+<p>According to the scheme in the left figure above, the <code>i</code> modified here is a variable exposed to programmers, and the control variable <code>ctrl var</code> is a hidden anonymous variable, and these two variables are independent. So modifications to <code>i</code> do not affect the control variable <code>ctrl var</code>. So this loop can still traverse the entire array.</p>
+<p>According to the scheme on the right, <code>i</code> and <code>ctrl var</code> are the same value, and modifying <code>i</code> means modifying <code>ctrl var</code>, which affects the next iteration function call, and eventually leads to the failure to traverse the entire array normally.</p>
+<p>Which behavior is more reasonable? <a href="https://www.lua.org/manual/5.4/manual.html#3.3.5">Lua Manual</a> explains: You should not change the value of the control variable during the loop. In other words, there is no clear definition of this behavior, so any solution is fine. However, the official implementation of Lua is based on the behavior in the left picture. In order to maintain consistency, we also choose the left picture here.</p>
+<h2 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h2>
+<p>The above describes the operation of the generic-for statement in the loop. These operations require a new bytecode <code>ForCallLoop</code> to complete.</p>
+<p>Before defining this bytecode, let's see where this bytecode should be placed? Is it the beginning of the loop, or the end of the loop? If you follow the Lua code, it should be placed at the beginning of the loop, and then generate a <code>Jump</code> bytecode at the end of the loop to jump back and continue the loop, like this:</p>
+<pre><code>ForCallLoop # If calling the iteration function returns nil, jump to the end
+... block ...
+Jump (back-to-ForCallLoop)
+</code></pre>
+<p>But in this case, 2 bytecodes are executed for each loop, <code>ForCallLoop</code> at the beginning and <code>Jump</code> at the end. To reduce the bytecode once, we can put <code>ForCallLoop</code> at the end of the loop, so that only 2 bytecodes need to be executed in the first loop, and only 1 bytecode needs to be executed in each subsequent loop:</p>
+<pre><code>Jump (forward-to-ForCallLoop)
+... block ...
+ForCallLoop # If the return of calling the iteration function is not nil, then jump to the above block
+</code></pre>
+<p>After determining the bytecode location, let's look at the definition. This bytecode needs to be associated with 3 parameters:</p>
+<ul>
+<li>the stack index of the iteration function <code>iter func</code>;</li>
+<li>The number of variables used for the assignment of the return value. If the number of return values is less than the number of variables, you need to fill in nil;</li>
+<li>Jump distance.</li>
+</ul>
+<p>Both the first two parameters can be represented by 1 byte, so there is only 1 byte left for the final jump distance, which can only represent a distance of 255, which is not enough. For this reason, we can only add a <code>Jump</code> bytecode to complete this function. However, in most cases, the loop body is not large, and the distance does not exceed 255. It is a bit wasteful to add another bytecode for a small number of large loop bodies. The best thing to do in this situation is to:</p>
+<ul>
+<li>For the small loop body, the jump distance can be programmed into <code>ForCallLoop</code> bytecode, only this 1 bytecode is used;</li>
+<li>For the large loop body, set the jump distance of the third parameter in the <code>ForCallLoop</code> bytecode to 0, and add a <code>Jump</code> bytecode to cooperate.</li>
+</ul>
+<p>In this way, when the virtual machine is executed:</p>
+<ul>
+<li>In the case where the loop needs to jump backwards: for a small loop body, jump directly according to the third parameter; for a large loop body, the third parameter is 0, actually jump to the next Jump bytecode, and then Execute the jump of the loop body again.</li>
+<li>In the case where the loop needs to continue to execute forward: for small loop bodies, no special processing is required; for large loop bodies, the next Jump bytecode needs to be skipped.</li>
+</ul>
+<p>In summary, the bytecode <code>ForCallLoop</code> is defined as follows:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     ForCallLoop(u8, u8, u8),</code></pre>
+<p>The specific syntax analysis and virtual machine execution code are omitted here.</p>
+<p>At this point, the generic-for statement is completed. We also finished <a href="https://www.lua.org/manual/5.4/manual.html#9">all the syntax of Lua</a>! (Applause please!)</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch09-04.rust_closure.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch09-06.environment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch09-04.rust_closure.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch09-06.environment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Variable Assignment - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html" class="active"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="variable-assignment"><a class="header" href="#variable-assignment">Variable Assignment</a></h1>
+<p>In the program that prints &quot;hello, world!&quot; at the beginning of Chapter 1, we support global variables, namely the <code>print</code> function. However, it only supports <em>access</em>, but not <em>assignment</em> or <em>creation</em>. Now the only global variable <code>print</code> is manually added to the global variable table when creating a virtual machine. In the previous section, we implemented the definition and access of local variables, but assignment is also not supported. This section will implement <em>assignment</em> of global variables and local variables.</p>
+<p>The assignment of simple variables is relatively simple, but the complete assignment statement in Lua is very complicated, such as <code>t[f()] = 123</code>. Here we first realize the variable assignment, and then briefly introduce the difference between the complete assignment statement.</p>
+<h2 id="combination-of-assignments"><a class="header" href="#combination-of-assignments">Combination of Assignments</a></h2>
+<p>The variable assignment statements to be supported in this section are expressed as follows:</p>
+<pre><code>Name = exp
+</code></pre>
+<p>The left side of the equal sign <code>=</code> (lvalue) currently has two categories, local variables and global variables; the right side is the expression <code>exp</code> in the previous chapter, which can be roughly divided into three categories: constants, local variables, and global variables. So this is a 2*3 combination:</p>
+<ul>
+<li>
+<p><code>local = const</code>, load the constant to the specified location on the stack, corresponding to the bytecode <code>LoadNil</code>, <code>LoadBool</code>, <code>LoadInt</code> and <code>LoadConst</code>, etc.</p>
+</li>
+<li>
+<p><code>local = local</code>, copy the value on the stack, corresponding to the bytecode <code>Move</code>.</p>
+</li>
+<li>
+<p><code>local = global</code>, assign the value on the stack to the global variable, corresponding to the bytecode <code>GetGlobal</code>.</p>
+</li>
+<li>
+<p><code>global = const</code>, to assign a <em>constant</em> to a global variable, you need to add the constant to the constant table first, and then complete the assignment through the bytecode <code>SetGlobalConst</code>.</p>
+</li>
+<li>
+<p><code>global = local</code>, assign <em>local variable</em> to global variable, corresponding to bytecode <code>SetGlobal</code>.</p>
+</li>
+<li>
+<p><code>global = global</code>, assign <em>global variable</em> to global variable, corresponding to bytecode <code>SetGlobalGlobal</code>.</p>
+</li>
+</ul>
+<p>Among these 6 cases, the first 3 are assigned to local variables. The <code>load_exp()</code> function in the previous section has been implemented and will not be introduced here. The latter three are assigned to global variables, and three new bytecodes are added accordingly. The parameter format of these 3 bytecodes is similar, and they all have 2 parameters, which are:</p>
+<ol>
+<li>The index of the name of the target global variable in the constant table, similar to the second parameter of the previous <code>GetGlobal</code> bytecode. So in these three cases, you need to add the name of the global variable to the constant table first.</li>
+<li>Source index, the three bytecodes are: the index in the constant table, the address on the stack, and the index of the name of the global variable in the constant table.</li>
+</ol>
+<p>The fourth case above, that is <code>global = const</code>, handles all constant types with only one bytecode, not like <a href="./ch02-01.more_types.html#syntax-analysis">previous local variables</a> which set different bytecodes for some types (such as <code>LoadNil</code>, <code>LoadBool</code>, etc.). This is because <em>local variables</em> are located directly through the index on the stack, and the virtual machine executes its assignment very quickly. If the source data can be inlined into the bytecode and reduce the access to the constant table once, it can be significantly proportional performance improvement. However, accessing <em>global variables</em> requires a table lookup, and the execution of the virtual machine is slow. At this time, the performance improvement brought by the inline source data is relatively small, so it is unnecessary. After all, more bytecodes bring more complexity in the parsing and execution stages.</p>
+<h2 id="lexical-analysis"><a class="header" href="#lexical-analysis">Lexical Analysis</a></h2>
+<p>Originally, function calls and local variable definitions were supported, but now variable assignment statements are added. as follows:</p>
+<pre><code>Name String
+Name ( exp )
+localName = exp
+Name = exp # add new
+</code></pre>
+<p>There is a problem here. The newly added <em>variable assignment</em> statement also starts with <code>Name</code>, which is the same as <em>function call</em>. Therefore, based on the indistinguishability of the first token at the beginning, it is necessary to &quot;peek&quot; forward at another token: if it is an equal sign <code>=</code>, it is a variable assignment statement, otherwise it is a function call statement. The &quot;peek&quot; here is in quotation marks to emphasize that it is a real <em>peek</em> but not <em>take</em> the token, because the subsequent statement analysis still needs to use this token. To this end, the lexical analysis also adds a <code>peek()</code> method:</p>
+<pre><code class="language-rust  ignore">    pub fn next(&amp;mut self) -&gt; Token {
+        if self.ahead == Token::Eos {
+            self.do_next()
+        } else {
+            mem::replace(&amp;mut self.ahead, Token::Eos)
+        }
+    }
+
+    pub fn peek(&amp;mut self) -&gt; &amp;Token {
+        if self.ahead == Token::Eos {
+            self.ahead = self.do_next();
+        }
+        &amp;self.ahead
+    }</code></pre>
+<p>The <code>ahead</code> is a newly added field in the <code>Lex</code> structure, which is used to save the Token that is parsed from the character stream but cannot be returned. According to the convention of Rust language, this <code>ahead</code> should be of type <code>Option&lt;Token&gt;</code>, <code>Some(Token)</code> means that there is a Token read ahead, and <code>None</code> means there is no Token. But for the same reason as <code>next()</code><a href="./ch01-04.lets_do_it.html#lexical-analysis">return value type</a>, the <code>Token</code> type is directly used here, and <code>Token::Eos</code> is used to represent no Read Token in advance.</p>
+<p>The original external <code>next()</code> function is changed to <code>do_next()</code> internal function, which is called by the newly added <code>peek()</code> and new <code>next()</code> functions.</p>
+<p>The newly added <code>peek()</code> function returns <code>&amp;Token</code> instead of <code>Token</code>, because the owner of the Token is still Lex, and it has not been handed over to the caller. Just &quot;lending&quot; it to the caller to &quot;look&quot;. If the caller not only wants to &quot;see&quot; but also &quot;change&quot;, then <code>&amp;mut Token</code> is needed, but we only need to look, and do not need to change. Now that there is <code>&amp;</code> borrowing, it involves <a href="https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html">lifetime</a> in Rust. Since this function has only one input lifetime parameter, that is <code>&amp;mut self</code>, according to <a href="https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html#lifetime-elision">elision rules</a>, which is given to all output lifetime parameters, the annotation of the lifetime can be omitted below. This default lifetime means to the compiler that the legal cycle of the returned reference <code>&amp;Token</code> is less than or equal to the input parameter, namely <code>&amp;mut self</code>, that is, <code>Lex</code> itself.</p>
+<blockquote>
+<p>I personally think that the owner of variables, borrowing (reference), and variable borrowing are the core concepts of the Rust language. The concept itself is very simple, but it takes a period of in-depth struggle with the compiler to understand it deeply. The concept of lifetime is based on the above-mentioned core concepts, but it is also slightly more complicated and needs to be understood in practice.</p>
+</blockquote>
+<p>The new <code>next()</code> is a simple wrapper for the original <code>do_next()</code> function, which handles the Token that may be stored in <code>ahead</code> and peeked before: if it exists, it will directly return this Token without calling<code> do_next()</code>. But this &quot;direct return&quot; in Rust is not very straightforward. Since <code>Token</code> type is not <code>Copy</code> (because its <code>String(String)</code> type is not <code>Copy</code>), so <a href="https://doc.rust-lang.org/stable/book/ch04-01-what-is-ownership.html#memory-and-allocation">cannot return directly</a>. The simple solution is to use <code>Clone</code>, but the meaning of Clone is to tell us that there is a price to pay, for example, for string type, we need to copy the string content; and we don't need 2 copies of strings, because the Token is returned. After that, we don't need this Token anymore. So the result we need now is: return the Token in <code>ahead</code>, and <em>simultaneously</em> clean up <code>ahead</code> (here naturally set to represent &quot;no&quot; <code>Token::Eos</code>). This scene is very similar to the gif of &quot;Raiders of the Lost Ark&quot; that is widely circulated on the Internet (search for &quot;Raiders of the Lost Ark gif&quot; on the internet), and the sandbag in the hand &quot;replaces&quot; the treasure on the mechanism. &quot;Replace&quot; here is a keyword, and this requirement can be fulfilled with the <code>std::mem::replace()</code> function in the standard library. This requirement is so common (at least very common in C language projects) that it feels surprised to use such a long-name function to achieve it. But it is precisely because of these restrictions that the security promised by Rust is guaranteed. But if <code>ahead</code> is of <code>Option&lt;Token&gt;</code> type, then you can use the <code>take()</code> method of <code>Option</code>, which looks simpler and has exactly the same function.</p>
+<h2 id="syntax-analysis"><a class="header" href="#syntax-analysis">Syntax Analysis</a></h2>
+<p>With the increase of functions, there will be more and more internal codes in the big cycle of syntax analysis, so we first put each statement into an independent function, namely <code>function_call()</code> and <code>local()</code>, and then add variable assignment statement <code>assignment()</code>. The <code>peek()</code> function added in the lexical analysis just now is used here:</p>
+<pre><code class="language-rust  ignore">     fn chunk(&amp;mut self) {
+         loop {
+             match self. lex. next() {
+                 Token::Name(name) =&gt; {
+                     if self.lex.peek() == &amp;Token::Assign {
+                         self. assignment(name);
+                     } else {
+                         self. function_call(name);
+                     }
+                 }
+                 Token::Local =&gt; self. local(),
+                 Token::Eos =&gt; break,
+                 t =&gt; panic!(&quot;unexpected token: {t:?}&quot;),
+             }
+         }
+     }</code></pre>
+<p>Then look at the <code>assignment()</code> function:</p>
+<pre><code class="language-rust  ignore">     fn assignment(&amp;mut self, var: String) {
+         self. lex. next(); // `=`
+
+         if let Some(i) = self. get_local(&amp;var) {
+             // local variable
+             self. load_exp(i);
+         } else {
+             // global variable
+             let dst = self.add_const(var) as u8;
+
+             let code = match self. lex. next() {
+                 // from const values
+                 Token::Nil =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::Nil) as u8),
+                 Token::True =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::Boolean(true)) as u8),
+                 Token::False =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::Boolean(false)) as u8),
+                 Token::Integer(i) =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::Integer(i)) as u8),
+                 Token::Float(f) =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::Float(f)) as u8),
+                 Token::String(s) =&gt; ByteCode::SetGlobalConst(dst, self.add_const(Value::String(s)) as u8),
+
+                 // from variable
+                 Token::Name(var) =&gt;
+                     if let Some(i) = self. get_local(&amp;var) {
+                         // local variable
+                         ByteCode::SetGlobal(dst, i as u8)
+                     } else {
+                         // global variable
+                         ByteCode::SetGlobalGlobal(dst, self. add_const(Value::String(var)) as u8)
+                     }
+
+                 _ =&gt; panic!(&quot;invalid argument&quot;),
+             };
+             self.byte_codes.push(code);
+         }
+     }</code></pre>
+<p>For the case where the lvalue is a local variable, call <code>load_exp()</code> to handle it. For the case of global variables, according to the type of the expression on the right, generate <code>SetGlobalConst</code>, <code>SetGlobal</code> and <code>SetGlobalGlobal</code> bytecodes respectively.</p>
+<h2 id="test"><a class="header" href="#test">Test</a></h2>
+<p>Use the following code to test the above six variable assignments:</p>
+<pre><code class="language-lua">local a = 456
+a = 123
+print(a)
+a = a
+print(a)
+a = g
+print(a)
+g = 123
+print(g)
+g = a
+print(g)
+g = g2
+print(g)
+</code></pre>
+<p>Execution is as expected. The specific execution results will no longer be posted.</p>
+<h2 id="complete-assignment-statement"><a class="header" href="#complete-assignment-statement">Complete Assignment Statement</a></h2>
+<p>The function of the above variable assignment is very simple, but the complete assignment statement of Lua is very complicated. Mainly manifested in the following two places:</p>
+<p>First of all, the left side of the equal sign <code>=</code> now only supports local variables and global variables, but the assignment of table fields is also supported in the complete assignment statement, such as <code>t.k = 123</code>, or the more complex <code>t[f()+g ()] = 123</code>. The above <code>assignment()</code> function is difficult to add table support. For this reason, it is necessary to add an intermediate expression layer, that is, the <code>ExpDesc</code> structure introduced by the subsequent chapter.</p>
+<p>Second, the expression following the equal sign <code>=</code> is now divided into 3 categories, for 3 bytecodes. If we want to introduce other types of expressions later, such as upvalue, table index (such as <code>t.k</code>), or operation results (such as <code>a+b</code>), do we have to add a bytecode to each type? The answer is, no. But this will involve some problems that have not been encountered yet, so it is not easy to explain. If not, what needs to be done? This also involves the <code>ExpDesc</code> mentioned above.</p>
+<p>We will implement Lua's complete assignment statement in the future, and the current assignment code will be completely discarded at that time.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch02-02.local.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch03-00.optimize_string.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch02-02.local.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch03-00.optimize_string.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

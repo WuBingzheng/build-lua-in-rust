@@ -1,0 +1,446 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Binary Operations - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html" class="active"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="binary-operations"><a class="header" href="#binary-operations">Binary operations</a></h1>
+<p>Compared with the unary operation in the previous section, although the binary operation only has one more operand, it introduces many problems, mainly including BNF left recursion, priority, operand type, and evaluation order, etc.</p>
+<h2 id="bnf-left-recursive"><a class="header" href="#bnf-left-recursive">BNF Left Recursive</a></h2>
+<p>The complete syntax of the binary operation statement in Lua is as follows:</p>
+<pre><code>exp ::= nil | false | true | Numeral | LiteralString | '...' | functiondef |
+prefixexp | tableconstructor | exp binop exp | unop exp
+</code></pre>
+<p>For simplicity, the other parts are simplified to <code>OTHERS</code>, then we get:</p>
+<pre><code>exp ::= exp binop exp | OTHERS
+</code></pre>
+<p>It is a left recursion rule, we need to <a href="./ch04-05.table_rw_and_bnf.html#eliminate-left-recursion">eliminate left recursion</a> according to the method introduced before, and get:</p>
+<pre><code>exp ::= OTHERS A'
+A' := binop exp A' | Epsilon
+</code></pre>
+<p>The previous <code>exp()</code> function only implemented the <code>OTHERS</code> part of the first line above, and now we need to add the <code>A'</code> part of the second line, which is also a recursive reference, which is implemented using a loop. Modify the <code>exp()</code> function structure as follows:</p>
+<pre><code class="language-rust  ignore">     fn exp(&amp;mut self) -&gt; ExpDesc {
+         // OTHERS
+         let mut desc = match self. lex. next() {
+             // The original various OTHERS type processing is omitted here
+         };
+
+         // A' := binop exp A' | Epsilon
+         while is_binop(self. lex. peek()) {
+             let binop = self.lex.next(); // operator
+             let right_desc = self.exp(); // second operand
+             desc = self. process_binop(binop, desc, right_desc);
+         }
+         desc
+     }</code></pre>
+<p>Among them, the second operand right_desc is also recursively called <code>exp()</code> function to read, which leads to a problem: priority.</p>
+<h2 id="priority"><a class="header" href="#priority">Priority</a></h2>
+<p>In the unary operation statement in the previous section, the <code>exp()</code> function is also called recursively to read the operand, but because there is only one operand, so no need for priority. Or we can say that all unary operators have the same priority. And unary operators are right associative. For example, the following two examples of consecutive unary operations are executed in order from right to left, regardless of the specific operator:</p>
+<ul>
+<li><code>~ -10</code>, take negative first, then invert bit by bit,</li>
+<li><code>- ~10</code>, first bitwise invert, then negative.</li>
+</ul>
+<p>But for the binary operation statement, it is necessary to consider the priority. For example, the following two statements:</p>
+<ul>
+<li><code>a + b - c</code>, perform the previous addition first, and then perform the subsequent subtraction,</li>
+<li><code>a + b * c</code>, perform the subsequent multiplication first, and then perform the previous addition.</li>
+</ul>
+<p>Corresponding to the <code>exp()</code> function code above, the <code>OTHERS</code> part at the beginning reads the first operand <code>a</code>; then reads the operator <code>+</code> in the <code>while</code> loop; and then calls the <code>exp()</code> function recursively to read the right operand, so it needs to be calculated at this time. Also take the above two sentences as an example:</p>
+<ul>
+<li><code>a + b - c</code>, end after reading <code>b</code> and use it as the right operand; then perform addition <code>a + b</code>; and then loop through the following <code>- c</code> part again;</li>
+<li><code>a + b * c</code>, after reading <code>b</code>, continue down, read and execute the entire <code>b * c</code> and use the execution result as the right operand; then perform addition; and end the loop.</li>
+</ul>
+<pre><code>     -             +
+   /   \         /   \
+  +     c       a     *
+/   \               /   \
+a   b               b   c
+</code></pre>
+<p>So in syntax analysis, how to judge which of the above situations is the case? After reading <code>b</code>, should we stop parsing and calculate addition first, or continue parsing? It depends on the <em>priorities</em> of the next operator and the current operator:</p>
+<ul>
+<li>When the priority of the next operator is <em>not greater than</em> the current operator, it is the first case, stop parsing and complete the current operation first;</li>
+<li>When the priority of the next operator is <em>greater than</em> the current operator, it is the second case and needs to continue parsing.</li>
+</ul>
+<p>For this, refer to the list of all <a href="https://www.lua.org/manual/5.4/manual.html#3.4.8">operator precedence</a> in the Lua language:</p>
+<pre><code>or
+and
+&lt;     &gt;     &lt;=    &gt;=    ~=    ==
+|
+~
+&amp;
+&lt;&lt;    &gt;&gt;
+..
++     -
+*     /     //    %
+unary operators (not   #     -     ~)
+^
+</code></pre>
+<p>From top to bottom, the priority becomes higher. The connectors <code>..</code> and exponentiation <code>^</code> are right associative, and other operators are left associative. In the judging rules listed above, parsing is stopped (instead of continuing parsing) for cases of equal priority, so the default is left associative. Therefore, special treatment is required for two right-associated operators, that is, different priorities are defined for them to the left and to the right, and the one to the left is higher, which will become a right-association.</p>
+<p>In summary, define the priority function:</p>
+<pre><code class="language-rust  ignore">fn binop_pri(binop: &amp;Token) -&gt; (i32, i32) {
+    match binop {
+        Token::Pow =&gt; (14, 13), // right associative
+        Token::Mul | Token::Mod | Token::Div | Token::Idiv =&gt; (11, 11),
+        Token::Add | Token::Sub =&gt; (10, 10),
+        Token::Concat =&gt; (9, 8), // right associative
+        Token::ShiftL | Token::ShiftR =&gt; (7, 7),
+        Token::BitAnd =&gt; (6, 6),
+        Token::BitNot =&gt; (5, 5),
+        Token::BitOr =&gt; (4, 4),
+        Token::Equal | Token::NotEq | Token::Less | Token::Greater | Token::LesEq | Token::GreEq =&gt; (3, 3),
+        Token::And =&gt; (2, 2),
+        Token::Or =&gt; (1, 1),
+        _ =&gt; (-1, -1)
+    }
+}</code></pre>
+<p>For Tokens that are not binary operators, <code>-1</code> is returned, which is the lowest priority, and parsing can be stopped no matter what the current operator is. According to Rust's customary practice, this function should return <code>Option&lt;(i32, i32)&gt;</code> type, and then return <code>None</code> for tokens that are not binary operators. But it is simpler to return <code>-1</code> at the calling place, and there is no need to process Option one more time.</p>
+<p>This function appears to be a property of the <code>Token</code> type, so it seems to be a suitable method defined as <code>Token</code>. But <code>Token</code> type is defined in <code>lex.rs</code>; while priority is a concept of syntax, it should be implemented in <code>parse.rs</code>. The Rust language does not allow methods to be added to a type's non-defining file. So the above function is defined as an ordinary function in the <code>parse.rs</code> file (rather than the method of <code>ParseProto</code> like other functions).</p>
+<p>Now, according to the priority, modify the <code>exp()</code> function again:</p>
+<pre><code class="language-rust  ignore">     fn exp(&amp;mut self) -&gt; ExpDesc {
+         self.exp_limit(0)
+     }
+     fn exp_limit(&amp;mut self, limit: i32) -&gt; ExpDesc {
+         // OTHERS
+         let mut desc = match self. lex. next() {
+             // The original various OTHERS type processing is omitted here
+         };
+
+         // A' := binop exp A' | Epsilon
+         loop {
+             let (left_pri, right_pri) = binop_pri(self. lex. peek());
+             if left_pri &lt;= limit {
+                 return desc; // stop parsing
+             }
+
+             // continue parsing
+             let binop = self. lex. next();
+             let right_desc = self.exp_limit(right_pri);
+             desc = self. process_binop(binop, desc, right_desc);
+         }
+     }</code></pre>
+<p>First, add a <code>limit</code> parameter to <code>exp()</code>, as the priority of the current operator, and limit the subsequent parsing range. However, this parameter belongs to the internal concept of the statement, and the caller of this function does not need to know this parameter; therefore, the actual processing function <code>exp_limit()</code> is added, and <code>exp()</code> is turned into an outer encapsulation function, using <code>limit=0</code> to call the former. The reason why the initial call uses <code>limit=0</code> is that <code>0</code> is less than any binary operator priority defined in the <code>binop_pri()</code> function, so the first operator will continue to be parsed (rather than return to exit the loop ); but <code>0</code> is greater than the priority <code>-1</code> of the non-operator, so if it is followed by the non-operator, it will also exit normally.</p>
+<p>The above parsing code combines loops and recursive calls, which is very difficult for those who are not familiar with the algorithm (like me), and it is difficult to write the complete code directly. However, according to the BNF specification after eliminating left recursion, the loop and recursion can be completed, and then the function can be easily completed according to the priority and conditional exit.</p>
+<p>In addition, it should be noted that unary operators are also listed in the operator precedence table above, so when parsing unary operation statements in the previous section, the <code>exp()</code> function cannot be used when reading the operand expression (initial Priority 0), instead specify an initial priority of 12:</p>
+<pre><code class="language-rust  ignore">    fn exp_unop(&amp;mut self) -&gt; ExpDesc {
+        self.exp_limit(12) // 12 is all unary operators' priority
+    }</code></pre>
+<p>The priority of the exponentiation operation <code>^</code> is actually higher than that of the unary operator, so the execution order of the statement <code>-a^10</code> is: first exponentiation, and then negation.</p>
+<h2 id="evaluation-order"><a class="header" href="#evaluation-order">Evaluation Order</a></h2>
+<p>There is a very subtle bug in the parsing code above, which concerns the order in which the operands are evaluated.</p>
+<p>The processing of each operand requires 2 steps: first call the <code>exp()</code> function to read the operand and return ExpDesc, and then call the <code>discharge()</code> function to discharge the operand to the stack for bytecode operation. The binary operation has 2 operands, so a total of 4 steps are required. Now discuss the sequence of these 4 steps.</p>
+<p>According to the processing logic of the binary operation in the <code>exp()</code> function of the current version:</p>
+<ul>
+<li>read the first operand first, <code>desc</code>;</li>
+<li>After judging that it is a binary operation, call <code>exp_limit()</code> recursively, and read the second operand, <code>right_desc</code>;</li>
+<li>Then discharge the ExpDesc of the above two operands to the stack in the <code>process_binop()</code> function.</li>
+</ul>
+<p>Simplified is:</p>
+<ul>
+<li>parse the first operand;</li>
+<li>parse the second operand;</li>
+<li>discharge the first operand;</li>
+<li>discharge the second operand.</li>
+</ul>
+<p>During the parsing and discharge stages, bytecode may be generated. So in this order, the bytecodes related to the two operands may be interspersed. Like the following example:</p>
+<pre><code class="language-lua">local a = -g1 + -g2
+</code></pre>
+<p>Ignoring the previous local variable definition, and ignoring the operation of undefined global variables will throw an exception. Here, the focus is only on the subsequent addition statement. Generates the following bytecode sequence with the current version of the interpreter:</p>
+<pre><code>constants: ['g1', 'g2']
+byte_codes:
+   GetGlobal(0, 0) # parse the first operand
+   GetGlobal(1, 1) # parse the second operand
+   Neg(2, 0)       # discharge the first operand
+   Neg(3, 1)       # discharge the second operand
+   Add(0, 2, 3)
+</code></pre>
+<p>It can be seen that the bytecodes related to the two operands are interspersed here. In this example, interleaving is fine. But in some cases, parsing the second operand will affect the evaluation of the first operand, and interleaving will cause problems at this time. Like the following example:</p>
+<pre><code class="language-lua">local t = { k = 1 }
+local function f(t) t.k = 100; return 2 end -- modify the value of t.k
+local r = t.k + f(t)*3
+</code></pre>
+<p>For the last sentence, we expected <code>1 + 2*3</code>, but if we follow the current order of evaluation:</p>
+<ol>
+<li>First parse the left operand <code>t.k</code> to generate <code>ExpDesc::IndexField</code>, but not discharge;</li>
+<li>Then parse the right operand <code>f(t)*2</code>, and execute f(t) during the parsing process, thus modifying the value of <code>t.k</code> to <code>100</code>;</li>
+<li>Then discharge the left operationNumber, generate <code>GetField</code> bytecode, but at this time <code>t.k</code> has been modified by the previous step! Here comes the error. What is actually executed is <code>100 + 2*3</code>.</li>
+</ol>
+<p>In summary, we need to ensure that the bytecodes of the two operands cannot be interspersed! Then modify the <code>exp_limit()</code> function as follows:</p>
+<pre><code class="language-rust  ignore">     fn exp_limit(&amp;mut self, limit: i32) -&gt; ExpDesc {
+         // The original various OTHERS type processing is omitted here
+
+         loop {
+             // Omit the processing of judging the priority
+
+             // discharge the first operand! ! !
+             if !matches!(desc, ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_)) {
+                 desc = ExpDesc::Local(self. discharge_top(desc));
+             }
+
+             // continue parsing
+             let binop = self. lex. next();
+             let right_desc = self.exp_limit(right_pri); // parse the second operand
+             desc = self. process_binop(binop, desc, right_desc);
+         }
+     }</code></pre>
+<p>Discharge the first operand onto the stack before parsing the second operand. However, this is not necessary for constant types, because:</p>
+<ul>
+<li>the constant will not be affected by the second operand as in the above example;</li>
+<li>Constants are also to be directly folded in subsequent attempts.</li>
+</ul>
+<p>So far, the transformation of <code>exp_limit()</code> function for binary operation syntax analysis has been completed. As for the specific processing <code>process_binop()</code> function of the binary operation, it is introduced below.</p>
+<h2 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h2>
+<p>The unary operation introduced in the previous section has only one operand, which can be divided into two cases: constants and variables. Constants are evaluated directly, and variables generate bytecodes. So each unary operation has only one bytecode. Binary operations are more complicated because they involve 2 operands.</p>
+<p>First of all, although binary operators are mostly numerical calculations, because Lua's metatable is similar to operator overloading, other types of constants (such as strings, bools, etc.) may be legal operands. When parsing unary operations, these types of constants will directly report an error, but for binary operations, it needs to be executed at the execution stage to determine whether it is legal.</p>
+<p>Secondly, if both operands are constants of numeric type (integer and floating point), then the result can be directly calculated during syntax analysis, which is called constant folding.</p>
+<p>Otherwise, bytecode is generated and executed by the virtual machine. Similar to <a href="./ch02-00.variables.html">Read Global Variables</a> and <a href="./ch04-05.table_rw_and_bnf.html">Read Table</a> operations that have been supported before, each binary operator is also set to 3 types of right operands: variables on the stack, constants, and small integers.</p>
+<p>The left operand is uniformly discharged to the stack, because it is rare for the left operand to be a constant. If we also add corresponding bytecodes for constants and small integer types, such as <code>10-a</code>, then there are too many bytecode types.</p>
+<p>Finally, for addition and multiplication that satisfy the commutative law, if the left operation is a constant, then it can be exchanged. For example, <code>10+a</code> can be converted to <code>a+10</code> first. Since the right operand <code>10</code> is a small integer, it can be use <code>AddInt</code> bytecode then.</p>
+<h2 id="expdesc"><a class="header" href="#expdesc">ExpDesc</a></h2>
+<p>Similar to the new ExpDesc type introduced by the unary operation introduced in the previous section, the binary operation also needs a new type because it has one more operand:</p>
+<pre><code class="language-rust  ignore">enum ExpDesc {
+     UnaryOp(fn(u8,u8)-&gt;ByteCode, usize), // (opcode, operand)
+     BinaryOp(fn(u8,u8,u8)-&gt;ByteCode, usize, usize), // (opcode, left-operand, right-operand)</code></pre>
+<h2 id="syntax-analysis"><a class="header" href="#syntax-analysis">Syntax analysis</a></h2>
+<p>So far, the basic requirements of the binary operation statement have been introduced. Let's look at the code implementation, that is, the <code>process_binop()</code> function called in the <code>exp()</code> function:</p>
+<pre><code class="language-rust  ignore">     fn process_binop(&amp;mut self, binop: Token, left: ExpDesc, right: ExpDesc) -&gt; ExpDesc {
+         if let Some(r) = fold_const(&amp;binop, &amp;left, &amp;right) { // constant fold
+             return r;
+         }
+
+         match binop {
+             Token::Add =&gt; self.do_binop(left, right, ByteCode::Add, ByteCode::AddInt, ByteCode::AddConst),
+             Token::Sub =&gt; self.do_binop(left, right, ByteCode::Sub, ByteCode::SubInt, ByteCode::SubConst),
+             Token::Mul =&gt; self.do_binop(left, right, ByteCode::Mul, ByteCode::MulInt, ByteCode::MulConst),
+             // omit more types
+         }
+     }</code></pre>
+<p>Try constant folding first. This part of the function is introduced in the next section because it involves the processing of integer and floating point types. Because the two operands are not necessarily constants, they may not be able to be folded. If the fold is not successful, then the operator and the two operands will be used later, so the <code>fold_const()</code> function here can only pass in references.</p>
+<p>If it is not a constant and cannot be folded, then call the <code>do_binop()</code> function to return ExpDesc. Here, the enum tag is used as a function, which has been introduced <a href="./ch04-04.expdesc_rewrite.html#table_constructor">before</a>, and will not be introduced here.</p>
+<p>Let's look at the <code>do_binop()</code> function:</p>
+<pre><code class="language-rust  ignore">    fn do_binop(&amp;mut self, mut left: ExpDesc, mut right: ExpDesc, opr: fn(u8,u8,u8)-&gt;ByteCode,
+            opi: fn(u8,u8,u8)-&gt;ByteCode, opk: fn(u8,u8,u8)-&gt;ByteCode) -&gt; ExpDesc {
+
+        if opr == ByteCode::Add || opr == ByteCode::Mul { // commutative
+            if matches!(left, ExpDesc::Integer(_) | ExpDesc::Float(_)) {
+                // swap the left-const-operand to right, in order to use opi/opk
+                (left, right) = (right, left);
+            }
+        }
+
+        let left = self.discharge_top(left);
+
+        let (op, right) = match right {
+            ExpDesc::Integer(i) =&gt;
+                if let Ok(i) = u8::try_from(i) {
+                    (opi, i as usize)
+                } else {
+                    (opk, self.add_const(i))
+                }
+            ExpDesc::Float(f) =&gt; (opk, self.add_const(f)),
+            _ =&gt; (opr, self.discharge_top(right)),
+        };
+
+        ExpDesc::BinaryOp(op, left, right)
+    }</code></pre>
+<p>First, judge if it is addition or multiplication, and the left operand is a numeric constant, then exchange the two operands, so that the bytecode of <code>xxCoust</code> or <code>xxInt</code> can be generated later.</p>
+<p>Then, discharge the left operand onto the stack;</p>
+<p>Then, judge whether the type of the right operand is a numeric constant, or discharge it to the stack.</p>
+<p>Finally, <code>ExpDesc::BinaryOp</code> is generated.</p>
+<p>So far, the grammatical analysis of the binary operation statement is basically completed.</p>
+<h2 id="integer-and-float"><a class="header" href="#integer-and-float">Integer and Float</a></h2>
+<p>So far, we have introduced the general analysis process of binary operations, but there is still a detail, that is, the different processing rules for integer and floating point types. Since there is a lot of content in this aspect, and it is relatively independent from the above-mentioned main analysis process, it will be introduced separately in the next section.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch05-01.unary_ops.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch05-03.int_and_float.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch05-01.unary_ops.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch05-03.int_and_float.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

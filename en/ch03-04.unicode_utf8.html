@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Unicode and UTF-8 - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html" class="active"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="unicode-and-utf-8"><a class="header" href="#unicode-and-utf-8">Unicode and UTF-8</a></h1>
+<p>The previous sections of this chapter refine the string-related content, clarifying some issues, but also introducing some confusion. For example, the definitions of the three string types in <code>Value</code>, some are of <code>[u8]</code> type, some are of <code>String</code> type:</p>
+<pre><code class="language-rust  ignore">pub enum Value {
+     ShortStr(u8, [u8; SHORT_STR_MAX]), // [u8] type
+     MidStr(Rc&lt;(u8, [u8; MID_STR_MAX])&gt;), // [u8] type
+     LongStr(Rc&lt;String&gt;), // String type</code></pre>
+<p>Another example is the mixed use of &quot;byte&quot; and &quot;character&quot; in the previous section. The same is true for the lexical analysis code, which reads bytes of type <code>u8</code> from the input character stream, but converts them to characters of type <code>char</code> via <code>as</code>.</p>
+<pre><code class="language-rust  ignore">     fn read_char(&amp;mut self) -&gt; char {
+         match self. input. next() {
+             Some(Ok(ch)) =&gt; ch as char, // u8 -&gt; char</code></pre>
+<p>The reason these confusions haven't caused problems so far is because our test programs only involve ASCII characters. Problems arise if other characters are involved. For example, for the following Lua code:</p>
+<pre><code class="language-lua">print &quot;你好&quot;
+</code></pre>
+<p>The execution result is wrong:</p>
+<pre><code class="language-bash">$ cargo r -q --  test_lua/nihao.lua
+constants: [print, ä½ å¥½]
+byte_codes:
+  GetGlobal(0, 0)
+  LoadConst(1, 1)
+  Call(0, 1)
+ä½ å¥½
+</code></pre>
+<p>The output is not the expected <code>你好</code>, but <code>ä½ å¥½</code>. Let's explain the reason for this &quot;garbled code&quot; and fix this problem.</p>
+<h2 id="unicode-and-utf-8-concepts"><a class="header" href="#unicode-and-utf-8-concepts">Unicode and UTF-8 Concepts</a></h2>
+<p>These two are very general concepts, and only the most basic introduction is given here.</p>
+<p>Unicode uniformly encodes most of the characters in the world. Among them, in order to be compatible with the ASCII code, the encoding of the ASCII character set is consistent. For example, the ASCII and Unicode encodings of the English letter <code>p</code> are both 0x70, and <code>U+0070</code> is written in Unicode. The Unicode encoding of Chinese <code>你</code> is <code>U+4F60</code>.</p>
+<p>Unicode just numbers the character, while how the computer stores it is another matter. The easiest way is to store directly according to the Unicode encoding. Since Unicode currently supports more than 140,000 characters (still increasing), it needs at least 3 bytes to represent, so the English letter <code>p</code> is <code>00 00 70</code>, and the Chinese <code>你</code> is <code>00 4F 60</code> . The problem with this method is that 3 bytes are required for the ASCII part, which (for English) is wasteful. So there are other encoding methods, UTF-8 is one of them. UTF-8 is a variable-length encoding. For example, each ASCII character only occupies 1 byte. Here the encoding of the English letter <code>p</code> is still 0x70, and it is written as <code>\x70</code> according to UTF-8; while each Chinese character occupies 3 bytes, for example, the UTF-8 encoding of Chinese <code>你</code> is <code>\xE4\xBD\xA0</code>. The more detailed encoding rules of UTF-8 are omitted here. Here are a few examples:</p>
+<pre><code>char | Unicode | UTF-8
+-----+---------+---------------
+p    |  U+0070 | \x70
+r    |  U+0072 | \x72
+你   |  U+4F60 | \xE4\xBD\xA0
+好   |  U+597D | \xE5\xA5\xBD
+</code></pre>
+<h2 id="garbled-code"><a class="header" href="#garbled-code">Garbled Code</a></h2>
+<p>After introducing the coding concepts, let’s analyze the reasons for the garbled characters in the Lua test code at the beginning of this section. Use hexdump to view source code files:</p>
+<pre><code class="language-bash">$ hexdump -C test_lua/nihao.lua
+00000000  70 72 69 6e 74 20 22 e4  bd a0 e5 a5 bd 22 0a     |print &quot;......&quot;.|
+#         p  r  i  n  t     &quot;  |--你---| |--好---| &quot;
+</code></pre>
+<p>The last line is the comment I added, indicating each Unicode text. You can see that the encoding of <code>p</code> and <code>你</code> is consistent with the UTF-8 encoding introduced above. Indicates that this file is UTF-8 encoded. How the file is encoded depends on the text editor and operating system used.</p>
+<p>Our current lexical analysis reads &quot;bytes&quot; one by one, so for the Chinese <code>你</code>, it is considered by the lexical analysis to be 3 independent bytes, namely <code>e4</code>, <code>bd</code> and <code>a0</code>. Then use <code>as</code> to convert to <code>char</code>. Rust's <code>char</code> is Unicode encoded, so we get 3 Unicode characters. By querying Unicode, we can get these 3 characters are <code>ä</code>, <code>½</code> and <code> </code> (the last one is a blank character), which is the first half of the &quot;garbled characters&quot; we encountered at the beginning. The following <code>好</code> corresponds to the second half of the garbled characters. The 6 characters represented by these 6 bytes are sequentially pushed into <code>Token::String</code> (Rust <code>String</code> type), and finally printed out by <code>println!</code>. Rust's <code>String</code> type is UTF-8 encoded, but this does not affect the output.</p>
+<p>Summarize the process of garbled characters:</p>
+<ul>
+<li>The source file is UTF-8 encoded;</li>
+<li>Read byte by byte, at this time UTF-8 encoding has been fragmented;</li>
+<li>Each byte is interpreted as Unicode, resulting in garbled characters;</li>
+<li>Storage and printing.</li>
+</ul>
+<p>You can also verify it again through Rust coding:</p>
+<pre><pre class="playground"><code class="language-rust  editable"><span class="boring">fn main() {
+</span>     let s = String::from(&quot;print hello&quot;); // Rust's String is UTF-8 encoded, so it can simulate Lua source files
+     println!(&quot;string: {}&quot;, &amp;s); // normal output
+     println!(&quot;bytes in UTF-8: {:x?}&quot;, s.as_bytes()); // View UTF-8 encoding
+
+     print!(&quot;Unicode: &quot;);
+     for ch in s.chars() { // Read &quot;characters&quot; one by one, check the Unicode encoding
+         print!(&quot;{:x} &quot;, ch as u32);
+     }
+     println!(&quot;&quot;);
+
+     let mut x = String::new();
+     for b in s.as_bytes().iter() { // read &quot;bytes&quot; one by one
+         x.push(*b as char); // as char, bytes are interpreted as Unicode, resulting in garbled characters
+     }
+     println!(&quot;wrong: {}&quot;, x);
+<span class="boring">}</span></code></pre></pre>
+<p>Click on the upper right corner to run and see the result.</p>
+<p>The core of the garbled problem lies in the conversion of &quot;byte&quot; to &quot;char&quot;. So there are 2 workarounds:</p>
+<ol>
+<li>
+<p>When reading the source code, modify it to read &quot;char&quot; one by one. This solution has bigger problems:</p>
+<ul>
+<li>The input type of Lex we introduced in the previous section is <code>Read</code> trait, which only supports reading by &quot;byte&quot;. If you want to read according to the &quot;character char&quot;, you need to convert it to the <code>String</code> type first, and you need the <code>BufRead</code> trait, which has stricter requirements for input, such as <code>Cursor&lt;T&gt;</code> encapsulated outside the string. not support.</li>
+<li>If the source code input is UTF-8 encoding, and finally Rust’s storage is also UTF-8 encoding, if it is read according to the Unicode encoding “character char”, then it needs two meaningless steps from UTF-8 to Unicode and then to UTF-8 conversion.</li>
+<li>There is another most important reason, which will be discussed soon, Lua strings can contain arbitrary data, not necessarily legal UTF-8 content, and may not be correctly converted to &quot;character char&quot; .</li>
+</ul>
+</li>
+<li>
+<p>When reading the source code, still read byte by byte; when saving, it is no longer converted to &quot;character char&quot;, but directly saved according to &quot;byte&quot;. This makes it impossible to continue to use Rust's <code>String</code> type to save, the specific solution is shown below.</p>
+</li>
+</ol>
+<p>It is obvious (it just seems obvious now. I was confused at the beginning, and tried for a long time) should choose the second option.</p>
+<h2 id="string-definition"><a class="header" href="#string-definition">String Definition</a></h2>
+<p>Now let's see the difference between the contents of strings in Lua and Rust languages.</p>
+<p><a href="https://www.lua.org/manual/5.4/manual.html#3.1">Lua introduction</a> to strings: We can specify any byte in a short literal string. In other words, Lua strings can represent arbitrary data. Rather than calling it a string, it is better to say that it is a series of continuous data, and does not care about the content of the data.</p>
+<p>And the <a href="https://doc.rust-lang.org/std/string/struct.String.html">introduction</a> of the Rust string <code>String</code> type: A UTF-8–encoded, growable string. Easy to understand. Two features: UTF-8 encoding, and growable. Lua's strings are immutable, Rust's are growable, but this distinction is beyond the scope of this discussion. Now the focus is on the former feature, which is UTF-8 encoding, which means that Rust strings cannot store arbitrary data. This can be better observed through the definition of Rust's string:</p>
+<pre><code class="language-rust  ignore">pub struct String {
+     vec: Vec&lt;u8&gt;,
+}</code></pre>
+<p>You can see that <code>String</code> is the encapsulation of <code>Vec&lt;u8&gt;</code> type. It is through this encapsulation that the data in <code>vec</code> is guaranteed to be legal UTF-8 encoding, and no arbitrary data will be mixed in. If arbitrary data is allowed, just define the alias <code>type String = Vec&lt;u8&gt;;</code> directly.</p>
+<p>To sum up, Rust's string <code>String</code> is only a subset of Lua string; the Rust type corresponding to the Lua string type is not <code>String</code>, but <code>Vec&lt;u8&gt;</code> that can store arbitrary data.</p>
+<h2 id="modify-the-code"><a class="header" href="#modify-the-code">Modify the Code</a></h2>
+<p>Now that we have figured out the cause of the garbled characters and analyzed the difference between Rust and Lua strings, we can start modifying the interpreter code. The places that need to be modified are as follows:</p>
+<ul>
+<li>
+<p>The type associated with <code>Token::String</code> in lexical analysis is changed from <code>String</code> to <code>Vec&lt;u8&gt;</code> to support arbitrary data, not limited to legal UTF-8 encoded data.</p>
+</li>
+<li>
+<p>Correspondingly, the type associated with <code>Value::LongStr</code> is also changed from <code>String</code> to <code>Vec&lt;u8&gt;</code>. This is consistent with the other two string types ShortStr and MidStr.</p>
+</li>
+<li>
+<p>In lexical analysis, the original reading functions <code>peek_char()</code> and <code>read_char()</code> are changed to <code>peek_byte()</code> and <code>next_byte()</code> respectively, and the return type is changed from &quot;char&quot; to &quot;byte&quot;. It turns out that although the name is <code>char</code>, it actually reads &quot;bytes&quot; one by one, so there is no need to modify the function content this time.</p>
+</li>
+<li>
+<p>In the code, the original matching character constant such as <code>'a'</code> should be changed to a byte constant such as <code>b'a'</code>.</p>
+</li>
+<li>
+<p>If the original <code>read_char()</code> reads to the end, it will return <code>\0</code>, because <code>\0</code> is considered to be a special character at that time. Now Lua's string can contain any value, including <code>\0</code>, so <code>\0</code> cannot be used to indicate the end of reading. At this point, Rust's <code>Option</code> is needed, and the return value type is defined as <code>Option&lt;u8&gt;</code>.</p>
+<p>But this makes it inconvenient to call this function, requiring pattern matching (<code>if let Some(b) =</code>) every time to get out the bytes. Fortunately, there are not many places where this function is called. But another function <code>peek_byte()</code> is called in many places. It stands to reason that the return value of this function should also be changed to <code>Option&lt;u8&gt;</code>, but in fact the bytes returned by this function are used to &quot;look at it&quot;, as long as it does not match several possible paths, it can be regarded as No effect. So when this function reads to the end, it can still return <code>\0</code>, because <code>\0</code> will not match any possible path. If you really read to the end, then just leave it to the next <code>next_byte()</code> to process.</p>
+<blockquote>
+<p>It is the inconvenience brought by <code>Option</code> (it must be matched to get the value) that withdraws its value. In my C language programming experience, the handling of this special case of function return is generallyIt is represented by a special value, such as <code>NULL</code> for the pointer type, and <code>0</code> or <code>-1</code> for the int type. This brings two problems: one is that the caller may not handle this special value, which will directly lead to bugs; the other is that these special values may later become ordinary values (for example, our <code>\0</code> this time is a typical example), then all places that call this function must be modified. Rust's <code>Option</code> perfectly solves these two problems.</p>
+</blockquote>
+</li>
+<li>
+<p>In lexical analysis, strings support escape. This part is all boring character processing, and the introduction is omitted here.</p>
+</li>
+<li>
+<p>Add <code>impl From&lt;Vec&lt;u8&gt;&gt; for Value</code> to convert the string constant in <code>Token::String(Vec&lt;u8&gt;)</code> to <code>Value</code> type. This also involves a lot of details of Vec and strings, which is very cumbersome and has little to do with the main line. The following two sections will be devoted to it.</p>
+</li>
+</ul>
+<h2 id="conversion-from-str-string-u8-vec-to-value"><a class="header" href="#conversion-from-str-string-u8-vec-to-value">Conversion from &amp;str, String, &amp;[u8], Vec<u8> to Value</a></h2>
+<p>The conversion of <code>String</code> and <code>&amp;str</code> to <code>Value</code> has been implemented before. Now add <code>Vec&lt;u8&gt;</code> and <code>&amp;[u8]</code> to <code>Value</code> conversion. The relationship between these 4 types is as follows:</p>
+<pre><code>            slice
+   &amp;[u8] &lt;---------&gt; Vec&lt;u8&gt;
+                       ^
+                       |encapsulate
+            slice      |
+   &amp;str &lt;---------&gt; String
+</code></pre>
+<ul>
+<li><code>String</code> is an encapsulation of <code>Vec&lt;u8&gt;</code>. The encapsulated <code>Vec&lt;u8&gt;</code> can be returned by <code>into_bytes()</code>.</li>
+<li><code>&amp;str</code> is a slice of <code>String</code> (can be considered a reference?).</li>
+<li><code>&amp;[u8]</code> is a slice of <code>Vec&lt;u8&gt;</code>.</li>
+</ul>
+<p>So <code>String</code> and <code>&amp;str</code> can depend on <code>Vec&lt;u8&gt;</code> and <code>&amp;[u8]</code> respectively. And it seems that <code>Vec&lt;u8&gt;</code> and <code>&amp;[u8]</code> can also depend on each other, that is, only one of them can be directly converted to <code>Value</code>. However, this will lose performance. analyse as below:</p>
+<ul>
+<li>Source type: <code>Vec&lt;u8&gt;</code> is owned, while <code>&amp;[u8]</code> is not.</li>
+<li>Destination type: <code>Value::ShortStr/MidStr</code> only needs to copy the string content (into Value and Rc respectively), without taking ownership of the source data. And <code>Value::LongStr</code> needs to take ownership of <code>Vec</code>.</li>
+</ul>
+<p>2 source types, 2 destination types, 4 conversion combinations are available:</p>
+<pre><code>          | Value::ShortStr/MidStr  | Value::LongStr
+----------+-------------------------+-----------------------
+  &amp;[u8]   | 1. Copy string content  | 2. Create a Vec and allocate memory
+  Vec&lt;u8&gt; | 3. Copy string content  | 4. Transfer ownership
+</code></pre>
+<p>If we directly implement <code>Vec&lt;u8&gt;</code>, and for <code>&amp;[8]</code>, first create <code>Vec&lt;u8&gt;</code> through <code>.to_vec()</code> and then indirectly convert it to <code>Value</code>. So for the first case above, only the content of the string needs to be copied, and the Vec created by <code>.to_vec()</code> is wasted.</p>
+<p>If we directly implement <code>&amp;[8]</code>, and for <code>Vec&lt;u8&gt;</code>, it is first converted to <code>&amp;[u8]</code> by reference and then indirectly converted to <code>Value</code>. Then for the fourth case above, it is necessary to convert the reference to <code>&amp;u[8]</code> first, and then create a Vec through <code>.to_vec()</code> to obtain ownership. One more unnecessary creation.</p>
+<p>So for the sake of efficiency, it is better to directly implement the conversion of <code>Vec&lt;u8&gt;</code> and <code>&amp;[u8]</code> to <code>Value</code>. However, maybe the compiler will optimize these, and the above considerations are nothing to worry about. However, this can help us understand the two types <code>Vec&lt;u8&gt;</code> and <code>&amp;[u8]</code> more deeply, and the concept of ownership in Rust. The final conversion code is as follows:</p>
+<pre><code class="language-rust  ignore">// convert &amp;[u8], Vec&lt;u8&gt;, &amp;str and String into Value
+impl From&lt;&amp;[u8]&gt; for Value {
+    fn from(v: &amp;[u8]) -&gt; Self {
+        vec_to_short_mid_str(v).unwrap_or(Value::LongStr(Rc::new(v.to_vec())))
+    }
+}
+impl From&lt;&amp;str&gt; for Value {
+    fn from(s: &amp;str) -&gt; Self {
+        s.as_bytes().into() // &amp;[u8]
+    }
+}
+
+impl From&lt;Vec&lt;u8&gt;&gt; for Value {
+    fn from(v: Vec&lt;u8&gt;) -&gt; Self {
+        vec_to_short_mid_str(&amp;v).unwrap_or(Value::LongStr(Rc::new(v)))
+    }
+}
+impl From&lt;String&gt; for Value {
+    fn from(s: String) -&gt; Self {
+        s.into_bytes().into() // Vec&lt;u8&gt;
+    }
+}
+
+fn vec_to_short_mid_str(v: &amp;[u8]) -&gt; Option&lt;Value&gt; {
+    let len = v.len();
+    if len &lt;= SHORT_STR_MAX {
+        let mut buf = [0; SHORT_STR_MAX];
+        buf[..len].copy_from_slice(&amp;v);
+        Some(Value::ShortStr(len as u8, buf))
+
+    } else if len &lt;= MID_STR_MAX {
+        let mut buf = [0; MID_STR_MAX];
+        buf[..len].copy_from_slice(&amp;v);
+        Some(Value::MidStr(Rc::new((len as u8, buf))))
+
+    } else {
+        None
+    }
+}</code></pre>
+<h2 id="reverse-conversion"><a class="header" href="#reverse-conversion">Reverse Conversion</a></h2>
+<p>The conversion from <code>Value</code> to <code>String</code> and <code>&amp;str</code> has been implemented before. Now to add the conversion to <code>Vec&lt;u8&gt;</code>. First list the code:</p>
+<pre><code class="language-rust  ignore">impl&lt;'a&gt; From&lt;&amp;'a Value&gt; for &amp;'a [u8] {
+    fn from(v: &amp;'a Value) -&gt; Self {
+        match v {
+            Value::ShortStr(len, buf) =&gt; &amp;buf[..*len as usize],
+            Value::MidStr(s) =&gt; &amp;s.1[..s.0 as usize],
+            Value::LongStr(s) =&gt; s,
+            _ =&gt; panic!(&quot;invalid string Value&quot;),
+        }
+    }
+}
+
+impl&lt;'a&gt; From&lt;&amp;'a Value&gt; for &amp;'a str {
+    fn from(v: &amp;'a Value) -&gt; Self {
+        std::str::from_utf8(v.into()).unwrap()
+    }
+}
+
+impl From&lt;&amp;Value&gt; for String {
+    fn from(v: &amp;Value) -&gt; Self {
+        String::from_utf8_lossy(v.into()).to_string()
+    }
+}</code></pre>
+<ul>
+<li>
+<p>Since the three strings of <code>Value</code> are all consecutive <code>u8</code> sequences, it is easy to convert to <code>&amp;[u8]</code>.</p>
+</li>
+<li>
+<p>The conversion to <code>&amp;str</code> needs to be processed by <code>std::str::from_utf8()</code> to handle the <code>&amp;[u8]</code> type just obtained. This function does not involve new memory allocation, but only verifies the validity of the UTF-8 encoding. If it is illegal, it will fail, and here we panic directly through <code>unwrap()</code>.</p>
+</li>
+<li>
+<p>Conversion to <code>String</code>, through <code>String::from_utf8_lossy()</code> to process the <code>&amp;[u8]</code> type just obtained. This function also verifies the legality of UTF-8 encoding, but if the verification fails, a special character <code>u+FFFD</code> will be used to replace the illegal data. But the original data cannot be modified directly, so a new string will be created. If the verification is successful, there is no need to create new data, just return the index of the original data. The return type <code>Cow</code> of this function is also worth learning.</p>
+</li>
+</ul>
+<p>The different processing methods of the above two functions are because <code>&amp;str</code> has no ownership, so new data cannot be created, but an error can only be reported. It can be seen that ownership is very critical in the Rust language.</p>
+<p>The conversion from <code>Value</code> to <code>String</code>, the current requirement is only used when the global variable table needs to be set. You can see that this conversion always calls <code>.to_string()</code> to create a new string. This makes the optimization of strings in our chapter (mainly <a href="./ch03-01.string_type.html">Section 1</a>) meaningless. Later, after introducing the Lua table structure, the index type of the global variable table will be changed from <code>String</code> to <code>Value</code>, and then the operation of the global variable table will not need this conversion. However, this conversion is still used in other places.</p>
+<h2 id="test"><a class="header" href="#test">Test</a></h2>
+<p>So far, the function of Lua string is more complete. The test code at the beginning of this section can also be output normally. More methods can be handled by escape, and verified with the following test code:</p>
+<pre><code class="language-lua">print &quot;tab:\thi&quot; -- tab
+print &quot;\xE4\xBD\xA0\xE5\xA5\xBD&quot; -- 你好
+print &quot;\xE4\xBD&quot; -- invalid UTF-8
+print &quot;\72\101\108\108\111&quot; -- Hello
+print &quot;null: \0.&quot; -- '\0'
+</code></pre>
+<h2 id="summarize"><a class="header" href="#summarize">Summarize</a></h2>
+<p>This chapter has learned the Rust string type, which involves ownership, memory allocation, Unicode and UTF-8 encoding, etc., and deeply understands what is said in &quot;Rust Programming Language&quot;: Rust strings are complex because the string itself is complex of. Through these learnings, Lua's string type is optimized, and generics and <code>From</code> traits are also involved. Although it did not add new features to our Lua interpreter, it also gained a lot.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-03.read_input.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch03-05.gc_vs_rc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-03.read_input.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch03-05.gc_vs_rc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

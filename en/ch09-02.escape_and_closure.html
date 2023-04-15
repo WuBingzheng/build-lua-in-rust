@@ -1,0 +1,666 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Upvalue Escape and Closure - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html" class="active"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="upvalue-escape-and-closure"><a class="header" href="#upvalue-escape-and-closure">Upvalue Escape and Closure</a></h1>
+<p>The previous section introduced the concept of upvalue, and took the most basic usage of upvalue as an example to introduce the modification of syntax analysis to support upvalue. This section introduces the complete features of upvalue, mainly the escape of upvalue.</p>
+<p>The following refers to the sample code in the book &quot;Lua Programming&quot;:</p>
+<pre><code class="language-lua">local function newCounter()
+     local i = 0
+     return function ()
+         i = i + 1 -- upvalue
+         print(i)
+     end
+end
+
+local c1 = newCounter()
+c1() -- output: 1
+c1() -- output: 2
+</code></pre>
+<p><code>newCounter()</code> in the above code is a typical factory function, which creates and returns an anonymous function. What needs to be explained here is that the returned anonymous function refers to the local variable <code>i</code> in <code>newCounter()</code>, which is upvalue.
+The second half of the code calls the <code>newCounter()</code> function and assigns the returned anonymous function to <code>c1</code> and calls it. At this time, the <code>newCounter()</code> function has ended, and it seems that the local variable <code>i</code> defined in it has also exceeded the scope. At this time, calling <code>c1</code> to refer to the local variable <code>i</code> will cause problems (if you are C Language programmers should understand this). However, in Lua, the closure mechanism ensures that calling <code>c1</code> here is no problem. That is, the escape of upvalue.</p>
+<p>The book &quot;Lua Programming&quot; is for Lua programmers, and it is enough to introduce the concept of upvalue escape. But our purpose is to <em>implement</em> an interpreter (not just <em>use</em> an interpreter), so we must not only know that this is no problem, but also know how to do it, that is, how to realize the escape of upvalue.</p>
+<h2 id="unfeasible-static-storage-solution"><a class="header" href="#unfeasible-static-storage-solution">Unfeasible Static Storage Solution</a></h2>
+<p>The easiest way is to refer to the static variable inside the function in C language. For the local variable referenced by upvalue (such as <code>i</code> in the <code>newCounter()</code> function here), it is not placed on the stack, but placed in a static area. But this solution is not feasible, because the static variable in C language is globally unique, and the upvalue in Lua will generate a new copy every time it is called. For example, following the above code, continue with the following code:</p>
+<pre><code class="language-lua">local c2 = newCounter()
+c2() -- output: `1`. A new count starts.
+c1() -- output: `3`. Continue with the output of c1 above.
+</code></pre>
+<p>Calling <code>newCounter()</code> again will generate a new counter, in which the local variable <code>i</code> will be re-initialized to 0 and start counting again. At this point, there are two counters: <code>c1</code> and <code>c2</code>, each of which has an independent local variable <code>i</code>. So when <code>c2()</code> is called, it will start counting again from 1; if interspersed with <code>c1()</code> before calling, it will continue the previous counting. How interesting!</p>
+<pre><code>   --+---+--              +---+   +---+
+     | i |                | i |   | i |
+   --+-^-+--              +-^-+   +-^-+
+       |                    |       |
+   /---+---\                |       |
+   |       |                |       |
++----+   +----+          +----+   +----+
+| c1 |   | c2 |          | c1 |   | c2 |
++----+   +----+          +----+   +----+
+</code></pre>
+<p>The left figure above shows that <code>i</code> is placed in the globally unique static storage, then all counter functions point to the unique i. This does not meet our needs. What we need is a separate <code>i</code> for each counter function as shown on the right.</p>
+<h2 id="storage-scheme-on-the-heap"><a class="header" href="#storage-scheme-on-the-heap">Storage Scheme on the Heap</a></h2>
+<p>Since it cannot be placed on the stack, nor can it be placed in the global static area, it can only be placed on the heap. The next question is, when to put it on the heap? There are several possible scenarios:</p>
+<ol>
+<li>When entering the function, put all local variables referenced by upvalue on the heap;</li>
+<li>When a local variable is referenced by upvalue, it is moved from the stack to the heap;</li>
+<li>When the function exits, move all local variables referenced by upvalue to the heap;</li>
+</ol>
+<p>The first solution does not work, because a local variable may have been used as a local variable before it is referenced by upvalue, and related bytecodes have been generated. The second solution should be feasible, but after the local variable is referenced by upvalue, it may be used as a local variable in the current function. It is not necessary to move it to the heap in advance. After all, access to the stack is faster and more convenient. So we choose option 3.</p>
+<p>This operation of moving local variables from the stack to the heap, we follow the code implemented by Lua official, is also called &quot;close&quot;.</p>
+<p>Next, in order to demonstrate that an upvalue is accessed before and after escaping, we modify the sample code based on the counter sample above. The inner function is called once inside the <code>newCounter()</code> function before returned. To do this, we assign this anonymous function to a local variable <code>retf</code>:</p>
+<pre><code class="language-lua">local function newCounter()
+     local i = 0
+     local function retf()
+         i = i + 1 -- upvalue
+         print(i)
+     end
+     retf() -- called inside newCounter()
+     return retf -- return retf
+end
+</code></pre>
+<p>This example is introduced in two parts. First, <code>retf()</code> is called inside the factory function, and then the upvalue escape caused by the factory function returning <code>retf</code>.</p>
+<p>First of all, when <code>retf()</code> is called inside the factory function, <code>i</code> to be operated by <code>retf</code> is still on the stack. The schematic diagram is as follows.</p>
+<pre><code>     |          |
+     +----------+
+base |newCounter|
+     +----------+
+   0 |    i     |&lt;- - - - - - - - - - \
+     +----------+                     |
+   1 |   retf   +--+-&gt;+-FuncProto-----+--+
+     +----------+  |  |byte_codes:    |  |
+   2 |   retf   +--/  | GetUpvalue(0, 0) |
+     +----------+     | ...              |
+     |          |     +------------------+
+</code></pre>
+<p>In the figure, the stack is on the left, where <code>newCounter</code> is the entry of the function call and the base position of the current function. The <code>i</code> and the first <code>retf</code> are local variables, and the second <code>retf</code> is the entry on the stack of the function call. The two <code>retf</code>s point to same function prototype. In the bytecode sequence in the <code>retf</code> function prototype, the first bytecode <code>Getupvalue</code> is to load upvalue <code>i</code> onto the stack to perform addition. This bytecode has two associated parameters. The first is the target address loaded onto the stack, which is ignored here; the second is the source address of upvalue, refer to the syntax analysis of upvalue in the previous section, the meaning of this parameter is: the stack of local variables of the upper function index. In this example, it is the index of <code>i</code> in the newCounter() function, which is <code>0</code>. So far, it is still the content of the previous section, and escape has not been involved.</p>
+<p>Now consider the escape of upvalue. After the <code>newCounter()</code> function exits, the three spaces on the left stack will be destroyed, and <code>i</code> will no longer exist. In order for the retf function to continue to access <code>i</code>, before the <code>newCounter()</code> function exits, it is necessary to close the local variable <code>i</code> and move <code>i</code> from the stack to the heap. The schematic diagram is as follows:</p>
+<pre><code>     |          |
+     +----------+
+base |newCounter|         +===+
+     +----------+  close  | i |&lt;- - - \
+   0 |    i     +--------&gt;+===+       ?
+     +----------+                     ?
+   1 |   retf   +----&gt;+-FuncProto-----?--+
+     +----------+     |byte_codes:    ?  |
+     |          |     | GetUpvalue(0, 0) |
+                      | ...              |
+                      +------------------+
+</code></pre>
+<p>Although this ensures that <code>i</code> can continue to be accessed, there is a very obvious problem: the second parameter associated with the bytecode <code>Getupvalue</code> cannot locate <code>i</code> on the heap (the continuous <code>?</code> in the figure Wire). This is also mentioned in the <a href="./ch09-01.upvalue.html#variable-resolution-process">previous section</a>, it is not feasible to directly use the index of the local variable on the stack to represent the upvalue scheme. Improvements need to be made on the basis of this scheme.</p>
+<h2 id="improvement-upvalue-intermediary"><a class="header" href="#improvement-upvalue-intermediary">Improvement: Upvalue Intermediary</a></h2>
+<p>In order to still be able to be accessed by upvalue after closing the local variable, we need an upvalue intermediary. At the beginning, the index on the stack is used to represent the upvalue, and when the local variable of the outer function is closed, it is moved to this intermediary.</p>
+<p>The following two figures show the situation after adding the upvalue intermediary.</p>
+<pre><code>     |          |             - - - - - - \
+     +----------+            |            |
+base |newCounter|            |      *-----+-+---
+     +----------+            |      |Open(0)|
+   0 |    i     |&lt;- - - - - -       *-^-----+---
+     +----------+                     |
+   1 |   retf   +--+-&gt;+-FuncProto-----+--+
+     +----------+  |  |byte_codes:    |  |
+   2 |   retf   +--/  | GetUpvalue(0, 0) |
+     +----------+     | ...              |
+     |          |     +------------------+
+</code></pre>
+<p>The figure above is a schematic diagram of calling the <code>retf()</code> function inside the <code>newCounter()</code> function. Compared with the previous version, the upvalue intermediary list (the list with <code>*</code> as the corner in the figure) is added, and there is only one member: <code>Open(0)</code>, which means that this local variable has not been closed and is on the stack The relative index is 0. In the function prototype of <code>retf</code>, although the second parameter associated with the bytecode <code>Getupvalue</code> has not changed, its meaning has changed, and it has become the index of the intermediary list. It just happens to be 0 in this example.</p>
+<pre><code>     |          |          /----------------\
+     +----------+          |                |
+base |newCounter|          |        *-------V-+---
+     +----------+  close   |        |Closed(i)|
+   0 |    i     +----------/        *-^-------+---
+     +----------+                     |
+   1 |   retf   +----&gt;+-FuncProto-----+--+
+     +----------+     |byte_codes:    |  |
+     |          |     | GetUpvalue(0, 0) |
+                      | ...              |
+                      +------------------+
+</code></pre>
+<p>The figure above is a schematic diagram after the local variable <code>i</code> is closed before the <code>newCounter()</code> function returns. The members of the upvalue intermediary list added in the figure above become <code>Closed(i)</code>, that is, the local variable <code>i</code> is moved to this intermediary list. In this way, <code>Getupvalue</code> can still locate the 0th upvalue intermediary and access the closed <code>i</code>.</p>
+<h2 id="improvement-shared-upvalue"><a class="header" href="#improvement-shared-upvalue">Improvement: Shared Upvalue</a></h2>
+<p>The above scheme can support the current simple escape scenario, but it does not support the scenario where multiple closures share the same local variable. For example, the following sample code:</p>
+<pre><code class="language-lua">local function foo()
+     local i, ip, ic = 0, 0, 0
+     local function producer()
+         i = i + 1
+         ip = ip + 1
+     end
+     local function consumer()
+         i = i - 1
+         ic = ic + 1
+     end
+     return produce, consume
+end
+</code></pre>
+<p>The two internal functions returned by the above <code>foo()</code> function both refer to the local variable <code>i</code>, and it is obvious that the two functions share <code>i</code> and operate on the same <code>i</code> instead of being independent <code>i</code>. Then when the <code>foo()</code> function finishes closing <code>i</code>, two functions are needed to share the closed <code>i</code>. Since these two functions have different upvalue lists, namely <code>i, ip</code> and <code>i, ic</code>, the two functions do not need to share the same upvalue list. Then it can only be shared separately for each upvalue.</p>
+<p>The following figure shows the scheme of sharing each upvalue separately:</p>
+<pre><code>     |          |
+     +----------+     +=======+
+base |    foo   |     |Open(0)|&lt;===============+------------\
+     +----------+     +=======+                |            |
+   0 |    i     |&lt;- -/  +=======+              |            |
+     +----------+       |Open(1)|&lt;-------------|---\        |
+   1 |    ip    |&lt;- - - +=======+              |   |        |
+     +----------+         +=======+            |   |        |
+   2 |    ic    |&lt;- - - - |Open(2)|&lt;-----------|---|--------|---\
+     +----------+         +=======+          *-+-+-+-+--    |   |
+   3 | producer +----&gt;+-FuncProto--------+   | i |ip |      |   |
+     +----------+     |byte_codes:       |   *-^-+-^-+--    |   |
+   4 | consumer +--\  | GetUpvalue(0, 0)-+----/    |        |   |
+     +----------+  |  | ...              |         |        |   |
+     |          |  |  | GetUpvalue(0, 1)-+---------/        |   |
+                   |  | ...              |                  |   |
+                   |  +------------------+                  |   |
+                   |                                      *-+-+-+-+--
+                   \--------------&gt;+-FuncProto-------+    | i |ic |
+                                  |byte_codes:       |    *-^-+-^-+--
+                                  | GetUpvalue(0, 0)-+-----/    |
+                                  | ...              |          |
+                                  | GetUpvalue(0, 1)-+----------/
+                                  | ...              |
+                                  +------------------+
+</code></pre>
+<p>The picture above is slightly more complicated, but most of it is the same as the previous scheme. The leftmost is still the stack. Then see that the content pointed to by the <code>producer()</code> function is still the function prototype and the corresponding upvalue list. Since this function uses two upvalues, two bytecodes are listed. Then there is a difference: in the upvalue list, it is not directly the upvalue, but the address of the upvalue. The real upvalue is allocated on the heap alone, which is <code>Open(0)</code>, <code>Open(1)</code> and <code>Open(2)</code> in the figure. These 3 upvalues can access local variables on the stack through indexes. The last <code>consumer()</code> function is similar, the difference is that different upvalues are referenced.</p>
+<p>When the <code>foo()</code> function ends and all local variables referenced by upvalue are closed, <code>Open(0)</code>, <code>Open(1)</code> and <code>Open(2)</code> in the above figure are replaced by <code>Closed(i)</code>, <code>Closed(ip)</code> and <code>Closed(ic)</code>. At this time, the <code>i</code> in the upvalue lists corresponding to <code>producer()</code> and <code>consumer()</code> functions point to the same <code>Closed(i)</code>. In this way, after the outer <code>foo()</code> function exits, these two functions can still access the same <code>i</code>. Only 3 upvalues are replaced, the changes are relatively small, and the closed picture is omitted here.</p>
+<h2 id="definition-of-closure"><a class="header" href="#definition-of-closure">Definition of Closure</a></h2>
+<p>Before continuing to introduce more upvalue usage scenarios, we first introduce the concept of closure based on the above scheme.</p>
+<p>According to the above scheme, the returned <code>retf</code> is not only a function prototype, but also includes the corresponding upvalue list. And the function prototype plus upvalue is <em>closure</em>! Add Lua closure type in <code>Value</code>:</p>
+<pre><code class="language-rust  ignore">pub enum upvalue { // upvalue intermediary in the above figure
+     Open(usize),
+     Closed(Value),
+}
+pub struct LuaClosure {
+     proto: Rc&lt;FuncProto&gt;,
+     upvalues: Vec&lt;Rc&lt;RefCell&lt;upvalue&gt;&gt;&gt;,
+}
+pub enum Value {
+     LuaFunction(Rc&lt;FuncProto&gt;), // Lua function
+     LuaClosure(Rc&lt;LuaClosure&gt;), // Lua closure</code></pre>
+<p>In this way, although the different closures returned by multiple calls to the <code>newCounter()</code> function share the same function prototype, each has an independent upvalue. This is also the reason why the two counters c1 and c2 at the beginning of this section can count independently.</p>
+<p>The following figure shows a schematic diagram of two counters:</p>
+<pre><code>             +-LuaClosure--+
+|      |     |       proto-+----------------------+--&gt;+-FuncProto--------+
++------+     |    upvalues-+---&gt;+---+--           |   |byte_codes:       |
+|  c1  +----&gt;+-------------+    | i |             |   | GetUpvalue(0, 0) |
++------+                        +-+-+--           |   | ...              |
+|  c2  +-\                        |               |   +------------------+
++------+ |                        V=========+     |
+|      | |                        |Closed(i)|     |
+         |                        +=========+     |
+         \--&gt;+-LuaClosure--+                      |
+             |       proto-+----------------------/
+             |    upvalues-+---&gt;+---+--
+             +-------------+    | i |
+                                +-+-+--
+                                  |
+                                  V=========+
+                                  |Closed(i)|
+                                  +=========+
+</code></pre>
+<p>Similarly, we also modify the schematic diagram in the shared upvalue example above. For clarity, delete the specific content of <code>FuncProto</code>; then merge the function prototype and upvalue list into <code>LuaClosure</code>. As shown below.</p>
+<pre><code>     |          |
+     +----------+     +=======+
+base |    foo   |     |Open(0)|&lt;========+----------\
+     +----------+     +=======+         |          |
+   0 |    i     |&lt;- -/  +=======+       |          |
+     +----------+       |Open(1)|&lt;------|---\      |
+   1 |    ip    |&lt;- - - +=======+       |   |      |
+     +----------+         +=======+     |   |      |
+   2 |    ic    |&lt;- - - - |Open(2)|&lt;----|---|------|---\
+     +----------+         +=======+     |   |      |   |
+   3 | producer +----&gt;+-LuaClosure--+   |   |      |   |
+     +----------+     | proto       |   |   |      |   |
+   4 | consumer +--\  | upvalues   -+&gt;*-+-+-+-+--  |   |
+     +----------+  |  +-------------+ | i |ip |    |   |
+     |          |  |                  *---+---+--  |   |
+                   |                               |   |
+                   \------------&gt;+-LuaClosure--+   |   |
+                                 | proto       |   |   |
+                                 | upvalues   -+&gt;*-+-+-+-+--
+                                 +-------------+ | i |ic |
+                                                 *---+---+--
+</code></pre>
+<p>It can be seen from the figure that compared with the Lua function <code>LuaFunction</code> defined in the previous chapter, although the closure <code>LuaClosure</code> can have an independent upvalue list, it has one more memory allocation and pointer jump. Here we are faced with a choice: to completely replace the function with the closure, or to coexist? The official implementation of Lua is the former, which is also the source of the phrase &quot;all functions in Lua are closures&quot;. The advantage of substitution is that there is one less type, and the code is a little simpler; the advantage of coexistence is that the function type allocates less memory and one pointer jump after all. In addition to these two advantages and disadvantages, there is a larger difference that affects behavior. For example, the following sample code:</p>
+<pre><code class="language-lua">local function foo()
+     return function () print &quot;hello, world!&quot; end
+end
+local f1 = foo()
+local f2 = foo()
+print(f1 == f2) -- true or false?
+</code></pre>
+<p>Here the anonymous function returned by calling <code>foo()</code> does not include the upvalue. So the question is, are the two return values ​​of the two calls to <code>foo()</code> equal?</p>
+<ul>
+<li>
+<p>If the <code>LuaFunction</code> type is reserved, then the return value is <code>LuaFunction</code> type, and <code>f1</code> and <code>f2</code> only involve the function prototype and are equal. Validation can be performed with the code from the previous chapter.</p>
+</li>
+<li>
+<p>If the <code>LuaFunction</code> type is not reserved, the returned function is of the <code>LuaClosure</code> type. Although it does not contain upvalue, it is also two different closures, <code>f1</code> and <code>f2</code> are not equal.</p>
+</li>
+</ul>
+<p>So which of the above behaviors meets the requirements of <a href="https://www.lua.org/manual/5.4/manual.html#3.4.4">Lua language</a>? The answer is: both can. The description of function comparison in the Lua manual is as follows:</p>
+<blockquote>
+<p>Functions created at different times but with no detectable differences may be classified as equal or not (depending on internal caching details).</p>
+</blockquote>
+<p>That is, it doesn't matter, and there is no guarantee on it. Then we can choose whatever we want. In this project, we initially chose closures instead of functions, and later added function types back. I don't feel much difference.</p>
+<h2 id="syntax-snalysis-of-closure"><a class="header" href="#syntax-snalysis-of-closure">Syntax Snalysis of Closure</a></h2>
+<p>When there was no closure before and it was still LuaFunction, the processing of function definition was very intuitive:</p>
+<ul>
+<li>Parse the function definition and generate the function prototype FuncProto;</li>
+<li>Wrap FuncProto with <code>Value::LuaFunction</code> and put it in the constant table;</li>
+<li>Generate bytecodes such as <code>LoadConst</code> to read the constant table.</li>
+</ul>
+<p>Function definitions are treated in a similar way to other types of constants. Recall that the relevant code is as follows:</p>
+<pre><code class="language-rust  ignore">     fn funcbody(&amp;mut self, with_self: bool) -&gt; ExpDesc {
+         // omit preparation
+
+         // The proto returned by the chunk() function is the FuncProto type
+         let proto = chunk(self. lex, has_varargs, params, Token::End);
+         ExpDesc::Function(Value::LuaFunction(Rc::new(proto)))
+     }
+     fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+         let code = match desc {
+             // omit other types
+
+             // Add the function reason to the constant table and generate LoadConst bytecode
+             ExpDesc::Function(f) =&gt; ByteCode::LoadConst(dst as u8, self. add_const(f) as u16),</code></pre>
+<p>Now in order to support closures, the following improvements need to be made:</p>
+<ul>
+<li>
+<p>The relevant Value type definition has been changed to <code>LuaClosure(Rc&lt;LuaClosure&gt;)</code>, so the parsed function prototype FuncProto cannot be directly put into the constant table. Although it can be placed indirectly, it is not intuitive. It is better to add a new table in the function prototype FuncProto to save the prototype list of the inner function.</p>
+</li>
+<li>
+<p>When the virtual machine executes the function definition, an upvalue is generated in addition to the function prototype. Then the bytecode that directly reads the constant table like <code>LoadConst</code> does not meet the demand. A special bytecode needs to be added to aggregate the function prototype and the generated upvalue into a closure.</p>
+</li>
+<li>
+<p>In addition, when generating upvalue, we need to know which local variables of the upper function are used by this function. Therefore, the function prototype also needs to add a list of upvalue references to upper-level local indexes.</p>
+</li>
+</ul>
+<p>In summary, the newly added bytecode for creating a closure is as follows:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     Closure(u8, u16),</code></pre>
+<p>The two parameters associated with this bytecode are similar to the <code>LoadConst</code> bytecode, which are the target address on the stack and the index of the internal function prototype list <code>inner_funcs</code>.</p>
+<p>In addition, two new members need to be added to the function prototype as follows:</p>
+<pre><code class="language-rust  ignore">pub struct FuncProto {
+     pub upindexes: Vec&lt;usize&gt;,
+     pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,</code></pre>
+<p>where <code>inner_funcs</code> is a list of prototypes of the inner functions defined inside the function. <code>upindexes</code> is the index of the local variable that the current function refers to the upper function, and this member needs to be modified later. It should be noted that <code>inner_funcs</code> is used when the current function acts as an outer function, and <code>upindexes</code> is used when the current function acts as a inner function.</p>
+<p>After we introduce the complete features of upvalue later, we will introduce the analysis of the upvalue index <code>upindexes</code>.</p>
+<p>Now, after introducing the definition and syntax analysis of closures, let's look at other scenarios of upvalue.</p>
+<h2 id="improvement-references-to-upvalue"><a class="header" href="#improvement-references-to-upvalue">Improvement: References to Upvalue</a></h2>
+<p>The upvalues introduced before are all references to the <em>local variables</em> of the upper-level functions. Now let’s look at the references to the <em>upvalues</em> of the upper-level functions. Make a modification to the counting closure example at the beginning of this section, and put the incremental code <code>i = i + 1</code> into a layer of functions:</p>
+<pre><code class="language-lua">local function newCounter()
+     local i = 0
+     return function ()
+         print(i) -- upvalue
+         local function increase()
+             i = i + 1 -- where does `i` refer?
+         end
+         increase()
+     end
+end
+
+local c1 = newCounter()
+c1()
+</code></pre>
+<p>In this example, the <code>i</code> in the first line of the print statement of the anonymous function returned by the <code>newCounter()</code> function is the ordinary upvalue introduced before, pointing to the local variable of the upper-level function. And what is <code>i</code> in the internal function <code>increase()</code> function? Also upvalue. Who is this upvalue a reference to?</p>
+<p>Can it be regarded as a <em>cross-layer</em> reference to the local variable <code>i</code> in the outermost <code>newCounter()</code> function? No, because it cannot be realized when the virtual machine is executed. When the anonymous function returns, the internal <code>increase()</code> function has not been created; only when the anonymous function is called outside, the internal <code>increase()</code> function will be created and executed; at this time the outermost <code>newCounter()</code> has ended, and the local variable <code>i</code> no longer exists, so it cannot be referenced.</p>
+<p>Since it cannot be a <em>cross-layer</em> reference to the <em>local variable</em> <code>i</code> in the outermost <code>newCounter()</code> function, it can only be a reference to the <em>upvalue</em> <code>i</code> in the anonymous function of the outer layer.</p>
+<p>In order to support references to upvalue, first, modify the definition of the upvalue list in <code>FuncProto</code> just now, from only supporting local variables to also supporting upvalue:</p>
+<pre><code class="language-rust  ignore">pub enum UpIndex {
+     Local(usize), // index of local variables in upper functions
+     Upvalue(usize), // index of upvalues in upper functions
+}
+
+pub struct FuncProto {
+     pub upindexes: Vec&lt;UpIndex&gt;, // change from usize to UpIndex
+     pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,</code></pre>
+<p>Then, look at the schematic diagram of calling the internal <code>increase()</code> function when executing the returned anonymous function counter <code>c1</code> in the above example:</p>
+<pre><code>|          |
++----------+
+|    c1    +--------------------&gt;+-LuaClosure--+
++----------+                     | proto       |
+| increase |                     | upvalues    +---&gt;+---+--
++----------+                     +-------------+    | i |
+| increase +--&gt;+-LuaClosure--+                      +-+-+--
++----------+   | proto       |                        |
+|          |   | upvalues    +---&gt;+---+--             |
+               +-------------+    | i |               |
+                                  +-+-+--             V=========+
+                                    \----------------&gt;|Closed(i)|
+                                                      +=========+
+</code></pre>
+<p>On the left is the stack. Among them, <code>c1</code> is the function call entry, and the corresponding closureThe upvalue <code>i</code> contained in the package is referenced in the print statement.</p>
+<p>The first <code>increase</code> below the stack is a local variable in <code>c1</code>. The second <code>increase</code> is the function call entry, and the upvalue <code>i</code> contained in the corresponding closure is referenced in the statement that performs the increment operation. In the function prototype, this upvalue should correspond to the 0th upvalue of the upper-level function, namely <code>UpIndex::upvalue(0)</code>, so when the virtual machine executes and generates this closure, this upvalue points to the 0th of <code>c1</code> upvalue, which is <code>Closed(i)</code> in the figure. In this way, the increment operation of <code>i</code> in this function will also be reflected in the print statement of <code>c1</code> function.</p>
+<h2 id="improvement-references-across-multiple-layer-functions"><a class="header" href="#improvement-references-across-multiple-layer-functions">Improvement: References Across Multiple Layer Functions</a></h2>
+<p>Let's look at another scenario: cross-layer references. Slightly modifying the above use case to put the <code>print</code> statement after the increment operation, we get the following sample code:</p>
+<pre><code class="language-lua">local function newCounter()
+     local i = 0
+     return function ()
+         local function increase()
+             i = i + 1 -- upvalue of upper-upper local
+         end
+         increase()
+         print(i) -- upvalue
+     end
+end
+</code></pre>
+<p>The difference between this example and the above example is that when the <code>increase()</code> function is parsed, the upvalue <code>i</code> has not been generated in the anonymous function to be returned, so <code>i</code> in the <code>increase()</code> function points to who? Summarize the previous upvalue types: either it refers to the local variable of the upper-level function, or the upvalue of the upper-level function, and analyzes that it cannot be referenced across multiple layers of functions. Therefore, there is only one solution: create an upvalue in the middle layer function. This upvalue is not used in the current function (by now), it is only used to reference the inner function.</p>
+<p>The current function does not use the created upvalue &quot;by now&quot;. But in the subsequent analysis process, it may still be used. For example, after the above example, the following <code>print</code> statement uses this upvalue.</p>
+<p>In this example, the prototypes and schematic diagrams of the two functions are the same as the above example. omitted here.</p>
+<p>At this point, all the upvalue features are finally introduced, and the final solution is given. During this period, syntax analysis and virtual machine execution are also involved. Next, according to the final plan, we will briefly organize syntax analysis and virtual machine execution.</p>
+<h2 id="syntax-analysis-of-upvalue-index"><a class="header" href="#syntax-analysis-of-upvalue-index">Syntax Analysis of Upvalue Index</a></h2>
+<p>When introducing <a href="#syntax-snalysis-of-closure">Syntax Analysis of Closures</a>, it is pointed out that in the function prototype <code>FuncProto</code>, a new member <code>upindexes</code> needs to be added to represent the upvalue index of the current function.</p>
+<p>In the <a href="./ch09-01.upvalue.html#variable-resolution-process">previous section</a>, the variable parsing process is listed:</p>
+<ol>
+<li>Match in the local variable list of the current function, if found, it is a local variable;</li>
+<li>Match in the local variable list of upper-level functions, if found, it will be upvalue;</li>
+<li>Otherwise it is a global variable.</li>
+</ol>
+<p>According to the introduction of the complete features of upvalue earlier in this section, the above-mentioned step 2 is extended to the more detailed analysis steps of the upvalue index. The final process of variable analysis is as follows:</p>
+<ol>
+<li>Match in the local variable list of the current function, if found, it is a local variable;</li>
+<li>Match in the upvalue list of the current function, if found, the upvalue already exists; (reuse upvalue)</li>
+<li>Match in the local variable list of outer functions, if found, add an upvalue; (ordinary upvalue)</li>
+<li>Match in the upvalue list of the outer function, if found, add an upvalue; (reference to the upvalue in the upper function)</li>
+<li>Match in the local variable list of the outer functions, if found, create an upvalue in all intermediate layer functions, and add an upvalue; (references across multi-layer functions)</li>
+<li>Match in the upvalue list of the outer functions, if found, create an upvalue in all intermediate layer functions, and add an upvalue; (a reference to an upvalue across multi-layer functions)</li>
+<li>Repeat steps 5 and 6 above, if the outermost function is still not matched, it is a global variable.</li>
+</ol>
+<p>There is obviously a lot of duplication in this process. The most obvious is that steps 3 and 4 are special cases of steps 5 and 6, that is, there is no intermediate layer function, so steps 3 and 4 can be removed. In addition, when the code is implemented, steps 1 and 2 can also be omitted as special cases. Since there is too much content in this section, the specific code will not be posted here.</p>
+<p>In the syntax analysis in the previous section, in order to support upvalue, it is necessary to access the local variable list of the upper-level function, so the new context <code>ParseContext</code> data structure is added, which contains the local variable list of functions at all levels. This section introduces that upvalue can also refer to the upvalue of upper-level functions, so it is also necessary to add the upvalue list of functions at all levels in <code>ParseContext</code>.</p>
+<pre><code class="language-rust  ignore">struct ParseContext&lt;R: Read&gt; {
+     all_locals: Vec&lt;Vec&lt;String&gt;&gt;,
+     all_upvalues: Vec&lt;Vec&lt;(String, UpIndex)&gt;&gt;, // new
+     lex: Lex&lt;R&gt;,
+}
+
+pub struct FuncProto {
+     pub upindexes: Vec&lt;UpIndex&gt;,</code></pre>
+<p>In the above code, <code>ParseContext</code> is the parsing context, which is the internal data structure of parsing. The member type of its upvalue list <code>all_upvalues</code> is <code>(String, UpIndex)</code>, where String is the name of the upvalue variable, which is used for the matching in step 4 and step 6; <code>UpIndex</code> is the index of upvalue.</p>
+<p><code>FuncProto</code> is the output of the syntax analysis stage, which is used by the virtual machine execution stage. At this time, the upvalue variable name is not needed, and only the UpIndex index is needed.</p>
+<h2 id="virtual-machine-execution"><a class="header" href="#virtual-machine-execution">Virtual Machine Execution</a></h2>
+<p>In the front part of this section, when introducing the upvalue design scheme, it was basically introduced according to the execution phase of the virtual machine, so we will go through it again here.</p>
+<p>First, the closure is created, that is, the function is defined. To this end, a new bytecode <code>ByteCode::Closure</code> is introduced, whose responsibility is to generate upvalue, package it together with the function prototype as a closure, and load it on the stack.</p>
+<p>What needs to be explained here is that in the syntax analysis phase, in order to access the local variables of the upper-level function, the <code>ParseContext</code> context needs to be introduced; however, in the virtual machine execution phase, although upvalue also needs to access the stack space of the upper-level function, it does not need for a similar context. This is because when the closure is created, the upvalue list is generated by the outer function and passed into the closure, and the inner function can indirectly access the stack space of the outer function through the upvalue list.</p>
+<p>Besides, in addition to passing the closure into the generated upvalue list, the outer function itself also needs to maintain the list for two purposes:</p>
+<ul>
+<li>
+<p>As mentioned in the <a href="#improvement-shared-upvalue">Shared upvalue</a> section above, if a function contains multiple closures, the upvalue of these closures must share local variables. Therefore, when creating an upvalue, first check whether the upvalue associated with this local variable has been created. If so, share; otherwise, create a new one.</p>
+<p>There is a small problem here, the check of whether this has been created is carried out during the virtual machine execution phase. There are generally not many upvalue lists, so it is not necessary to use a hash table. If Vec is used, the time complexity of this matching check is O(n). When there are many upvalues, this may affect performance. Can this matching check be placed in the syntax analysis stage? This issue will be addressed in detail in the next section.</p>
+</li>
+<li>
+<p>When the outer function exits, upvalue needs to be closed.</p>
+<p>It should be noted that, theoretically speaking, only escaped upvalues need to be closed; there is no need to close unescaped upvalues. However, it is very difficult to determine whether an upvalue escapes or not at the syntax stage. Because except for the obvious escape case where the internal function is used as the return value in the above example, there are also situations such as assigning the internal function to an external table. It is also very troublesome to judge whether to escape in the virtual machine stage. So for the sake of simplicity, we refer to the official implementation of Lua here, and close all upvalues at the end of the function, regardless of whether they escape.</p>
+</li>
+</ul>
+<p>The timing of closing upvalue is where all functions exit, including <code>Return</code>, <code>Return0</code> and <code>TailCall</code> bytecodes. The specific closing code is omitted here.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>This section introduces the escape of upvalue and adds closure types. But it mainly introduces how to design and manage upvalue, but does not talk about specific operations, including how to create, read, write, and close upvalue. However, after the design plan is explained clearly, these specific operations are relatively simple. This section is already very long, so the introduction and code of this part will be omitted.</p>
+<h2 id="rust-dst"><a class="header" href="#rust-dst">Rust DST</a></h2>
+<p>Now introduce a feature of the Rust language, DST.</p>
+<p>The definition of the closure data structure <code>LuaClosure</code> earlier in this section is as follows:</p>
+<pre><code class="language-rust  ignore">pub struct LuaClosure {
+     proto: Rc&lt;FuncProto&gt;,
+     upvalues: Vec&lt;Rc&lt;RefCell&lt;upvalue&gt;&gt;&gt;,
+}</code></pre>
+<p>The function prototype <code>proto</code> field is ignored here, and only the upvalue list <code>upvalues</code> field is concerned. In order to store any upvalue, the upvalues here are defined as a list Vec. This requires an additional allocation of memory. The memory layout of the entire closure is as follows:</p>
+<pre><code>+-LuaClosure--+
+| proto       |
+| upvalues:   |    upvalue list
+|   ptr     --+---&gt;+------+------+-
+|   capacity  |    |      |      |
+|   length    |    +------+------+-
++-------------+
+
+</code></pre>
+<p>In the figure above, the closure <code>LuaClosure</code> is on the left, and the extra memory on the right pointed to by <code>ptr</code> is the actual storage space of the upvalue list Vec. There are three disadvantages of allocating an additional memory in this way:</p>
+<ul>
+<li>Waste of memory, each segment of memory requires additional management space and waste due to alignment;</li>
+<li>When applying for memory, one more allocation needs to be performed, which affects performance;</li>
+<li>When accessing upvalue, one more pointer jump is required, which also affects performance.</li>
+</ul>
+<p>For the requirement of this variable-length array, the classic approach in C language is: define a zero-length array in the data structure, and then specify the actual length as needed when actually allocating memory. The sample code is as follows:</p>
+<pre><code class="language-c">// define the data structure
+struct lua_closure {
+     struct func_proto *proto;
+     int n_upavlue; // actual number
+     struct upvalue upvalues[0]; // zero-length array
+}
+
+// request memory
+struct lua_closure *c = malloc(sizeof(struct lua_closure) // basic space
+         + sizeof(struct upvalue) * n_upvalue); // extra space
+
+// initialization
+c-&gt;n_upvalue = n_upvalue;
+for (int i = 0; i &lt; n_upvalue; i++) {
+     c-&gt;upvalues[i] = ...
+}
+</code></pre>
+<p>The corresponding memory layout is as follows:</p>
+<pre><code>+-------------+
+| proto       |
+| n_upvalue   |
+:             : \
+:             :  + Upvalue列表
+:             : /
++-------------+
+</code></pre>
+<p>This approach can avoid the above three disadvantages. Can this be done in Rust? For example, the following definition:</p>
+<pre><code class="language-rust  ignore">pub struct LuaClosure {
+     proto: Rc&lt;FuncProto&gt;,
+     upvalues: [Rc&lt;RefCell&lt;upvalue&gt;&gt;], // slice
+}</code></pre>
+<p>In this definition, the type of upvalues has changed from list <code>Vec</code> to slice <code>[]</code>. The good news is that Rust supports the DST type (that is, the slice here) as the last field of the data structure, which means that the above definition is legal. The bad news is that such data structures cannot be initialized. A data structure that cannot be initialized, is of course useless. To quote <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html">The Rustonomicon</a>: custom DSTs are a largely half-baked feature for now.</p>
+<p>We can think about why it cannot be initialized? For example, <code>Rc</code> has <code>Rc::new_uninit_slice()</code> API to create slices, so can a similar API be added to create this data structure containing slices? In addition, you can also refer to <a href="https://docs.rs/dyn_struct/latest/dyn_struct/struct.DynStruct.html">dyn_struct</a>.</p>
+<p>However, even if it can be initialized, and the definition of the above data structure can be used, but there will be another problem: since the upvalues field is DST, then the entire <code>LuaClosure</code> will also become DST, so the pointer will become a fat pointer, including the actual length of the slice, <code>Rc&lt;LuaClosure&gt;</code> becomes 2 words, which in turn causes <code>enum Value</code> to change from 2 words to 3 words. This does not meet our requirements, just like <code>Rc&lt;str&gt;</code> cannot be used to define the string type before.</p>
+<p>Since slice cannot be used, is there any other solution? Fixed-length arrays can be used. For example, modify the definition as follows:</p>
+<pre><code class="language-rust  ignore">enum Varupvalues {
+     One(Rc&lt;RefCell&lt;upvalue&gt;&gt;), // 1 upvalue
+     Two([Rc&lt;RefCell&lt;upvalue&gt;&gt;; 2]), // 2 upvalues
+     Three([Rc&lt;RefCell&lt;upvalue&gt;&gt;; 3]), // 3 upvalues
+     Four([Rc&lt;RefCell&lt;upvalue&gt;&gt;; 4]), // 4 upvalues
+     More(Vec&lt;Rc&lt;RefCell&lt;upvalue&gt;&gt;&gt;), // more upvalue
+}
+
+pub struct LuaClosure {
+     proto: Rc&lt;FuncProto&gt;,
+     upvalues: Varupvalues,
+}</code></pre>
+<p>In this way, for closures with no more than 4 upvalues, additional memory allocation can be avoided. This should satisfy most cases. In the case of more upvalues, the waste of allocating another piece of memory is relatively not that great. Another advantage of this solution is that it does not involve unsafe. Of course, the problem with this solution is that it will bring coding complexity. Since the creation of <code>LuaClosure</code> is only generated once when the closure is created, it is not a high-frequency operation, so there is no need to make it so complicated. Therefore, in the end, we still use the original <code>Vec</code> solution.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch09-01.upvalue.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch09-03.escape_from_block_and_goto.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch09-01.upvalue.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch09-03.escape_from_block_and_goto.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

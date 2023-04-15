@@ -1,0 +1,663 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Return Value - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html" class="active"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="return-value"><a class="header" href="#return-value">Return Value</a></h1>
+<p>This section describes the return values of Lua functions. First introduce the case of fixed number return values, and then introduce the case of variable number.</p>
+<p>Similar to the parameter characteristics in the previous section involving parameters and arguments, there are two places involved in realizing the return value of a function:</p>
+<ul>
+<li>
+<p>The called function generates a return value before exiting. This is done with the <code>return</code> statement in Lua. Correspondingly, the <code>Return</code> bytecode needs to be added.</p>
+</li>
+<li>
+<p>The caller reads and processes the return value. This part of the functionality is implemented in <code>Call</code> bytecode. Previous <code>Call</code> bytecode just called the function without processing the return value.</p>
+</li>
+</ul>
+<p>Just as the arguments are passed by the stack, the return values are also passed by the stack.</p>
+<p>We first introduce the <code>return</code> statement and <code>Return</code> bytecode that the function generates the return value.</p>
+<h2 id="return-bytecode"><a class="header" href="#return-bytecode"><code>Return</code> Bytecode</a></h2>
+<p>Between the called function and the caller, the return values are passed using the stack. The called function generate return values and loads them on the stack, and then notifies the caller of the return values' positions on the stack, and the caller reads the return values from the stack.</p>
+<p>Functions in Lua language support multiple return values. If the positions of these return values on the stack are discontinuous, it is difficult to inform the caller of the specific return value. Therefore, all return values are required to be arranged continuously on the stack, so that the caller can be informed by the starting index on the stack and the number of return values. To do this, all return values need to be loaded onto the top of the stack in turn. Like the following example:</p>
+<pre><code class="language-lua">local function foo()
+     local x, y = 1, 2
+     return x, &quot;Yes&quot;, g1+g2
+end
+</code></pre>
+<p>The stack layout before the function returns is as follows:</p>
+<pre><code>|       |
++-------+
+|  foo  | The caller loads `foo` onto the stack
++=======+ &lt;--base
+|   x   | 0 \
++-------+    + local variables
+|   y   | 1 /
++-------+
+|   x   | 2 \
++-------+    |
+| &quot;yes&quot; | 3   + return value
++-------+    |
+| g1+g2 | 4 /
++-------+
+|  g2   | 5&lt;-- temporary variables
++-------+
+|       |
+</code></pre>
+<p>The numbers 0~5 on the right side of the stack are relative addresses. Among them, 2~4 is the position of the return values on the stack, then the information to be returned by this function is <code>(2, 3)</code>, where <code>2</code> is the starting position of the return value on the stack, and <code>3</code> is the return values number. It can be seen that the newly added bytecode <code>Return</code> needs to be associated with 2 parameters.</p>
+<p>In addition to the above-mentioned general cases, there are two special cases, that is, the cases where the number of return values is 0 and 1.</p>
+<p>First of all, for the case where the number of return values is 0, that is, the return statement with no return value, although the <code>Return</code> bytecode can also be used to return <code>(0, 0)</code>, but for clarity, we add bytecode <code>Return0</code> without associate parameter for this case.</p>
+<p>Secondly, for the case where the number of return values is 1, it can be optimized during syntax analysis. In the case of the above multiple return values, it is mandatory to load all the return values onto the stack sequentially for the sake of continuity and to be able to notify the caller of the position of the return value. And if there is only one return value, continuity is not required, so for local variables that are already on the stack, there is no need to load them on the stack again. Of course, other types of return values (such as global variables, constants, table indexes, etc.) still need to be loaded. Like the following example:</p>
+<pre><code class="language-lua">local function foo()
+     local x, y = 1, 2
+     return x
+end
+</code></pre>
+<p>The stack layout before the function returns is as follows:</p>
+<pre><code>|       |
++-------+
+|  foo  | The caller loads foo onto the stack
++=======+ &lt;--base
+|   x   | 0 \    &lt;-----return values
++-------+    + local variables
+|   y   | 1 /
++-------+
+|       |
+</code></pre>
+<p>There is only one return value <code>x</code>, and it is a local variable, which is already on the stack, and it is enough to return <code>(0, 1)</code>, without loading it to the top of the stack again.</p>
+<p>In summary, the newly added two bytecodes are defined as follows:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     Return0,
+     Return(u8, u8),</code></pre>
+<p>The parsing process of the <code>return</code> statement is as follows:</p>
+<ul>
+<li>for no return value, generate <code>Return0</code> bytecode;</li>
+<li>For a single return value, <em>on-demand</em> loaded onto the stack and generate <code>Return(?, 1)</code> bytecode;</li>
+<li>For multiple return values, <em>force</em> to be loaded onto the stack sequentially and generate <code>Return(?, ?)</code> bytecode.</li>
+</ul>
+<h2 id="syntax-analysis-of-return-statement"><a class="header" href="#syntax-analysis-of-return-statement">Syntax Analysis of <code>return</code> statement</a></h2>
+<p>The parsing process of the <code>return</code> statement is summarized above, and now the syntax analysis begins. The BNF definition of the <code>return</code> statement is as follows:</p>
+<pre><code>retstat ::= return [explist][';']
+</code></pre>
+<p>In addition to optional multiple return value expressions, there can be 1 optional <code>;</code>. In addition, there is another rule, that is, the end token of a block must be followed by the return statement, such as <code>end</code>, <code>else</code>, etc. This statement is relatively simple, but there are more details. The code is first listed below:</p>
+<pre><code class="language-rust  ignore">     fn ret_stat(&amp;mut self) {
+         let code = match self. lex. peek() {
+             // return;
+             Token::SemiColon =&gt; {
+                 self. lex. next();
+                 ByteCode::Return0 // no return value
+             }
+
+             // return
+             t if is_block_end(t) =&gt; {
+                 ByteCode::Return0 // no return value
+             }
+
+             _ =&gt; { // has return values
+                 let mut iret = self.sp;
+
+                 // Read the list of expressions. Only the last one is kept and ExpDesc
+                 // is returned, while the previous ones are loaded onto the stack.
+                 // Return value: `nexp` is the number of previously loaded expressions,
+                 // and `last_exp` is the last expression.
+                 let (nexp, last_exp) = self.explist();
+
+                 // check optional ';'
+                 if self.lex.peek() == &amp;Token::SemiColon {
+                     self. lex. next();
+                 }
+                 // check block end
+                 if !is_block_end(self.lex.peek()) {
+                     panic!(&quot;'end' expected&quot;);
+                 }
+
+                 if nexp == 0 {
+                     // single return value, loaded *on demand*
+                     iret = self.discharge_any(last_exp);
+                 } else {
+                     // Multiple return values, other return values have been loaded to
+                     // the top of the stack in turn, now we need to put the last
+                     // Expressions are also *forced* to be loaded on top of the stack,
+                     // after other return values
+                     self.discharge(self.sp, last_exp);
+                 }
+
+                 ByteCode::Return(iret as u8, nexp as u8 + 1)
+             }
+         };
+         self.fp.byte_codes.push(code);
+     }</code></pre>
+<p>Because the processing of single and multiple return values is different, when reading the return value list, keep the last expression and not directly load it on the stack. At this point, the modified <code>explist()</code> function in the previous section comes in handy again. If there is only the last expression, that is, <code>nexp == 0</code>, then it is a single expression, and it is loaded on the stack as needed; otherwise, it is the case of multiple return values, and other return values have been loaded to the stack in turn At the top, it is necessary to force the last expression to be loaded on the top of the stack, behind other return values.</p>
+<p>To review, in the above code, the <code>discharge_any()</code> method in the case of a single return value is <em>on-demand</em> loading, that is, it does not process expressions already on the stack (local variables or temporary variables, etc.); and The <code>discharge()</code> method in the case of multiple return values is <em>forced</em> to load.</p>
+<h2 id="return-bytecode-execution"><a class="header" href="#return-bytecode-execution">Return Bytecode Execution</a></h2>
+<p>After completing the syntax analysis, the next step is to introduce the execution of the <code>Return</code> bytecode by the virtual machine. Two things need to be done:</p>
+<ul>
+<li>
+<p>To exit from the execution of the current function <code>execute()</code>, use the <code>return</code> statement of Rust;</p>
+</li>
+<li>
+<p>The most intuitive way to tell the caller the position of the return value is to return the two parameters associated with <code>Return</code> bytecode: the starting position and number of return values on the stack. However, the starting position here needs to be converted from a relative position to an absolute position. code show as below:</p>
+</li>
+</ul>
+<pre><code class="language-rust  ignore">     ByteCode::Return(iret, nret) =&gt; {
+         return (self. base + iret as usize, nret as usize);
+     }</code></pre>
+<p>This is a bit long-winded, and there are 2 problems:</p>
+<ul>
+<li>
+<p>The prototype of the Rust function type in Lua (such as the <code>print</code> function) is <code>fn (&amp;mut ExeState) -&gt; i32</code>, and there is only 1 return value <code>i32</code>, which represents the number of Rust function return values. If the Lua function type returns 2 values, the return information of these two types of functions is inconsistent, which is inconvenient to handle later.</p>
+</li>
+<li>
+<p>Later in this section, a variable number of return values of Lua functions will be supported, and the specific number of return values needs to be calculated according to the execution situation.</p>
+</li>
+</ul>
+<p>So it is also changed here to only return the number of Lua function return values, but not returning the starting position. For this reason, possible temporary variables on the stack need to be cleaned up to ensure that the return value is at the top of the stack. In this way, the caller can determine the position of the return value only according to the number of return values. Also using the above example:</p>
+<pre><code>|       |
++-------+
+|  foo  | The caller loads foo onto the stack
++=======+ &lt;--base
+|   x   | 0 \
++-------+    + local variables
+|   y   | 1 /
++-------+
+|   x   | 2 \
++-------+    |
+| &quot;yes&quot; | 3   + return values
++-------+    |
+| g1+g2 | 4 /
++-------+
+|       | &lt;--clean up the temporary variable `g2`
+</code></pre>
+<p>In this example, after clearing the temporary variable <code>g2</code> at the top of the stack, only return <code>3</code> to the calling function, and the calling function can read the 3 values at the top of the stack as the return value.</p>
+<p>So why do we need to associate 2 parameters in the <code>Return</code> bytecode? In addition to the number of return values, but also the starting position of the return value? This is because it is difficult to determine whether there are temporary variables on the top of the stack during execution during the syntax analysis phase (such as <code>g2</code> in the above example), and even if it can be determined, there is nothing to do with these temporary variables (unless a bytecode is added to clean up the temporary variables ). Therefore, the return value cannot be expressed only by the number. In the virtual machine execution stage, since possible temporary variables can be cleaned up, there is no need to return to the starting address without the interference of temporary variables.</p>
+<p>In summary, the execution code of <code>Return</code> bytecode is as follows:</p>
+<pre><code class="language-rust  ignore">     ByteCode::Return(iret, nret) =&gt; {
+         // convert relative address to absolute address
+         let iret = self.base + iret as usize;
+
+         // clean up temporary variables to ensure that `nret`
+         // at the top of the stack is the return value
+         self.stack.truncate(iret + nret as usize);
+
+         return nret as usize;
+     }
+     ByteCode::Return0 =&gt; {
+         return 0;
+     }</code></pre>
+<p>Correspondingly, the entry function <code>execute()</code> executed by the virtual machine also needs to modify the prototype, change it to return a <code>usize</code> value:</p>
+<pre><code class="language-rust  ignore">     pub fn execute(&amp;mut self, proto: &amp;FuncProto) -&gt; usize {</code></pre>
+<h2 id="bytecode-traversal-and-function-exit"><a class="header" href="#bytecode-traversal-and-function-exit">Bytecode Traversal and Function Exit</a></h2>
+<p>Now that the <code>execute()</code> function is mentioned, let's talk about the traversal and exit of the bytecode sequence.</p>
+<p>At the beginning, this project only supported sequential execution, using Rust Vec's iterator:</p>
+<pre><code class="language-rust  ignore">     for code in proto.byte_codes.iter() {
+         match *code {</code></pre>
+<p>Later, after the jump statement is supported, it is necessary to traverse manually, and judge whether to exit by whether the <code>pc</code> exceeds the bytecode sequence:</p>
+<pre><code class="language-rust  ignore">     let mut pc = 0;
+     while pc &lt; proto.byte_codes.len() {
+         match proto.byte_codes[pc] {</code></pre>
+<p>Lua's <code>return</code> statement is now supported, and the execution of the corresponding <code>Return</code> bytecode will exit the <code>execute()</code> function. If all Lua functions eventually contain the <code>Return</code> bytecode, there is no need to check whether the pc has exceeded the bytecode sequence to determine whether to exit. In this way, the original <code>while</code> loop in the <code>execute()</code> function can be changed to a <code>loop</code> loop, reducing a conditional judgment:</p>
+<pre><code class="language-rust  ignore">     let mut pc = 0;
+     loop {
+         match proto.byte_codes[pc] {
+             ByteCode::Return0 =&gt; { // Return or Return0 bytecode, exit function
+                 return 0;
+             }</code></pre>
+<p>To do this, we append the <code>Return0</code> bytecode at the end of all Lua functions:</p>
+<pre><code class="language-rust  ignore">fn chunk(lex: &amp;mut Lex&lt;impl Read&gt;, end_token: Token) -&gt; FuncProto {
+     let mut proto = ParseProto::new(lex);
+     assert_eq!(proto.block(), end_token);
+     if let Some(goto) = proto. gotos. first() {
+         panic!(&quot;goto {} no destination&quot;, &amp;goto.name);
+     }
+
+     // All Lua functions end with `Return0` bytecode
+     proto.fp.byte_codes.push(ByteCode::Return0);
+
+     proto.fp
+}</code></pre>
+<p>So far, the function of exiting the function and generating a return value is completed. Next, introduce the second part: the caller reads the return value.</p>
+<h2 id="read-return-values-position"><a class="header" href="#read-return-values-position">Read Return Values: Position</a></h2>
+<p>After the called function returns through the <code>return</code> statement, the virtual machine execution sequence returns back to the <code>Call</code> bytecode of the outer calling function, where the return values are read and processed. How to handle the return values? It depends on the different application scenarios where the function call is made. Because the Lua function supports multiple return values, and the specific number of return values cannot be determined during the syntax analysis stage, similar to the variable parameters expression <code>...</code> in the previous section, the processing of the function return values is simlar with the variable parameter and also includes 3 scenarios:</p>
+<ol>
+<li>
+<p>When used as the last argument of a function call, the last value of a <code>return</code> statement, or the last array member of a table construction, read all return values. For example, the following example:</p>
+<pre><code class="language-lua">print(&quot;hello: &quot;, foo(1, 2)) -- last argument
+local t = {1, 2, foo()} -- last list member
+return a+b, foo() -- the last return value
+</code></pre>
+</li>
+<li>
+<p>When used as the last expression after the equal sign <code>=</code> of a local variable definition statement or an assignment statement, the number of return values will be expanded or reduced as required. For example, the following example:</p>
+<pre><code class="language-lua">local x, y = foo() -- take the first 2 actual parameters and assign them to x and y respectively
+t.k, t.j = a, foo() -- take the first actual parameter and assign it to t.j
+</code></pre>
+</li>
+<li>
+<p>Other places only represent the first actual parameter passed in. For example, the following example:</p>
+<pre><code class="language-lua">local x, y = foo(), b -- not the last expression, just take the first argument and assign it to x
+t.k, t.j = foo(), b -- not the last expression, just take the first argument and assign it to t.k
+if foo() then -- conditional judgment
+   t[foo()] = foo() + f -- table index, and binary operands
+end
+</code></pre>
+</li>
+</ol>
+<p>In addition, there is another scenario:</p>
+<ol start="4">
+<li>
+<p>For a single function call statement, the return values are ignored at this time. For example, the following example:</p>
+<pre><code class="language-lua">print(&quot;no results&quot;)
+foo(1, 2, 3)
+</code></pre>
+</li>
+</ol>
+<p>The fourth scenario does not need to deal with the return values, so ignore it for now. In the previous three scenarios, it is necessary to move the return values from the top of the stack to the position of the function entry. For example, for the <code>print(&quot;hello&quot;, sqr(3, 4))</code> statement, the stack layout before calling the <code>sqr()</code> function is shown in the left figure below:</p>
+<pre><code>|       |        |       |                |       |
++-------+        +-------+                +-------+
+| print |        | print |                | print |
++-------+        +-------+                +-------+
+|&quot;hello&quot;|        |&quot;hello&quot;|                |&quot;hello&quot;|
++-------+        +-------+                +-------+
+|  sqr  |        |  sqr  |              / |   9   | &lt;--original sqr entry position
++-------+        +-------+ &lt;--base   /-+  +-------+
+|   3   |        |   3   |           |  \ |   16  |
++-------+        +-------+           |    +-------+
+|   4   |        |   4   |           |    |       |
++-------+        +-------+           |
+|       |        |   9   | \         |
+                 +-------+  +return--/
+                 |   16  | / values
+                 +-------+
+                 |       |
+</code></pre>
+<p>In the left picture, the <code>print</code> function is at the top of the stack, followed by the parameter <code>&quot;hello&quot;</code> string constant and the <code>sqr()</code> function, and then the two parameters of the <code>sqr()</code> function: <code>3</code> and <code>4</code>. The important point here is that in the syntax analysis stage, the arguments of the function are generated by <code>explist()</code> bytecodes, which are loaded onto the stack in turn, so the <code>sqr()</code> function must be located in the <code>print()</code> function's argument location. Then, the return value of the <code>sqr()</code> function should be moved to the position of the <code>sqr()</code> function as the argument of the <code>print()</code> function, as shown in the rightmost figure in the above figure.</p>
+<p>Therefore, the above three stack layout diagrams are summarized as follows:</p>
+<ul>
+<li>
+<p>The picture on the left is the state before the <code>sqr()</code> function call;</p>
+</li>
+<li>
+<p>The picture in the middle is after the <code>sqr()</code> function is called, that is, the state after the <code>Return</code> bytecode introduced in the previous part of this section is executed;</p>
+</li>
+<li>
+<p>The picture on the right is the expected state after calling the <code>sqr()</code> function, that is, the return value of the <code>sqr()</code> function is used as the return value of the <code>print()</code> function.</p>
+</li>
+</ul>
+<p>Therefore, what we need to do is to change the stack layout from the middle picture to the right picture, so in the processing flow of <code>Call</code> bytecode, move the return value from the top of the stack to the position of the function entry, which is the last line in the following code :</p>
+<pre><code class="language-rust  ignore">     ByteCode::Call(func, narg_plus) =&gt; {
+         self.base += func as usize + 1;
+         match &amp;self.stack[self.base - 1] {
+             Value::LuaFunction(f) =&gt; {
+                 // The processing of parameters is omitted here.
+
+                 // Call the function, `nret` is the number of return values at the top of the stack
+                 let nret = self. execute(&amp;f);
+
+                 // Delete the stack values from the function entry to the
+                 // starting position of the return values, so the return
+                 // values are moved to the function entry position.
+                 self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
+             }</code></pre>
+<p>Here, the return values are not directly moved to the function entry position, but the stack data from the function entry to the start position of the return value is cleared through the <code>Vec::drain()</code> method to realize the return value in place. This is also done to clean up the stack space occupied by the called function at the same time, so as to release resources in time.</p>
+<h2 id="read-return-value-number"><a class="header" href="#read-return-value-number">Read Return Value: Number</a></h2>
+<p>The above describes where to put the return values, now let's deal with the number of return values. This is also the same as the variable parameter expression in the previous section. According to the above four scenarios, it is also divided into four types:</p>
+<ol>
+<li>All return values;</li>
+<li>Fixed the first N return values;</li>
+<li>The first return value;</li>
+<li>No return value is required.</li>
+</ol>
+<p>Similar to <code>VarArgs</code> bytecode, <code>Call</code> bytecode also needs to add a parameter to indicate how many return values are needed:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     Call(u8, u8, u8) // Add the third associated parameter, indicating how many return values are required</code></pre>
+<p>But there is a difference here, that is the number of parameters associated with <code>VarArgs</code>, and the value <code>0</code> means all variable arguments. The fourth scenario is added here for the function call, which does not need a return value, that is, a return value of <code>0</code> is required, so the new associated parameters of the <code>Call</code> bytecode cannot be represented by <code>0</code> as a special value for all return values. This is like the scene in the previous section <a href="./ch08-02.arguments.html#scenario-1-all-variable-arguments">Number of parameters</a>, that is, there are already <code>0</code> parameters, so it cannot be simply used <code>0</code> is a special value. There are two solutions to this problem:</p>
+<ul>
+<li>
+<p>Refer to the processing method of the number of parameters in the previous section, use <code>0</code> to represent all return values, and change the case of fixed N return values to N+1 and encode them into the <code>Call</code> bytecode. This is also the scheme adopted by Lua's official implementation;</p>
+</li>
+<li>
+<p>Take the &quot;no need to return value&quot; in the fourth scenario as &quot;ignore the return value&quot;, that is, there is no need to process the return value, or it doesn't matter how to process the return value. Then in this scenario, we can fill in any number for this associated parameter. Here we choose to fill in <code>0</code>.</p>
+</li>
+</ul>
+<p>We choose the latter option. That is to say, the value <code>0</code> has two meanings:</p>
+<ul>
+<li>All return values are required;</li>
+<li>No return value is required.</li>
+</ul>
+<p>Although the meanings of these two scenarios are different, the processing method is the same when the virtual machine is executed, and the return value is not processed. In other words, all return values (if any) will be placed at the function entry.</p>
+<p>If the value of this parameter is not <code>0</code>, it corresponds to the second and third scenarios above, that is, the situation where the first N and the first return values need to be fixedIn this case, you need to deal with:</p>
+<ul>
+<li>If the actual return value is less than the expected demand, then <code>nil</code> needs to be added;</li>
+<li>Otherwise, no processing is required. The extra return value is considered as a temporary variable on the stack and has no effect.</li>
+</ul>
+<p>Next, add this nil filling process in the process of executing <code>Call</code> bytecode in the virtual machine:</p>
+<pre><code class="language-rust  ignore">     ByteCode::Call(func, narg_plus, want_nret) =&gt; {
+         self.base += func as usize + 1;
+         match &amp;self.stack[self.base - 1] {
+             Value::LuaFunction(f) =&gt; {
+                 let nret = self. execute(&amp;f);
+                 self.stack.drain(self.base+func as usize .. self.stack.len()-nret);
+
+                 // Fill nil as needed
+                 // If want_nret==0, there is no need to process it, and it will not enter the if{} branch.
+                 let want_nret = want_nret as usize;
+                 if nret &lt; want_nret {
+                     self.fill_stack(nret, want_nret - nret);
+                 }
+             }</code></pre>
+<p>At this point, the virtual machine execution part of <code>Call</code> bytecode is completed.</p>
+<h2 id="syntax-analysis-of-scenarios"><a class="header" href="#syntax-analysis-of-scenarios">Syntax Analysis of Scenarios</a></h2>
+<p>In previous chapters, we always introduce syntax analysis to generate bytecode first, and then introduce the virtual machine to execute the bytecode. But this time is different. The above only introduces the virtual machine execution of <code>Call</code> bytecode in different scenarios; it does not introduce syntax analysis, that is, how to generate <code>Call</code> bytecode in each scenario. Make it up now.</p>
+<p>The first and second scenarios above are exactly the same as the <a href="./ch08-02.arguments.html#scenario-1-all-variable-arguments">corresponding scenario</a> of variable parameter expressions, so there is no need to do these statements here to modify, we only need to add <code>ExpDesc::Call</code> expressions in <code>discharge_expand()</code> and <code>discharge_expand_want()</code>. The code of <code>discharge_expand()</code> is listed below, and ``discharge_expand_want()` is similar, so it is omitted here.</p>
+<pre><code class="language-rust  ignore">     fn discharge_expand(&amp;mut self, desc: ExpDesc) -&gt; bool {
+         let code = match desc {
+             ExpDesc::Call(ifunc, narg_plus) =&gt; { // Add function call expression
+                 ByteCode::Call(ifunc as u8, narg_plus as u8, 0)
+             }
+             ExpDesc::VarArgs =&gt; {
+                 ByteCode::VarArgs(self.sp as u8, 0)
+             }
+             _ =&gt; {
+                 self.discharge(self.sp, desc);
+                 return false
+             }
+         };
+         self.fp.byte_codes.push(code);
+         true
+     }</code></pre>
+<p>In Lua, when the number of values cannot be determined during the syntax analysis stage, there are only variable arguments and function calls. So these two functions are now complete. If there are other similar statements, we can also add statements to this function without modifying the specific application scenario.</p>
+<p>Next, look at the third scenario, which only takes the first return value. The same as the variable arguments statement in the previous section, the loading of the <code>ExpDesc::Call</code> expression is also completed in the <code>discharge()</code> function. Unlike the variable arguments statement, the first associated parameter of the <code>VarArgs</code> bytecode generated by the variable arguments is the target address, and the three parameters associated with the <code>Call</code> bytecode here have no target address of. It is introduced above that when the virtual machine is executed, the return value is placed at the entry address of the function, but the <code>discharge()</code> function is to load the value of the expression to the specified address. Therefore, the loading of the <code>ExpDesc::Call</code> expression may require 2 bytecodes: first generate the <code>Call</code> bytecode to call the function and put the return value at the function entry position, and then generate the <code>Move</code> bytecode to put the first A return value is assigned to the target address. code show as below:</p>
+<pre><code class="language-rust  ignore">     fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+         let code = match desc {
+             ExpDesc::Call(ifunc, narg_plus) =&gt; {
+                 // Generate Call, keep only 1 return value, and put it in ifunc position
+                 self.fp.byte_codes.push(ByteCode::Call(ifunc as u8, narg_plus as u8, 1));
+
+                 // Generate Move, copy return value from ifunc to dst position
+                 self.fp.byte_codes.push(ByteCode::Move(dst as u8, ifunc as u8));
+             }</code></pre>
+<p>For example, the following sample code:</p>
+<pre><code class="language-lua">local x, y
+x = foo()
+</code></pre>
+<p>Its stack layout is as follows:</p>
+<pre><code>|       |          |       |          |       |
++-------+          +-------+          +-------+
+|   x   |          |   x   |    /----&gt;|   x   |
++-------+          +-------+    |     +-------+
+|   y   |          |   y   |    |     |   y   |
++-------+          +-------+    |     +-------+
+|  foo  |    /----&gt;|  100  |----/     |       |
++-------+    |     +-------+    Move bytecode assigns the return value to the target address
+:       :    |     |       |
++-------+    |
+|  100  |----/ `Call` bytecode moves the returns value 100 to `foo` position
++-------+
+|       |
+</code></pre>
+<ul>
+<li>The picture on the left is the stack layout before the <code>foo()</code> function returns, assuming <code>100</code> at the top of the stack is the return value of the function;</li>
+<li>The picture in the middle shows that after the <code>Call</code> bytecode is executed, the return value is moved to the function entry position, which is the function completed above in this section;</li>
+<li>The figure on the right is the <code>Move</code> bytecode assigning the return value to the target address, that is, the local variable <code>x</code>.</li>
+</ul>
+<p>It can be seen that 2 bytecodes are generated in this scenario, and the return value is also moved 2 times. There is room for optimization here. The reason why 2 bytecodes are needed is because the <code>Call</code> bytecode has no parameters associated with the target address, so it cannot be directly assigned. The reason why there is no associated target address parameter is because the <code>Call</code> bytecode has already stuffed 3 parameters, and there is no space to stuff it into the target address.</p>
+<p>Once the problem is identified, the optimization solution becomes obvious. Since only one return value is always required in this scenario, the third associated parameter (the number of required return values) in <code>Call</code> bytecode is meaningless. So you can add a bytecode dedicated to this scenario, delete the third parameter in the <code>Call</code> bytecode, and make room for the parameter of the target address. For this, we add <code>CallSet</code> bytecode:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     Call(u8, u8, u8), // Associated parameters: function entry, number of arguments, number of expected return values
+     CallSet(u8, u8, u8), // Associated parameters: target address, function entry, number of arguments</code></pre>
+<p>In this way, in the <code>discharge()</code> function, the function call statement only needs one bytecode:</p>
+<pre><code class="language-rust  ignore">     fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+         let code = match desc {
+             ExpDesc::Call(ifunc, narg) =&gt; {
+                 ByteCode::CallSet(dst as u8, ifunc as u8, narg as u8)
+             }</code></pre>
+<p>The virtual machine execution of <code>CallSet</code> bytecode is as follows:</p>
+<pre><code class="language-rust  ignore">     ByteCode::CallSet(dst, func, narg) =&gt; {
+         // Call functions
+         let nret = self. call_function(func, narg);
+
+         if nret == 0 { // no return value, set nil
+             self. set_stack(dst, Value::Nil);
+         } else {
+             // use swap() to avoid clone()
+             let iret = self.stack.len() - nret as usize;
+             self.stack.swap(self.base+dst as usize, iret);
+         }
+
+         // Clean up the stack space occupied by the function call
+         self.stack.truncate(self.base + func as usize + 1);
+     }</code></pre>
+<p>The <code>call_function()</code> method in the above is a function that extracts the execution flow of <code>Call</code> bytecode. After calling the function, if there is no return value, set the target address to <code>nil</code>, otherwise assign the first return value to the target address. The last line cleans up the stack space occupied by function calls, and there are 2 cases in cleaning:</p>
+<ul>
+<li>If the target address is a local variable, then the cleanup location is from the function entry;</li>
+<li>If the target address is a temporary variable, set the target address of the function return value as the function entry position in <code>discharge_any()</code>, so the cleaning position starts from one position behind the function entry.</li>
+</ul>
+<p>In summary, always start cleaning from a position behind the function entry position, which can satisfy the above two conditions. Only in the case of local variables, one more function entry will be reserved.</p>
+<h2 id="variable-number-of-return-values"><a class="header" href="#variable-number-of-return-values">Variable Number of Return Values</a></h2>
+<p>The syntax analysis and virtual machine execution of the return value are introduced above, but one place is still missing. Among the three application scenarios of variable parameters listed in the previous section, the first scenario includes three statements: table construction, function argument, and function return value. At that time, only the first two statements were introduced. Now that the return value statement is supported, the last statement is added.</p>
+<p>This section <a href="#syntax-analysis-of-return-statement">above</a> introduces the syntax analysis of the return statement, but at that time, all expressions of the return value were loaded onto the stack in sequence, that is, only a fixed number of return values was supported. When the last expression of the function return value statement is a variable parameter or a function call statement, then all variable parameters or all return values of the function when the virtual machine is executed will be used as the return value of this function, that is to say, the number of return values cannot be determined during the parsing phase, that is, a variable number of return values.</p>
+<p>Variable number of return values, syntax analysis can refer to the previous section <a href="./ch08-02.arguments.html#scenario-1-all-variable-arguments">table construction</a> or <a href="./ch08-02.arguments.html#scenario-1-all-variable-arguments-continued">function arguments</a>, that is, use the modified <code>explist()</code> function , special treatment is given to the last expression. The specific code is omitted here.</p>
+<p>What needs to be explained is how to represent &quot;variable number&quot; in bytecode. In this section, two new return value-related bytecodes are added, <code>Return0</code> and <code>Return</code>. Among them, <code>Return0</code> is used when there is no return value, so the parameter of the number of return values associated in <code>Return</code> bytecode will not be <code>0</code>, then <code>0</code> can be used as a special value to indicate variable number.</p>
+<h2 id="summary-of-variable-number-statements-and-scenario"><a class="header" href="#summary-of-variable-number-statements-and-scenario">Summary of Variable Number Statements and Scenario</a></h2>
+<p>Here is a summary of statements and scenarios related to variable quantities. Statements that directly result in variable numbers include:</p>
+<ul>
+<li>Variable argument statement <code>...</code>, there are <a href="./ch08-02.arguments.html#expdescvarargs-and-application-scenarios">3 application scenarios</a>;</li>
+<li>Function call statement, in addition to the 3 application scenarios of variable parameters, there is also a scenario of ignoring the return value.</li>
+</ul>
+<p>Among the several application scenarios of these two statements, the first scenario is to take all the actual parameters or return values when the virtual machine is executed. This scenario includes 3 statements:</p>
+<ul>
+<li>Table construction, corresponding to <code>SetList</code> bytecode;</li>
+<li>Function arguments, corresponding to <code>Call/CallSet</code> bytecode;</li>
+<li>The return value of the function corresponds to the <code>Return</code> bytecode of the called function and the <code>Call/CallSet</code> bytecode of the calling function.</li>
+</ul>
+<p>In the above bytecodes, in order to represent the state of &quot;actually all expressions when the virtual machine is executed&quot;, <code>0</code> is used as a special value, among which:</p>
+<ul>
+<li>
+<p>The second parameter of <code>Call/CallSet</code> bytecode represents the number of actual parameters. Because the function call originally supports no parameters, in order to use <code>0</code> as a special value, we have to correcte the number with adding by 1 for fixed number case, that is, N fixed parameters are encoded into N+1 in the bytecode;</p>
+</li>
+<li>
+<p>The third parameter of <code>Call/CallSet</code> bytecode represents the number of expected return values. The function call also supports the situation that the return value is not required, but we understand &quot;no need&quot; as &quot;ignore&quot;, then it is no problem to read all the return values, so <code>0</code> can be used as a special value;</p>
+</li>
+<li>
+<p>The second parameter of <code>SetList</code> and <code>Return</code> bytecodes both represent the number. However, when these two bytecodes are used for fixed numbers, no expressions are supported, so <code>0</code> can be directly used as a special value.</p>
+</li>
+</ul>
+<p>In addition, it needs to be emphasized again that when <code>0</code> is used to represent a special value in the above bytecode, the number of specific expressions is calculated from the top of the stack, which must ensure that there is no temporary variable on the top of the stack, so the virtual machine must explicitly clean up temporary variables when executing variable parameter and function call statements.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>This section begins by introducing fixed number return values. The called function puts the return value on the top of the stack through the <code>Return/Return0</code> bytecode, and then the calling function reads the return value in the <code>Call/CallSet</code> bytecode.</p>
+<p>The variable number of return values was introduced later, which is similar to the variable parameters in the previous section.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch08-02.arguments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch08-04.rust_functions_and_api.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch08-02.arguments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch08-04.rust_functions_and_api.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

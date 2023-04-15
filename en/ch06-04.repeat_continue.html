@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>repeat and continue Statements - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html" class="active"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="repeatuntil-and-continue-statements"><a class="header" href="#repeatuntil-and-continue-statements"><code>repeat..until</code> and <code>continue</code> Statements</a></h1>
+<p>This section introduces the <code>repeat..until</code> statement, and discusses and attempts to introduce the <code>continue</code> statement that Lua language does not support.</p>
+<h2 id="repeatuntil-statement"><a class="header" href="#repeatuntil-statement"><code>repeat..until</code> Statement</a></h2>
+<p>The <code>repeat..until</code> statement is similar to the <code>while</code> statement, except that the judgment condition is placed behind to ensure that the internal code block is executed at least once.</p>
+<pre><code>     +--------+
+     | repeat |
+     +--------+
+/---&gt;
+|        block
+|
+|    +-----------------+
+\----| until condition |
+     +-----------------+
+</code></pre>
+<p>The format of the final generated bytecode sequence is as follows, where <code>...</code> represents the bytecode sequence of the inner code block:</p>
+<pre><code>     ... &lt;--\
+     Test ---/ `until` judgment condition
+</code></pre>
+<p>Compared with the bytecode sequence of the <code>while</code> statement, it seems that the Test is put at the end and the original Jump bytecode is replaced. But the situation is not that simple! Putting the judgment conditional statement behind the block will introduce a big problem. The local variables defined in the block may be used in the judgment conditional statement. For example, the following example:</p>
+<pre><code class="language-lua">-- keep retrying until the request succeeds
+repeat
+     local ok = request_xxx()
+until ok
+</code></pre>
+<p>The variable <code>ok</code> after the last line <code>until</code> is obviously intended to refer to the local variable defined in the second line. However, the previous code block analysis function <code>block()</code> has <a href="./ch06-01.if.html#variable-scope-in-block">deleted the internally defined local variables</a> at the end of the function. That is to say, according to the previous syntax analysis logic, when <code>until</code> is parsed, the internally defined <code>ok</code> local variable has become invalid and cannot be used. This is clearly unacceptable.</p>
+<p>In order to support the ability to read internal local variables during <code>until</code>, the original <code>block()</code> function needs to be modified (the code is always messed up by these strange requirements), and the control of local variables is independent. For this reason, a <code>block_scope()</code> function is added, which only does syntax analysis; while the scope of internal local variables is completed by the outer <code>block()</code> function. In this way, the place where the <code>block()</code> function was originally called (such as if, while statement, etc.) does not need to be modified, and this special <code>repeat..until</code> statement calls the <code>block_scope()</code> function for finer control. code show as below:</p>
+<pre><code class="language-rust  ignore">     fn block(&amp;mut self) -&gt; Token {
+         let nvar = self. locals. len();
+         let end_token = self. block_scope();
+         self.locals.truncate(nvar); // expire internal local variables
+         return end_token;
+     }
+     fn block_scope(&amp;mut self) -&gt; Token {
+         ... // The original block parsing process
+     }</code></pre>
+<p>Then, the analysis code of the <code>repeat..until</code> statement is as follows:</p>
+<pre><code class="language-rust  ignore">     fn repeat_stat(&amp;mut self) {
+         let istart = self.byte_codes.len();
+
+         self. push_break_block();
+
+         let nvar = self.locals.len(); // Internal local variable scope control!
+
+         assert_eq!(self. block_scope(), Token::Until);
+
+         let icond = self.exp_discharge_top();
+
+         // expire internal local variables AFTER condition exp.
+         self.locals.truncate(nvar); // Internal local variable scope control!
+
+         let iend = self.byte_codes.len();
+         self.byte_codes.push(ByteCode::Test(icond as u8, -((iend - istart + 1) as i16)));
+
+         self. pop_break_block();
+     }</code></pre>
+<p>In the above code, the 2 lines commented complete the scope control of the internal local variables in the original <code>block()</code> function. After calling <code>exp_discharge_top()</code> and parsing the conditional judgment statement, the internally defined local variables are deleted.</p>
+<h2 id="continue-statement"><a class="header" href="#continue-statement"><code>continue</code> statement</a></h2>
+<p>It took a lot of space to explain the scope of variables in the <code>repeat..until</code> statement, which has a lot to do with the <code>continue</code> statement that does not exist in Lua.</p>
+<p>When the <code>break</code> statement was supported in the previous section, it was mentioned that the Lua language does not support the <code>continue</code> statement. There is a lot of debate on this issue, and there is a high demand for adding a <code>continue</code> statement in Lua. As early as 2012, there was a related <a href="http://lua-users.org/wiki/ContinueProposal">proposal</a>, which listed in detail the advantages and disadvantages of adding the <code>continue</code> statement and related discussions. Twenty years have passed, and even though the stubborn Lua added the <code>goto</code> statement in version 5.2, it still did not add the <code>continue</code> statement.</p>
+<p>The <a href="https://www.luafaq.org/#T1.26">&quot;Unofficial FAQ&quot;</a> explains this:</p>
+<ul>
+<li>The <code>continue</code> statement is just one of many control statements, similar ones include <code>goto</code>, <code>break</code> with label, etc. The <code>continue</code> statement is nothing special, there is no need to add this statement;</li>
+<li>Conflicts with existing <code>repeat..until</code> statements.</li>
+</ul>
+<p>In addition, an <a href="http://lua-users.org/lists/lua-l/2008-02/msg01183.html">email</a> from Roberto, the author of Lua, is more representative of the official attitude. The reason for this is the first point above, that is, the <code>continue</code> statement is just one of many control statements. An interesting thing is that there are two examples in this email, and the other example just happens to be <code>repeat..until</code> besides <code>continue</code>. The above unofficial FAQ also mentioned that these two statements conflict.</p>
+<p>The reason for the conflict between these two statements is that if there is a <code>continue</code> statement in the <code>repeat..until</code> internal code block, then it will jump to the until conditional judgment position. If there are local variables defined in the block are used in <code>until</code> statement, while the <code>continue</code> statement may skip the definition and jump to the <code>until</code>, then this local variable is meaningless in <code>until</code>. This is where the conflict lies. For example the following code:</p>
+<pre><code class="language-lua">repeat
+     `continue` -- jump to until, skip the definition of `ok`
+     local ok = request_xxx()
+until ok -- how to deal with `ok` here?
+</code></pre>
+<p>In contrast, the equivalent of the <code>repeat..until</code> statement in the C language is the <code>do..while</code> statement, which supports <code>continue</code>. This is because in the <code>do..while</code> statement of the C language, the conditional judgment after the while is outside the scope of the internal code block. For example, the following code will compile error:</p>
+<pre><code class="language-c">     do {
+         bool ok = request_xx();
+     } while (ok); // error: 'ok' undeclared
+</code></pre>
+<p>Such a specification (the conditional judgment is outside the scope of the inner code block) is not convenient in some usage scenarios (such as the above example), but there are also very simple solutions (such as move <code>ok </code>definition outside the loop), and the syntax analysis is simpler, for example, there is no need to separate the <code>block_scope()</code> function. Then why does Lua stipulate that the conditional judgment statement should be placed within the inner scope? The speculation is as follows, if Lua also follows the practice of C language (the conditional judgment is outside the scope of the internal code block), and then the user writes the following Lua code, <code>ok</code> after the until will be parsed as a Global variables, without reporting errors like C language! This is not the user's intention, thus causing a serious bug.</p>
+<pre><code class="language-lua">repeat
+     local ok = request_xxx()
+until ok
+</code></pre>
+<p>To sum up, the <code>repeat..until</code> statement needs to put the conditional judgment statement after <code>until</code> in the scope of the internal code block in order to avoid bugs with a high probability; then when the <code>continue</code> statement jumps to the conditional statement, it may skip the definition of local variables, and then there is a conflict.</p>
+<h2 id="try-adding-continue-statement"><a class="header" href="#try-adding-continue-statement">Try Adding <code>continue</code> Statement</a></h2>
+<p>Lua's official <a href="https://www.luafaq.org/#T1.26">reason for not supporting the <code>continue</code> statement</a> is mainly that they think the frequency of use of the <code>continue</code> statement is very low and it is not worth supporting. But in my personal programming experience, whether in Lua or other languages, the frequency of use of the <code>continue</code> statement is still very high. Although it may not be as good as <code>break</code>, it is far more than <code>goto</code> and <code>break</code> with labels, and even more than <code>repeat..until</code> statement. Besides, the way to implement the <code>continue</code> function in Lua (<code>repeat..until true</code> + <code>break</code>, or <code>goto</code>) is more verbose than using <code>continue</code> directly. So can we add a <code>continue</code> statement to our interpreter?</p>
+<p>First of all, we have to resolve the conflict with <code>repeat..until</code> mentioned above. There are several solutions:</p>
+<ul>
+<li>
+<p>Make a rule that the <code>continue</code> statement is not supported in <code>repeat..until</code>, just like the <code>if</code> statement does not support <code>continue</code>. But this is very easy to cause misunderstanding. For example, a piece of code has two layers of loops, the outer layer is a <code>while</code> loop, and the inner layer is a <code>repeat</code> loop; the user wrote a <code>continue</code> statement in the inner loop, intending to make the inner <code>repeat</code> loop take effect, but because <code>repeat</code> does not actually support <code>continue</code>, Then it will take effect in the outer while loop, and <code>continue</code> the outer <code>while</code> loop. This is a serious potential bug.</p>
+</li>
+<li>
+<p>Make a rule that the <code>continue</code> statement is prohibited in <code>repeat..until</code>. If there is <code>continue</code>, an error will be reported. This can avoid the potential bugs of the above scheme, but this prohibition is too strict.</p>
+</li>
+<li>
+<p>Make a rule that if an internal local variable is defined in <code>repeat..until</code>, the <code>continue</code> statement is prohibited. This plan is a little more relaxed than the last one, but it can be more relaxed.</p>
+</li>
+<li>
+<p>Make a rule that after the <code>continue</code> statement appears in <code>repeat..until</code>, the definition of internal local variables is prohibited; in other words, <code>continue</code> prohibits jumping to local variable definitions. This is similar to the restriction on subsequent <code>goto</code> statements. However, it can be more relaxed.</p>
+</li>
+<li>
+<p>On the basis of the previous solution, only the local variables defined after the <code>continue</code> statement are used in the conditional judgment statement after the <code>until</code>, which is prohibited. It’s just that the judgment of whether to use local variables in the statement is very complicated. If function closures and Upvalue are supported later, it is basically impossible to judge. So this plan is not feasible.</p>
+</li>
+</ul>
+<p>In the end, I chose to use the second-to-last solution. For specific coding implementation, there used to be <code>break_blocks</code> in <code>ParseProto</code> to record break statements, and now a similar <code>continue_blocks</code> is added, but the member type is <code>(icode, nvar)</code>. Among them, the first variable icode is the same as the members of <code>break_blocks</code>, and records the position of the Jump bytecode corresponding to the <code>continue</code> statement for subsequent correction; the second variable <code>nvar</code> represents the number of local variables in the <code>continue</code> statement, which is used for Subsequent checks to see if the new local variable has been jumped.</p>
+<p>Second, adding a <code>continue</code> statement cannot affect existing code. In order to support the <code>continue</code> statement, it is necessary to use <code>continue</code> as a keyword (similar to the <code>break</code> keyword), so many existing Lua codes use <code>continue</code> as a label, or even a variable name or function name (essentially a variable name) will fail to parse. To this end, a tricky solution is not to use <code>continue</code> as a keyword, but to judge when parsing a statement that if it starts with <code>continue</code> and is followed by a block-ending Token (such as <code>end</code>, etc.), it is considered to be <code>continue</code> statement. Thus in most other places, <code>continue</code> will still be interpreted as a normal Name.</p>
+<p>In the corresponding <code>block_scope()</code> function, the part starting with Token::Name, the newly added code is as follows:</p>
+<pre><code class="language-rust  ignore">         loop {
+             match self. lex. next() {
+                 // Omit parsing of other types of statements
+                 t@Token::Name(_) | t@Token::ParL =&gt; {
+                     // this is not standard!
+                     if self.try_continue_stat(&amp;t) { // !! New !!
+                         continue;
+                     }
+
+                     // The following omits the parsing of standard 
+                     // function calls and variable assignment statements
+                 }</code></pre>
+<p>The <code>try_continue_stat()</code> function is defined as follows:</p>
+<pre><code class="language-rust  ignore">     fn try_continue_stat(&amp;mut self, name: &amp;Token) -&gt; bool {
+         if let Token::Name(name) = name {
+             if name.as_str() != &quot;continue&quot; { // The beginning of the judgment statement is `continue`
+                 return false;
+             }
+             if !matches!(self.lex.peek(), Token::End | Token::Elseif | Token::Else) {
+                 return false; // Judgment followed by one of these 3 Tokens
+             }
+
+             // Then, it's the `continue` statement. The following processing
+             // is similar to the break statement processing
+             if let Some(continues) = self.continue_blocks.last_mut() {
+                 self.byte_codes.push(ByteCode::Jump(0));
+                 continues.push((self.byte_codes.len() - 1, self.locals.len()));
+             } else {
+                 panic!(&quot;continue outside loop&quot;);
+             }
+             true
+         } else {
+             false
+         }
+     }</code></pre>
+<p>Before parsing to the code block of the loop body, it must be prepared first, which is the <code>push_loop_block()</code> function. After the block ends, use <code>pop_loop_block()</code> to handle <code>break</code>s and <code>continue</code>s. The jump corresponding to <code>break</code>s is to jump to the end of the block, that is, the current position; the jump position corresponding to <code>continue</code>s is determined according to different loops (for example, the while loop jumps to the beginning of the loop, and the repeat loop jumps to the end of the loop) , so parameters are required to specify; in addition, when processing continus, it is necessary to check whether there are new definitions of local variables, that is, compare the number of current local variables with the number of local variables in the <code>continue</code> statement.</p>
+<pre><code class="language-rust  ignore">     // before entering loop block
+     fn push_loop_block(&amp;mut self) {
+         self. break_blocks. push(Vec::new());
+         self. `continue`_blocks. push(Vec::new());
+     }
+
+     // after leaving loop block, fix `break` and `continue` Jumps
+     fn pop_loop_block(&amp;mut self, icon`continue`: usize) {
+         // breaks
+         let iend = self.byte_codes.len() - 1;
+         for i in self.break_blocks.pop().unwrap().into_iter() {
+             self.byte_codes[i] = ByteCode::Jump((iend - i) as i16);
+         }
+
+         // continues
+         let end_nvar = self. locals. len();
+         for (i, i_nvar) in self.`continue`_blocks.pop().unwrap().into_iter() {
+             if i_nvar &lt; end_nvar {
+                // i_nvar is the number of local variables in the 
+                // `continue` statement, end_nvar is the number of
+                // current local variables
+                 panic!(&quot;`continue` jump into local scope&quot;);
+             }
+             self.byte_codes[i] = ByteCode::Jump((i`continue` as isize - i as isize) as i16 - 1);
+         }
+     }</code></pre>
+<p>So far, we have implemented the <code>continue</code> statement while ensuring backward compatibility! You can use the following code to test:</p>
+<pre><code class="language-lua">-- validate compatibility
+continue = print -- continue as global variable name, and assign it a value
+continue(continue) -- call continue as function
+
+-- continue in while loop
+local c = true
+while c do
+    print &quot;hello, while&quot;
+    if true then
+      c = false
+      continue
+    end
+    print &quot;should not print this!&quot;
+end
+
+-- continue in repeat loop
+repeat
+    print &quot;hello, repeat&quot;
+    local ok = true
+    if true then
+      continue -- continue after local
+    end
+    print &quot;should not print this!&quot;
+until ok
+
+-- continue skip local in repeat loop
+-- PANIC!
+repeat
+    print &quot;hello, repeat again&quot;
+    if true then
+      continue -- skip `ok`!!! error in parsing
+    end
+    local ok = true
+until ok
+</code></pre>
+<h2 id="repeatuntil-existence"><a class="header" href="#repeatuntil-existence"><code>repeat..until</code> Existence</a></h2>
+<p>As can be seen above, the existence of the <code>repeat..until</code> statement introduces two problems because the scope of the local variables defined in the block needs to be extended in the <code>until</code> part:</p>
+<ul>
+<li>In programming implementation, it is necessary to create a <code>block_scope()</code> function;</li>
+<li>Conflict with <code>continue</code> statement.</li>
+</ul>
+<p>I personally think that introducing the above two problems in order to support a statement that is rarely used like <code>repeat..until</code> is not worth the candle. If I were to design the Lua language, this statement would not be supported.</p>
+<p>In the 8.4 Exercise section of the official &quot;Lua Programming (4th Edition)&quot; book, the following questions are raised:</p>
+<blockquote>
+<p>Exercise 8.3: Many people think that because <code>repeat-until</code> is rarely used, it should not appear at the end in a simple programming language like Lua language. What do you think?</p>
+</blockquote>
+<p>I really want to know the author's answer to this question, but unfortunately, none of the exercises in this book give an answer.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch06-03.while_break.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch06-05.numerical-for.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch06-03.while_break.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch06-05.numerical-for.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

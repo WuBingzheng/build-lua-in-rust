@@ -1,0 +1,403 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Definition and Call - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html" class="active"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="define-and-call"><a class="header" href="#define-and-call">Define and Call</a></h1>
+<p>Our interpreter only supported sequential execution at first, and later added control structures to support conditional jumps, and blocks also make the scope of variables. Functions, on the other hand, exist more independently in terms of resolution, execution, or scope. To do this, the current framework for parsing and virtual machine execution needs to be modified.</p>
+<h2 id="transform-parseproto"><a class="header" href="#transform-parseproto">Transform ParseProto</a></h2>
+<p>The definition of a function can be nested, that is, the function can be defined again inside another function. If the entire code is regarded as the main function, then our current syntax analysis is equivalent to only supporting this one function. In order to support nested definitions of functions, the parsing needs to be modified. First transform the data structure.</p>
+<p>Currently, the context structure of the parsing process is <code>ParseProto</code>, and this is also the structure returned to the virtual machine for execution. It is defined as follows:</p>
+<pre><code class="language-rust  ignore">pub struct ParseProto&lt;R: Read&gt; {
+     pub constants: Vec&lt;Value&gt;,
+     pub byte_codes: Vec&lt;ByteCode&gt;,
+
+     sp: usize,
+     locals: Vec&lt;String&gt;,
+     break_blocks: Vec&lt;Vec&lt;usize&gt;&gt;,
+     continue_blocks: Vec&lt;Vec&lt;(usize, usize)&gt;&gt;,
+     gotos: Vec&lt;GotoLabel&gt;,
+     labels: Vec&lt;GotoLabel&gt;,
+     lex: Lex&lt;R&gt;,
+}</code></pre>
+<p>The specific meaning of each field has been introduced in detail before, and will be ignored here. Here only the fields are distinguished according to the independence of the function:</p>
+<ul>
+<li>the final <code>lex</code> field is parsed throughout the code;</li>
+<li>All remaining fields are data inside the function.</li>
+</ul>
+<p>In order to support nested definitions of functions, the global part (<code>lex</code> field) and the function part (other fields) need to be disassembled. The newly defined data structure <code>PerFuncProto_</code> parsed by the function (because we will not adopt this solution in the end, <code>_</code> is added to the name of the structure), including other fields left after removing <code>lex</code> from the original <code>ParseProto</code>:</p>
+<pre><code class="language-rust  ignore">struct PerFuncProto_ {
+     pub constants: Vec&lt;Value&gt;,
+     pub byte_codes: Vec&lt;ByteCode&gt;,
+     sp: usize,
+     ... // omit more fields
+}</code></pre>
+<p>In order to support the nesting of functions, it is necessary to support multiple function analysis bodies at the same time. The most intuitive idea is to define a list of function bodies:</p>
+<pre><code class="language-rust  ignore">struct ParseProto&lt;R: Read&gt; {
+     funcs: Vec&lt;PerFuncProto_&gt;, // The list of function analysis body PerFuncProto_ just defined
+     lex: Lex&lt;R&gt;, // global data
+}</code></pre>
+<p>Each time a new layer of functions is nested, a new member is pushed into the <code>funcs</code> field; it pops up after the function is parsed. The last member of <code>funcs</code> represents the current function. This definition is very intuitive, but there is a problem. It is very troublesome to access all the fields of the current function. For example, to access the <code>constants</code> field, you need <code>self.funcs.last().unwrap().constants</code> to read or <code>self .funcs.last_mut().unwrap().constants</code> writes. It's too inconvenient, and the execution efficiency should also be affected.</p>
+<p>If it is C language, then this problem is easy to solve: add a pointer member of type <code>PerFuncProto_</code> in <code>ParseProto</code>, such as <code>current</code>, which points to the last member of <code>funcs</code>. This pointer is updated every time the function body is pushed or popped. Then we can directly use this pointer to access the current function, such as <code>self.current.constants</code>. This approach is very convenient but Rust thinks it is not &quot;safe&quot;, because the validity of this pointer cannot be guaranteed at the Rust syntax level. Although there are only two places to update this pointer, which is relatively safe, but since you use Rust, you must follow the rules of Rust.</p>
+<p>For Rust, a feasible solution is to add an index (rather than a pointer), such as <code>icurrent</code>, pointing to the last member of <code>funcs</code>. This index is also updated every time the function body is pushed or popped. When accessing the current function information, we can use <code>self.funcs[icurrent].constants</code>. While the Rust language allows this, it's really just a variant of the pointer scheme above, and can still cause bugs due to incorrect updates of the index. For example, if the index exceeds the length of <code>funcs</code>, it will panic, and if it is smaller than expected, there will be code logic bugs that are more difficult to debug. In addition, during execution, Rust's list index will be compared with the length of the list, which will also slightly affect performance.</p>
+<p>There is also a less intuitive solution that doesn't have the problems above: use recursion. When parsing nested functions, the most natural way is to recursively call the code of the parsing function, then each call will have an independent stack (Rust's call stack), so we can create a function parsing body every time you call it and use it Parse the current Lua function, and return the parsing body for the outer function to process after the call ends. In this solution, only the information of the current function can be accessed during the parsing process, and the information of the outer function cannot be accessed. Naturally, the problem of inconvenient access to the information of the current function just mentioned does not exist. For example, accessing constants still uses <code>self.constants</code>, even without modifying existing code. The only thing to solve is the global data <code>Lex</code>, which can be passed on as a parameter of the analysis function.</p>
+<p>In this solution, there is no need to define a new data structure, just change the <code>lex</code> field in the original <code>ParseProto</code> from <code>Lex</code> type to <code>&amp;mut Lex</code>. The syntax analysis function definition for parsing Lua functions is originally the method of <code>ParseProto</code>, which is defined as:</p>
+<pre><code class="language-rust  ignore">impl&lt;'a, R: Read&gt; ParseProto&lt;'a, R&gt; {
+     fn chunk(&amp;mut self) {
+         ...
+     }</code></pre>
+<p>Now change to a normal function, defined as:</p>
+<pre><code class="language-rust  ignore">fn chunk(lex: &amp;mut Lex&lt;impl Read&gt;) -&gt; ParseProto {
+     ...
+}</code></pre>
+<p>The parameter <code>lex</code> is global data, and each recursive call is directly passed to the next layer. The return value is the parsed information of the current Lua function created inside <code>chunk()</code>.</p>
+<p>In addition, the <code>chunk()</code> function internally calls the <code>block()</code> function to parse the code, and the latter returns the end Token of the block. Previously, the <code>chunk()</code> function was only used to process the entire code block, so the end Token could only be <code>Token::Eos</code>; but now it may also be used to parse other internal functions, and the expected end Token is <code>Token ::End</code>. Therefore, the <code>chunk()</code> function needs to add a new parameter, indicating the expected end Token. So the definition is changed to:</p>
+<pre><code class="language-rust  ignore">fn chunk(lex: &amp;mut Lex&lt;impl Read&gt;, end_token: Token) -&gt; ParseProto {
+     ...
+}</code></pre>
+<h2 id="add-funcproto"><a class="header" href="#add-funcproto">Add FuncProto</a></h2>
+<p>We just modified <code>ParseProto</code> and the type of <code>lex</code>. Now let's do a small optimization by the way. The first two <code>pub</code> modified fields in <code>ParseProto</code> are also returned to the virtual machine for execution; most of the latter fields are only used for syntax analysis, which are internal data and do not need to be returned to the virtual machine. These two parts can be disassembled so that only the part needed by the virtual machine is returned. To do this, add the <code>FuncProto</code> data structure:</p>
+<pre><code class="language-rust  ignore">// Return information to the virtual machine to execute
+pub struct FuncProto {
+     pub constants: Vec&lt;Value&gt;,
+     pub byte_codes: Vec&lt;ByteCode&gt;,
+}
+
+#[derive(Debug)]
+struct ParseProto&lt;'a, R: Read&gt; {
+     // Return information to the virtual machine to execute
+     fp: FuncProto,
+
+     // syntax analysis internal data
+     sp: usize,
+     locals: Vec&lt;String&gt;,
+     break_blocks: Vec&lt;Vec&lt;usize&gt;&gt;,
+     continue_blocks: Vec&lt;Vec&lt;(usize, usize)&gt;&gt;,
+     gotos: Vec&lt;GotoLabel&gt;,
+     labels: Vec&lt;GotoLabel&gt;,
+     lex: Lex&lt;R&gt;,
+
+     // global data
+     lex: &amp;'a mut Lex&lt;R&gt;,
+}</code></pre>
+<p>So the return value of the <code>chunk()</code> function is changed from <code>ParseProto</code> to <code>FuncProto</code>. Its full definition is as follows:</p>
+<pre><code class="language-rust  ignore">fn chunk(lex: &amp;mut Lex&lt;impl Read&gt;, end_token: Token) -&gt; FuncProto {
+     // Generate a new ParseProto to parse the current new Lua function
+     let mut proto = ParseProto::new(lex);
+
+     // call block() parsing function
+     assert_eq!(proto.block(), end_token);
+     if let Some(goto) = proto. gotos. first() {
+         panic!(&quot;goto {} no destination&quot;, &amp;goto.name);
+     }
+
+     // only returns the FuncProto part
+     proto.fp
+}</code></pre>
+<p>In this way, when syntactically analyzing Lua built-in functions, just recursively call <code>chunk(self.lex, Token::End)</code>. The specific syntax analysis is introduced below.</p>
+<h2 id="syntax-analysis"><a class="header" href="#syntax-analysis">Syntax Analysis</a></h2>
+<p>The general process of parsing Lua functions is introduced above, now let's look at the specific syntax analysis. By now, we should be familiar with syntax analysis already, and it can be executed according to BNF. Lua's function definition has 3 places:</p>
+<ol>
+<li>Global functions;</li>
+<li>Local functions:</li>
+<li>An anonymous function is a case of the expression <code>exp</code> statement.</li>
+</ol>
+<p>The BNF rules are as follows:</p>
+<pre><code>stat :=
+     `function` funcname funcbody | # 1. Global function
+     `local` `function` Name funcbody | # 2. Local function
+     # omit other cases
+
+exp := functiondef | omit other cases
+functiondef := `function` funcbody # 3. Anonymous function
+
+funcbody ::= '(' [parlist] ')' block end # Function definition
+</code></pre>
+<p>It can be seen from the above rules that the difference between these three definitions is only at the beginning, and at the end they all belong to <code>funcbody</code>. Here only the simplest second case, the local function, is introduced.</p>
+<pre><code class="language-rust  ignore">     fn local_function(&amp;mut self) {
+         self.lex.next(); // skip keyword `function`
+         let name = self.read_name(); // function name, or local variable name
+         println!(&quot;== function: {name}&quot;);
+
+         // currently does not support parameters, skip `()`
+         self.lex.expect(Token::ParL);
+         self.lex.expect(Token::ParR);
+
+         // Call the chunk() parsing function
+         let proto = chunk(self.lex, Token::End);
+
+         // Put the parsed result FuncProto into the constant table
+         let i = self.add_const(Value::LuaFunction(Rc::new(proto)));
+         // load function through LoadConst bytecode
+         self.fp.byte_codes.push(ByteCode::LoadConst(self.sp as u8, i as u16));
+
+         // create local variable
+         self. locals. push(name);
+     }</code></pre>
+<p>The parsing process is simple. It should be noted that the processing method of the function prototype FuncProto returned by the <code>chunk()</code> function is to put it in the constant table as a constant. It can be compared that a string is a constant composed of a series of character sequences; and the function prototype FuncProto is a constant composed of a series of constant tables and bytecode sequences. It also exists in the constant table, and it is also loaded with <code>LoadConst</code> bytecode.</p>
+<p>To this end, it is necessary to add a new Value type <code>LuaFunction</code> to represent the Rust function, and change the type that originally represented the Lua function from <code>Function</code> to <code>RustFunction</code>:</p>
+<pre><code class="language-rust  ignore">pub enum Value {
+     LongStr(Rc&lt;Vec&lt;u8&gt;&gt;),
+     LuaFunction(Rc&lt;FuncProto&gt;),
+     RustFunction(fn (&amp;mut ExeState) -&gt; i32),</code></pre>
+<p>The data type associated with <code>LuaFunction</code> is <code>Rc&lt;FuncProto&gt;</code>, and it can also be seen from here that it is similar to a string constant.</p>
+<p>The syntax analysis of &quot;defining a function&quot; is completed above, and the syntax analysis of &quot;calling a function&quot; is related to functions. But when &quot;calling a function&quot;, the Lua function and the Rust function are treated equally, and the Lua programmer does not even know what the function is implemented when calling the function; since the Rust function <code>print()</code> has been called before Syntactic analysis, so there is no need to perform syntax analysis specifically for Lua function calls.</p>
+<h2 id="virtual-machine-execution"><a class="header" href="#virtual-machine-execution">Virtual Machine Execution</a></h2>
+<p>Like syntax analysis, our previous virtual machine execution part only supports one layer of Lua functions. In order to support function calls, the easiest way is to recursively call the virtual machine to execute, that is, the <code>execute()</code> function. code show as below:</p>
+<pre><code class="language-rust  ignore">     ByteCode::Call(func, _) =&gt; {
+         self. func_index = func as usize;
+         match &amp;self. stack[self. func_index] {
+             Value::RustFunction(f) =&gt; { // previously supported Rust functions
+                 f(self);
+             }
+             Value::LuaFunction(f) =&gt; { // new Lua function
+                 let f = f. clone();
+                 self.execute(&amp;f); // recursively call the virtual machine!
+             }
+             f =&gt; panic!(&quot;invalid function: {f:?}&quot;),
+         }
+     }</code></pre>
+<p>However, special handling of the stack is required. During parsing, each time a new function is parsed, the stack pointer (the <code>sp</code> field in the <code>ParseProto</code> structure) starts from 0. Because during syntax analysis, the absolute starting address of the stack when the virtual machine is executed is not known. Then, when the virtual machine is executing, when accessing the stack, the stack index in the bytecode used needs to add the offset of the stack start address of the current function. For example, for the following Lua code:</p>
+<pre><code class="language-lua">local a, b = 1, 2
+local function foo()
+     local x, y = 1, 2
+end
+foo()
+</code></pre>
+<p>When parsing the <code>foo()</code> function definition, the stack addresses of the local variables x and y are 0 and 1, respectively. When the last line of code is executed and the <code>foo()</code> function is called, the function <code>foo</code> is placed at the absolute index 2 of the stack. At this time, the absolute indexes of the local variables x and y are 3 and 4. Then when the virtual machine executes, it needs to convert the relative addresses 0 and 1 into 3 and 4.</p>
+<pre><code>  absolute     relative
+  address      address
+        +-----+ &lt;---base of main function
+      0 |  a  | 0
+        +-----+
+      1 |  b  | 1
+        +-----+
+      2 | foo | 2
+        +-----+ &lt;---base of foo()
+      3 |  x  | 0
+        +-----+
+      4 |  y  | 1
+        +-----+
+        |     |
+
+</code></pre>
+<p>When executing the Rust function <code>print()</code> before, in order to allow the <code>print()</code> function to read the parameters, the <code>func_index</code> member is set in <code>ExeState</code> to point to the address of the function on the stack. Now call the Lua function, still the same. However, <code>func_index</code> is renamed to <code>base</code> here, and points to the next address of the function.</p>
+<pre><code class="language-rust  ignore">     ByteCode::Call(func, _) =&gt; {
+         self.base += func as usize + 1; // Set the absolute address of the function on the stack
+         match &amp;self.stack[self.base-1] {
+             Value::RustFunction(f) =&gt; {
+                 f(self);
+             }
+             Value::LuaFunction(f) =&gt; {
+                 let f = f. clone();
+                 self. execute(&amp;f);
+             }
+             f =&gt; panic!(&quot;invalid function: {f:?}&quot;),
+         }
+         self.base -= func as usize + 1; // restore
+     }</code></pre>
+<p>All previous write operations to the stack were called <code>set_stack()</code> method, now need to add self.base offset:</p>
+<pre><code class="language-rust  ignore">     fn set_stack(&amp;mut self, dst: u8, v: Value) {
+         set_vec(&amp;mut self.stack, self.base + dst as usize, v); // plus self.base
+     }</code></pre>
+<p>All previous read operations on the stack were directly <code>self.stack[i]</code>, and now a new function <code>get_stack()</code> is also extracted, and the self.base offset is added when accessing the stack:</p>
+<pre><code class="language-rust  ignore">     fn get_stack(&amp;self, dst: u8) -&gt; &amp;Value {
+         &amp;self.stack[self.base + dst as usize] // plus self.base
+     }</code></pre>
+<p>So far, we have completed the most basic definition and calling of Lua functions. Thanks to the power of recursion, the code changes are not big. But it's just the beginning of the full feature. The next section adds support for parameters and return values.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch08-00.function.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch08-02.arguments.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch08-00.function.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch08-02.arguments.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

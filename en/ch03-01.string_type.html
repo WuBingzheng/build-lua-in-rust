@@ -1,0 +1,442 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>String Definition - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html" class="active"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="string-definition"><a class="header" href="#string-definition">String Definition</a></h1>
+<p>This section does not add new features for now, but stops to discuss and optimize the string type.</p>
+<p><a href="https://doc.rust-lang.org/stable/book/ch04-01-what-is-ownership.html">Ownership</a> section in the book &quot;Rust Programming Language&quot; introduces the heap using strings as an example of stack and heap, and the relationship with ownership; <a href="https://doc.rust-lang.org/stable/book/ch08-02-strings.html">String</a> section says the strings are complex. We will now use strings to explore Rust's allocation of heaps and stacks, and initially experience the complexity of strings.</p>
+<h2 id="heap-and-stack"><a class="header" href="#heap-and-stack">Heap and Stack</a></h2>
+<p><a href="https://doc.rust-lang.org/stable/book/trpl-zh-cn/ch04-01-what-is-ownership.html">&quot;Rust Programming Language&quot;</a> uses strings as an example to introduce the concept of heap and stack, and the relationship between stack and ownership. Here is a brief recap. Rust's String consists of two parts:</p>
+<ol>
+<li>Metadata, generally located on the stack, includes 3 fields: a pointer to the memory block, the length of the string, and the capacity of the memory block. The following are represented by <code>buffer</code>, <code>len</code> and <code>cap</code> respectively.</li>
+<li>The private memory block used to store the string content is applied on the heap. Owned by the string, so is freed when the string ends. Because of this piece of memory on the heap, String is not <code>Copy</code>, which in turn leads to <code>Value</code> not being <code>Copy</code>. In order to copy <code>Value</code>, it can only be defined as <code>Clone</code>.</li>
+</ol>
+<p>For example, for a string whose content is &quot;hello, world!&quot;, the memory layout is as follows. On the left is the metadata on the stack, where <code>buffer</code> points to the memory block on the heap, <code>len</code> is the length of the string, which is 13, and <code>cap</code> is the capacity of the memory block, which is likely to be aligned to 16. On the right is the block of memory on the heap that stores the contents of the string.</p>
+<pre><code>    stack             heap
+    +--------+
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+</code></pre>
+<p>What needs to be explained here is that the metadata &quot;generally&quot; located on the stack above is for simple types. But for complex types, such as <code>Vec&lt;String&gt;</code>, the String metadata part is also stored on the heap as the content of the array (similar to the memory block part of String). Below is an array Vec with 2 string members. The metadata of the array itself is on the stack, but the metadata of the string is on the heap.</p>
+<pre><code>    stack             heap
+    +--------+
+    | buffer +-------&gt;+-------------+-------------+----
+    |--------|        | buf|len|cap | buf|len|cap | ...
+    | len=2  |        +--+----------+--+----------+----
+    |--------|           |             V
+    | cap=4  |           V             +----------------+
+    +--------+        +--------+       |hello, world!   |
+                      |print   |       +----------------+
+                      +--------+
+</code></pre>
+<p>In this case, although the metadata array part is on the heap, it still has the characteristics of the stack, including last-in-first-out, fast access through indexes, fixed known size, and no need for management (allocation and free). In fact, the stack of the virtual machine of our Lua interpreter is a similar <code>Vec&lt;Value&gt;</code> type. Similarly, although its data is on the heap, it has the characteristics of a stack. The term &quot;stack&quot; has two meanings here: the stack at the Rust level, and the stack at the Lua virtual machine. The latter is on the heap at the Rust level. The &quot;stack&quot; mentioned below in this article is the latter meaning, that is, the stack of the Lua virtual machine. But it doesn't matter if you understand it as a Rust stack.</p>
+<h2 id="use-string"><a class="header" href="#use-string">Use String</a></h2>
+<p>Currently the string type of Value uses <code>String</code> in the Rust standard library directly:</p>
+<pre><code class="language-rust  ignore">#[derive(Clone)]
+struct Value {
+     String(String),</code></pre>
+<p>The biggest problem with this definition is that if you want to copy the Value of a string, you must deeply copy the string content, that is, Clone. The following diagram represents the memory layout for copying a string:</p>
+<pre><code>    stack              heap
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+    :        :
+    :        :
+    +--------+
+    |t|      |
+    |-+------|
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +----------------+
+    |--------|
+    | cap=16 |
+    +--------+
+    |        |
+</code></pre>
+<p>The left side of the figure is the stack of the Lua virtual machine, and each line represents a word. Since we are developing based on a 64-bit system, a word is 8 bytes.</p>
+<p>The <code>t</code> in line 1 represents the tag of <code>enum Value</code>. Since our Value type is less than 256 types, 1 byte can be represented, so t occupies 1 byte. The next 3 lines <code>buffer</code>, <code>len</code> and <code>cap</code> form a Rust standard library String. Each field occupies one word. <code>buffer</code> is 8-byte aligned, so there are 7 bytes empty between <code>t</code> and this part is unusable. These 4 lines (the rectangle surrounded by four <code>+</code> in the figure) constitute a value of string type in total.</p>
+<blockquote>
+<p>There is no default layout for enums in Rust (although it can be specified). We only list one layout possibility here. This does not affect the discussion in this section.</p>
+</blockquote>
+<p>To deeply copy the string Value, you need to copy the metadata on the stack and the memory block on the heap, which is a great waste of performance and memory. The most straightforward way to solve this problem in Rust is to use <code>Rc</code>.</p>
+<h2 id="use-rcstring"><a class="header" href="#use-rcstring">Use Rc&lt;String&gt;</a></h2>
+<p>In order to quickly copy the string String, it is necessary to allow multiple owners of the string at the same time. Rust's <a href="https://doc.rust-lang.org/stable/book/ch15-04-rc.html">Rc</a> provides this feature. Encapsulate <code>Rc</code> outside String, and only need to update the Rc count when copying. It is defined as follows:</p>
+<pre><code class="language-rust  ignore">#[derive(Clone)]
+struct Value {
+     String(Rc&lt;String&gt;),</code></pre>
+<p>The memory layout is as follows:</p>
+<pre><code>    stack             heap
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+--------+--------+--------+
+    +--------+    |   |count=2 | weak=0 | buffer | len=13 | cap=16 |
+    :        :    |   +--------+--------+-+------+--------+--------+
+    :        :    |                       |
+    +--------+    |                       V
+    |t|      |    |                       +----------------+
+    |-+------|    |                       |hello, world!   |
+    |   Rc   +----/                       +----------------+
+    +--------+ 
+    |        |
+</code></pre>
+<p>The <code>count</code> and <code>weak</code> on the right side of the figure are the packages of <code>Rc</code>. Since there are currently 2 Values pointing to this string, <code>count</code> is 2.</p>
+<p>Using <code>Rc</code> directly causes the interpreter to use reference counting to implement garbage collection. The <a href="./ch03-05.gc_vs_rc.html">subsection below</a> is devoted to this high-impact decision.</p>
+<p>Although this solution solves the problem of copying, it also brings a new problem, that is, accessing the content of the string requires 2 pointer jumps. This wastes memory and affects execution performance. Some optimization schemes are introduced below.</p>
+<h2 id="use-rcstr"><a class="header" href="#use-rcstr">Use Rc&lt;str&gt;</a></h2>
+<p>Strings in Lua have a feature that they are read-only! If you want to process the string, such as truncation, connection, replacement, etc., a new string will be generated. Rust's String is designed for mutable strings, so it is a bit wasteful to represent read-only strings. For example, the <code>cap</code> field in metadata can be removed, and there is no need to reserve memory for possible modifications. For example, in the above example, the length of &quot;hello, world!&quot; is only 13, but a memory block of 16 is allocated for. In Rust, it is more suitable to represent a read-only string is <code>&amp;str</code>, which is the <a href="https://doc.rust-lang.org/stable/book/ch04-03-slices.html">slice</a> of <code>String</code>. But <code>&amp;str</code> is a reference, and does not have ownership of the string, but needs to be attached to a string. However, it has a reference that is not a string (the reference of a string is <code>&amp;String</code>). Intuitively, it should be a reference to <code>str</code>. What is <code>str</code>? It's as if it never appeared alone.</p>
+<p>For example. For code like this:</p>
+<pre><code class="language-rust  ignore">let s = String::from(&quot;hello, world!&quot;); // String
+let r = s[7..12]; // &amp;str</code></pre>
+<p>Where <code>r</code> is <code>&amp;str</code> type, and the memory layout is as follows:</p>
+<pre><code>    stack             heap
+s:  +--------+
+    | buffer +-------&gt;+----------------+
+    |--------|        |hello, world!   |
+    | len=13 |        +-------^--------+
+    |--------|                |
+    | cap=16 |                |
+    +--------+                |
+                              |
+r:  +--------+                |
+    | buffer +----------------/
+    |--------|
+    | len=5  |
+    +--------+
+</code></pre>
+<p>Then dereferencing <code>&amp;str</code>, what you get is the &quot;world&quot; memory. However, a general reference is an address, but length information is also added here, indicating that <code>str</code> includes length information in addition to memory. The length information is not on the original data like String, but follows the reference together. In fact, <code>str</code> does not exist independently, it must follow a reference (such as <code>&amp;str</code>) or a pointer (such as <code>Box(str)</code>). This is <a href="https://doc.rust-lang.org/stable/book/ch19-04-advanced-types.html#dynamically-sized-types-and-the-sized-trait">dynamic size type</a>.</p>
+<p>And <code>Rc</code> is also a pointer, so <code>Rc&lt;str&gt;</code> can be defined. It is defined as follows:</p>
+<pre><code class="language-rust  ignore">#[derive(Clone)]
+struct Value {
+     String(Rc&lt;str&gt;),</code></pre>
+<p>The memory layout is as follows:</p>
+<pre><code>    stack             heap
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+-------------+
+    |--------|    |   |count=2 | weak=0 |hello, world!|
+    | len=13 |    |   +--------+--------+-------------+
+    +--------+    |
+    :        :    |
+    :        :    |
+    +--------+    |
+    |t|      |    |
+    |-+------|    |
+    |   Rc   +----/
+    +--------+
+    | len=13 |
+    +--------+
+    |        |
+</code></pre>
+<p>Among them, &quot;hello, world!&quot; is the original data, which is encapsulated by Rc. The length information <code>len=13</code> is stored on the stack along with <code>Rc</code>.</p>
+<p>This scheme looks very good! Compared with the <code>Rc&lt;String&gt;</code> scheme above, this scheme removes the useless <code>cap</code> field, does not need to reserve memory, and also saves a layer of pointer jumps. But this solution also has 2 problems:</p>
+<p>First, the content needs to be copied when creating the string value. The previous solution only needs to copy the metadata part of the string, which is only 3 words long. And this scheme should copy the string content to the newly created Rc package. Imagine creating a 1M long string, this copying affects performance a lot.</p>
+<p>Secondly, it occupies 2 words of space on the stack. Although the problem was more serious in the earliest scheme of directly using String to occupy 3 characters, it can be understood that our current standard has been improved. At present, other types in Value only occupy a maximum of 1 word (plus tag, a total of 2 words). What can be spoiled is that the types of tables and UserData to be added in the future also only occupy 1 word, so it is a waste to change the size of Value from 2 to 3 just because of the string type. Not only does it take up more memory, but it's also unfriendly to the CPU cache.</p>
+<p>The key to these problems is that <code>len</code> follows <code>Rc</code>, not the data. It would be perfect if we could put <code>len</code> on the heap, say between <code>weak</code> and &quot;hello, world!&quot; in the picture. This is trivial for C, but Rust doesn't support it. The reason is that <code>str</code> is a dynamically sized type. So if you choose a fixed size type, can it be realized? Such as arrays.</p>
+<h2 id="use-rcu8-u8-47"><a class="header" href="#use-rcu8-u8-47">Use Rc&lt;(u8, [u8; 47])&gt;</a></h2>
+<p>Arrays in Rust have intrinsic size information. For example, the sizes of <code>[u8; 10]</code> and <code>[u8; 20]</code> are 10 and 20 respectively. This size is known at compile time, and there is no need to store it following the pointer. Two arrays with different lengths are different types, such as <code>[u8; 10]</code> and <code>[u8; 20]</code> are different types. Therefore, the array is a fixed-size type, which can solve the problem in the previous section, that is, only one word is needed on the stack.</p>
+<p>Since it is a fixed length, it can only store strings smaller than this length, so this solution is incomplete and can only be a supplementary solution for performance optimization. However, most of the strings encountered in Lua are very short, at least in my experience, so this optimization is still very meaningful. To do this, we need to define 2 string types, one is a fixed-length array, which is used to optimize short strings, and the other is the previous <code>Rc&lt;String&gt;</code> scheme, which is used to store long strings. The first byte of the fixed-length array is used to represent the actual length of the string, so the array can be split into two parts. Let's first assume that an array with a total length of 48 is used (1 byte represents the length, and 47 bytes store the string content), then the definition is as follows:</p>
+<pre><code class="language-rust  ignore">struct Value {
+     FixStr(Rc&lt;(u8, [u8; 47])&gt;), // len&lt;=47
+     String(Rc&lt;String&gt;), // len&gt;47</code></pre>
+<p>The memory layout for short strings is as follows:</p>
+<pre><code>    stack              heap
+    |        |
+    +--------+
+    |t|      |
+    |-+------|
+    |   Rc   +----+--&gt;+--------+--------+----------------------------+
+    +--------+    |   |count=2 | weak=0 |len|hello, world!           |
+    :        :    |   +--------+--------+----------------------------+
+    :        :    |
+    +--------+    |
+    |t|      |    |
+    |-+------|    |
+    |   Rc   +----/
+    +--------+
+    |        |
+</code></pre>
+<p>The first byte <code>len</code> at the beginning of the array part on the right in the figure indicates the actual length of the following string. The next 47 bytes can be used to store string content.</p>
+<p>This solution is the same as <code>Rc&lt;str&gt;</code> mentioned above, it needs to copy the string content, so it is not suitable for long strings. This is not a big problem. Originally, this solution was designed to optimize short strings. Then even if it is a short string, the selection of the array length is also critical. If it is very long, the space waste is serious for short strings; if it is very short, the coverage ratio is not high. However, this solution can continue to be optimized, using arrays with multi-level lengths, such as 16, 32, 48, 64, etc. However, this also creates some complications.</p>
+<p>In addition, the selection of the array length also depends on the memory management library used by Rust. For example, if we choose the length to be 48, plus the two counting fields encapsulated by Rc of 16 bytes, then the length of the memory block on the right heap in the above figure is 64 bytes, which is a very &quot;regular&quot; length. For example, the memory management library jemalloc manages small memory blocks into lengths of 16, 32, 48, 64, and 128, so the above-mentioned memory application with a total length of 64 is not wasted. If we choose the array length to be 40, the total length of the memory block is 56, and it will still be matched to the category of 64, and 64-56=8 bytes will be wasted. Of course, it is very bad behavior to rely on the specific implementation of other libraries to make decisions, but fortunately, the impact is not great.</p>
+<p>Here we choose an array length of 48, that is, only strings with lengths from 0 to 47 can be represented.</p>
+<p>Then compare it with the <code>Rc&lt;String&gt;</code> scheme to see how the optimization works. First of all, the biggest advantage of this solution is that only one memory allocation is required, and only one pointer jump is required during execution.</p>
+<p>Second, compare the allocated memory size. In the <code>Rc&lt;String&gt;</code> scheme, you need to apply for 2 blocks of memory: one is the Rc count and string metadata, fixed 2+3=5 words, 40 bytes, according to the memory strategy of jemalloc, it will occupy 48 bytes of memory ; The second is the string content. The memory size is related to the length of the string, and also depends on the memory management strategy of Rust String and the implementation of the underlying library. For example, a string with a length of 1 may occupy 16 bytes of memory; A character string with a length of 47 may occupy 48 bytes or 64 bytes of memory. The two blocks of memory together occupy 64 to 112 bytes, which is greater than or equal to this fixed-length array solution.</p>
+<p>Let's look at the next solution along the line of &quot;optimizing short strings&quot;.</p>
+<h2 id="use-inline-arrays"><a class="header" href="#use-inline-arrays">Use Inline Arrays</a></h2>
+<p>Compared with <code>Rc&lt;String&gt;</code>, the previous solution reduces one layer of pointer jumps. The following solution goes a step further, directly removing the storage on the heap, and storing the string completely on the stack.</p>
+<p>We want the size of the <code>Value</code> type to be 2 words, or 16 bytes. One of them is used for tag, and one is used for string length, so there are 14 bytes remaining, which can be used to store strings with a length less than 14. This scheme is also a supplementary scheme, and it must also be used in conjunction with a long string definition. details as follows:</p>
+<pre><code class="language-rust  ignore">// sizeof(Value) - 1(tag) - 1(len)
+const INLSTR_MAX: usize = 14;
+
+struct Value {
+     InlineStr(u8, [u8; INLSTR_MAX]), // len&lt;=14
+     String(Rc&lt;String&gt;), // len&gt;14</code></pre>
+<p>The short string <code>InlineStr</code> is associated with two parameters: the string length of the <code>u8</code> type, and the <code>u8</code> array with a length of 14, which also makes full use of the 7 bytes behind <code>t</code> that have been wasted before. hollow. The long string <code>String</code> still uses the <code>Rc&lt;String&gt;</code> scheme.</p>
+<p>The memory layout for short strings is as follows:</p>
+<pre><code>     stack
+    |        |
+    +vv------+
+    |tlhello,|
+    |--------|
+    | world! |
+    +--------+
+    :        :
+    :        :
+    +vv------+
+    |tlhello,|
+    |--------|
+    | world! |
+    +--------+
+    |        |
+</code></pre>
+<p>The <code>t</code> and <code>l</code> pointed to by the arrow <code>v</code> on the grid represent the tag and length of 1 byte, respectively. The actual string content spans 2 words. If you draw the stack horizontally, it looks clearer:</p>
+<pre><code>stack:
+    --+-+-+--------------+......+-+-+--------------+--
+      |t|l|hello, world! |      |t|l|hello, world! |
+    --+------------------+......+------------------+--
+</code></pre>
+<p>This solution has the best performance, but the worst ability, and can only handle strings with a length no greater than 14. There are three usage scenarios of string type in Lua: global variable name, table index, and string value. Most of the first two are not larger than 14 bytes, so it should be able to cover most cases.</p>
+<p>It can be further optimized by adding another type to store strings with a length of 15. Since the length is known, one byte originally used to store the length can also be used to store the content of the string. However, the optimization brought by this solution is not obvious and less than the complexity brought, so it is not used. It is defined as follows.</p>
+<pre><code class="language-rust  ignore">struct Value {
+     InlineStr(u8, [u8; INLSTR_MAX]), // len&lt;=14
+     Len15Str([u8; 15]), //len=15
+     String(Rc&lt;String&gt;), // len&gt;15</code></pre>
+<h2 id="summary-and-choice"><a class="header" href="#summary-and-choice">Summary and Choice</a></h2>
+<p>In this section, we used and analyzed <code>String</code>, <code>Rc&lt;String&gt;</code>, <code>Rc&lt;str&gt;</code>, <code>Rc&lt;(u8, [u8; 47])&gt;</code> and inline <code>(u8, [u8; 14])</code> and several other schemes. Each has advantages and disadvantages. A reasonable approach is to treat long and short strings differently, use short strings to optimize, and use long strings to cover the bottom line. 3 options are available:</p>
+<ul>
+<li>In order to guarantee the length of the <code>Value</code> type as 2 words, only <code>Rc&lt;String&gt;</code> can be used for long strings.</li>
+<li>For short strings, the final inlining solution does not use heap memory at all, and the optimization effect is the best.</li>
+<li>The penultimate fixed-length array scheme is a compromise between the above two schemes, which is slightly tasteless. However, there is only one disadvantage, which is to introduce greater complexity, and strings need to deal with 3 types. In the next section, generics are used to shield these three types, which solves this shortcoming.</li>
+</ul>
+<p>The final solution is as follows:</p>
+<pre><code class="language-rust  ignore">const SHORT_STR_MAX: usize = 14; // sizeof(Value) - 1(tag) - 1(len)
+const MID_STR_MAX: usize = 48 - 1;
+
+struct Value {
+     ShortStr(u8, [u8; SHORT_STR_MAX]),
+     MidStr(Rc&lt;(u8, [u8; MID_STR_MAX])&gt;),
+     LongStr(Rc&lt;Vec&lt;u8&gt;&gt;),</code></pre>
+<p>The original <code>InlineStr</code> and <code>FixStr</code> both represent specific implementation solutions, and the characteristics of external performance are long and short, so they are renamed <code>ShortStr</code>, <code>MidStr</code> and <code>LongStr</code>, which are more intuitive.</p>
+<p>In this way, most cases (short strings) can be processed quickly, and for a small number of cases (long strings), although slow, they can also be processed correctly, and do not affect the overall situation (for example, <code>Rc&lt;str&gt;</code> takes up 2 word, directly makes <code>Value</code> larger, even if it affects the overall situation), and ultimately improves the overall processing efficiency. This is a very common and effective optimization idea. Our scheme achieves optimization by distinguishing between two sets of definitions, which is a typical example. It would be even more beautiful if this goal can be achieved with only one set of definitions and one set of algorithms without distinguishing definitions. We will encounter such an example later in the syntax analysis of <a href="./ch04-05.table_rw_and_bnf.html">assignment statement</a>.</p>
+<p>After distinguishing between long and short strings, it also brings two new problems:</p>
+<ol>
+<li>
+<p>When generating the string type <code>Value</code>, we need to choose <code>ShortStr</code>, <code>MidStr</code> or <code>LongStr</code> according to the length of the string. This choice should be implemented automatically, not by the caller, otherwise it will be troublesome and may make mistakes. For example, the <code>self.add_const(Value::String(var))</code> statement that appears many times in the syntax analysis code needs to be improved.</p>
+</li>
+<li>
+<p>Strings are composed of &quot;characters&quot;, but <code>ShortStr</code> and <code>MidStr</code> are both composed of <code>u8</code>, what is the difference? How does <code>u8</code> express Unicode correctly? How to deal with illegal characters?</p>
+</li>
+</ol>
+<p>The next few sections discuss these two issues.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-00.optimize_string.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch03-02.from_trait.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-00.optimize_string.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch03-02.from_trait.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

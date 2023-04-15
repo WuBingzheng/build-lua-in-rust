@@ -1,0 +1,361 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ExpDesc Concept - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html" class="active"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="expdesc-concept"><a class="header" href="#expdesc-concept">ExpDesc Concept</a></h1>
+<p>Before introducing the reading and writing of tables, this section first introduces <code>ExpDesc</code>, the core data structure of syntax analysis.</p>
+<h2 id="problems-with-table-construction"><a class="header" href="#problems-with-table-construction">Problems with Table Construction</a></h2>
+<p>There is a performance issue with the construction of the table implemented in the previous section. For example, for the general type <code>[ exp ] = exp</code>, the expression corresponding to the key and value will be loaded to the top of the stack through the <code>load_exp()</code> function in turn as a temporary variable; then <code>SetTable</code> bytecode will be generated, including The indices of the two temporary variables on top of the stack. code show as below:</p>
+<pre><code class="language-rust  ignore">     Token::SqurL =&gt; { // `[` exp `]` `=` exp
+         nmap += 1;
+         self. lex. next();
+
+         self.load_exp(sp); // load key to the top of the stack
+         self.lex.expect(Token::SqurR); // `]`
+         self.lex.expect(Token::Assign); // `=`
+         self.load_exp(sp + 1); // load value to the top of the stack
+
+         self.byte_codes.push(ByteCode::SetTable(table, sp as u8, sp as u8 + 1));
+     },</code></pre>
+<p>This is wasteful because certain expression types, such as local variables, temporary variables, and constants, can be referenced directly without being loaded on the stack. For example, the following Lua code:</p>
+<pre><code class="language-lua">local k = 'kkk'
+local v = 'vvv'
+local t = { [k] = v }
+</code></pre>
+<p>According to the current implementation, the runtime stack and bytecode sequence are as follows:</p>
+<pre><code>    +---------+
+  0 |  &quot;kkk&quot;  |---\[1] Move 3 0
+    +---------+   |
+  1 |  &quot;vvv&quot;  |---|-\[2] Move 4 1
+    +---------+   | |
+  2 |   { }   |&lt;--|-|---------\
+    +---------+   | |         |
+  3 |  &quot;kkk&quot;  |&lt;--/ |   --\   |
+    +---------+     |      &gt;--/[3] SetTable 2 3 4
+  4 |  &quot;vvv&quot;  |&lt;----/   --/
+    +---------+
+    |         |
+</code></pre>
+<p>In fact, neither of these two temporary variables is needed, but only one bytecode is needed: <code>SetTable 2 0 1</code>, where the three parameters are the indexes of the table, key, and value on the stack. This is also the way Lua is officially implemented, that is, to directly refer to the index as much as possible, and avoid unnecessary temporary variables. The runtime stack and bytecode sequences are as follows:</p>
+<pre><code>    +---------+
+  0 |  &quot;kkk&quot;  |---\
+    +---------+    &gt;--\[1] SetTable 2 0 1
+  1 |  &quot;vvv&quot;  |---/   |
+    +---------+       |
+  2 |   { }   |&lt;------/
+    +---------+
+    |         |
+</code></pre>
+<p>These two methods (whether to introduce temporary variables) correspond to two types of virtual machines: stack-based and register-based.</p>
+<h2 id="stack-based-and-register-based"><a class="header" href="#stack-based-and-register-based">Stack-based and Register-based</a></h2>
+<p>First list the bytecode of the current implementation in the above example:</p>
+<pre><code>Move 3 0    # Load k to position 3. Now 3 is the top of the stack
+Move 4 1    # Load v to position 4. Now 4 is the top of the stack
+SetTable 2 3 4
+</code></pre>
+<p>In the current implementation, we can be sure that the key and value are to be loaded to the top of the stack, so the first parameter (that is, the target address) in the two <code>Move</code> bytecodes can be omitted; in addition, we can also be sure when setting the table, the key and value must be at the top of the stack, so the last two parameters of <code>SetTable</code> bytecode can also be omitted. So the bytecode sequence can be simplified as follows:</p>
+<pre><code>Push 0     # load k to the top of the stack
+Push 1     # load v to the top of the stack
+SetTable 2 # Use the two values at the top of the stack as key and value,
+           # and set them to the table at position 2
+</code></pre>
+<p>This method of operating parameters through the top of the stack is called a <em>stack-based</em> virtual machine. The virtual machines of many scripting languages such as Java and Python are based on stacks. The method of directly indexing parameters in the bytecode (such as <code>SetTable 2 0 1</code>) is called <em>register-based</em> virtual machine. The &quot;register&quot; here is not a register in the computer CPU, but a virtual concept. For example, in our Lua interpreter, it is a register implemented by a stack and a constant table. Lua was the first (official virtual machine) register-based mainstream language.</p>
+<p>The above is the write statement through the table as an example. Let's introduce another example that is easier to understand, the addition statement (although we have not implemented addition yet, it is indeed easier to understand). For the following Lua code:</p>
+<pre><code class="language-lua">local
+local a = 1
+local b = 2
+r = a + b
+</code></pre>
+<p>The bytecode generated by a stack-based virtual machine might look like this:</p>
+<pre><code>Push 1    # load a to the top of the stack
+Push 2    # load b to the top of the stack
+Add       # Pop and add the 2 numbers at the top of the stack, and push the result to the top of the stack
+Pop 0     # Pop the result at the top of the stack and assign it to r
+</code></pre>
+<p>The bytecode generated by a register-based virtual machine might look like this:</p>
+<pre><code>Add 0 1 2
+</code></pre>
+<p>It can be seen intuitively that the number of bytecode sequences based on the register virtual machine is small, but each bytecode is longer. It is generally believed that the performance of register-based bytecode is slightly better, but the implementation is more complicated. A more detailed description and comparison of these two types is beyond the scope of this article, and I have no ability to introduce them. The reason why I chose register-based in this project is simply because that's what the official Lua implementation does. I didn't know these two ways until I even wrote part of the project. Next, just continue to follow the register-based method instead of entangled with the stack-based method.</p>
+<p>One thing to note is that the register-based method is just <em>trying</em> to avoid using the temporary variable on the top of the stack. It is also needed when necessary. How to choose a register or a temporary variable will be described in detail later.</p>
+<h2 id="intermediary-expdesc"><a class="header" href="#intermediary-expdesc">Intermediary ExpDesc</a></h2>
+<p>Since we want to follow the register-based method, why do we need to load both key and value to the top of the stack and use the stack-based method in the construction of the table in the previous section? It's because we can't implement a register-based approach yet. Now <code>load_exp()</code> function directly generates bytecode and loads it to the specified position of the stack after encountering Token. code show as below:</p>
+<pre><code class="language-rust  ignore">     fn load_exp(&amp;mut self, dst: usize) {
+         let code = match self. lex. next() {
+             Token::Nil =&gt; ByteCode::LoadNil(dst as u8),
+             Token::True =&gt; ByteCode::LoadBool(dst as u8, true),
+             Token::False =&gt; ByteCode::LoadBool(dst as u8, false),
+             Token::Float(f) =&gt; self. load_const(dst, f),
+             Token::String(s) =&gt; self. load_const(dst, s),
+             // omit other tokens
+         };
+         self.byte_codes.push(code);
+     }</code></pre>
+<p>Therefore, when parsing the general-purpose writing statement of the above table, when the expression of key and value is encountered, it is immediately loaded to the top of the stack, and it becomes a stack-based method.</p>
+<p>And if we want to realize the register-based method to generate bytecodes such as <code>SetTable 2 0 1</code>, when encountering key or value expressions, we cannot generate bytecodes immediately, but need to save them temporarily and wait for the opportunity When it is mature, deal with it according to the situation. Or use the Lua code at the beginning of this section as an example:</p>
+<pre><code class="language-lua">local k = 'kkk'
+local v = 'vvv'
+local t = { [k] = v }
+</code></pre>
+<p>The table construction statement in line 3 is parsed as follows:</p>
+<ul>
+<li><code>[</code>, determined as a general formula;</li>
+<li><code>k</code>, as a Name, first determine that it is a local variable, the index is 0, and then save it as a key;</li>
+<li><code>]</code> and <code>=</code>, as expected;</li>
+<li><code>v</code>, as a Name, is also determined to be a local variable, the index is 1, and then saved as a value;</li>
+<li>At this point, an initialization statement is completed, and the indexes of the key and value saved before are 0 and 1 respectively, so the bytecode <code>SetTable 2 0 1</code> can be generated.</li>
+</ul>
+<p>The key here is &quot;save the key/value&quot;. We are going to add this staging mechanism now. A solution is to directly save the read Token. For example, in this example, the key and value are saved as <code>Token::Name(&quot;k&quot;)</code> and <code>Token::Name(&quot;v&quot;)</code> respectively. But doing so has several problems:</p>
+<ul>
+<li>A small problem is that Name may be a local variable or a global variable. We will see later that the handling of these two variables is different, and <code>Token::Name</code> cannot distinguish between these two types.</li>
+<li>The slightly bigger problem is that some expressions are more complex and contain more than one Token, such as <code>t.k</code>, <code>a+1</code>, <code>foo()</code>, etc., which cannot be represented by a Token. To support tables in this chapter, we must support expression statements such as <code>t.k</code> or even <code>t.k.x.y</code>.</li>
+<li>The bigger problem is that table reads <code>t.k</code> can at least be implemented in a stack-based way, but table writes cannot. For example, <code>t.k = 1</code> is the left part of the assignment statement. When parsing, it must be saved first, then parse the rvalue expression, and finally execute the assignment. To support the write statement of the table, it is necessary to add this temporary storage mechanism first. This is why this section must be inserted before supporting the read and write functions of the table.</li>
+</ul>
+<p>So, we need a new type to hold intermediate results. To this end we introduce <code>ExpDesc</code> (the name comes from the official Lua implementation code):</p>
+<pre><code class="language-rust  ignore">#[derive(Debug, PartialEq)]
+enum ExpDesc {
+     Nil,
+     Boolean(bool),
+     Integer(i64),
+     Float(f64),
+     String(Vec&lt;u8&gt;),
+     Local(usize), // on stack, including local and temporary variables
+     Global(usize), // global variable
+}</code></pre>
+<p>Now it seems that its type is the type currently supported by the expression, but <code>Token::Name</code> is split into <code>Local</code> and <code>Global</code>, so introducing this type is a bit of a fuss. But in the next section to support the reading and writing of tables, as well as subsequent statements such as calculation expressions and conditional jumps, ExpDesc will show its talents!</p>
+<p>The original parsing process is to directly generate bytecode from Token:</p>
+<pre><code>     Token::Integer -&gt; ByteCode::LoadInt
+     Token::String -&gt; ByteCode::LoadConst
+     Token::Name -&gt; ByteCode::Move | ByteCode::GetGlobal
+     ...
+</code></pre>
+<p>Now that the ExpDesc layer is added in the middle, the parsing process becomes:</p>
+<pre><code>     Token::Integer -&gt; ExpDesc::Integer -&gt; ByteCode::LoadInt
+     Token::String -&gt; ExpDesc::String -&gt; ByteCode::LoadConst
+     Token::Name -&gt; ExpDesc::Local -&gt; ByteCode::Move
+     Token::Name -&gt; ExpDesc::Global -&gt; ByteCode::GetGlobal
+     ...
+</code></pre>
+<h2 id="syntax-analysis-and-expdesc"><a class="header" href="#syntax-analysis-and-expdesc">Syntax Analysis and ExpDesc</a></h2>
+<p>ExpDesc is very important, and I will introduce it from another angle here.</p>
+<p><a href="./ch01-01.principles.html">Section 1.1</a> The general compilation process is introduced in the basic compilation principle:</p>
+<pre><code>              Lexical Analysis      Syntax Analysis      Semantic Analysis
+Character Stream --------&gt; Token Stream --------&gt; Syntax Tree --------&gt; Intermediate Code ...
+</code></pre>
+<p>We still use the above addition code as an example:</p>
+<pre><code class="language-lua">local
+local a = 1
+local b = 2
+r = a + b
+</code></pre>
+<p>According to the above general compilation process, for the addition statement in the last line, the syntax analysis will get the syntax tree:</p>
+<pre><code>     |
+     V
+     +
+    / \
+   a   b
+</code></pre>
+<p>Then during semantic analysis, first see <code>+</code>, and know that this is an addition statement, so you can directly generate bytecode: <code>Add ? 1 2</code>. Among them, <code>?</code> is the target address of the addition, which is handled by the assignment statement and is ignored here; <code>1</code> and <code>2</code> are the stack indexes of the two addends respectively.</p>
+<p>But our current approach, which is also the official implementation of Lua, omits the &quot;semantic analysis&quot; step, directly generates intermediate code from syntax analysis, and generates code while analyzing. Then when syntactic analysis, you can't have a global perspective like the above-mentioned semantic analysis. For example, for the addition statement <code>a+b</code>, when <code>a</code> is read, it is not known that it is an addition statement, so it can only be saved first. When <code>+</code> is read, it is determined that it is an addition statement, and then the second addend is read, and then bytecode is generated. We introduce an intermediate layer <code>ExpDesc</code> for this purpose. So ExpDesc is equivalent to the role of the &quot;syntax tree&quot; in the general process. It's just that the syntax tree is global, and ExpDesc is local, and it is the smallest granularity.</p>
+<pre><code>             Lexical Analysis            Syntax Analysis
+Character stream --------&gt; Token stream ----(ExpDesc)---&gt; intermediate code ...
+</code></pre>
+<p>It can be seen intuitively that this method of Lua omits the semantic analysis step, and the speed should be slightly faster, but because there is no global perspective, the implementation is relatively complicated. A more detailed description and comparison of these two approaches is beyond the scope of this article. We choose to follow Lua's official implementation method and choose the method of syntactic analysis to directly generate bytecode.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>This section introduces the concept of ExpDesc and describes its role. In the next section, the existing code will be modified based on ExpDesc.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-02.table_constructor.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch04-04.expdesc_rewrite.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-02.table_constructor.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch04-04.expdesc_rewrite.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

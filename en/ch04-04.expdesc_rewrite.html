@@ -1,0 +1,360 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ExpDesc Rewrite - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html" class="active"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="expdesc-rewrite"><a class="header" href="#expdesc-rewrite">ExpDesc Rewrite</a></h1>
+<p>The previous section introduced the concept of ExpDesc and introduced its function and role. This section is based on ExpDesc to modify the existing code. This transformation does not support new features, but only lays the foundation for the reading and writing functions of the next table and more features to follow.</p>
+<p>First of all, the most important thing is the function <code>load_exp()</code> for parsing expressions. This function originally generated bytecode directly from Token. Now it needs to be split into two steps: Token to ExpDesc, and generating bytecode from ExpDesc. Then, on this basis, transform the table constructor and variable assignment statement.</p>
+<h2 id="exp"><a class="header" href="#exp">exp()</a></h2>
+<p>Transform the <code>load_exp()</code> function step 1, Token to ExpDesc, create a new <code>exp()</code> function, the code is as follows:</p>
+<pre><code class="language-rust  ignore">     fn exp(&amp;mut self) -&gt; ExpDesc {
+         match self. lex. next() {
+             Token::Nil =&gt; ExpDesc::Nil,
+             Token::True =&gt; ExpDesc::Boolean(true),
+             Token::False =&gt; ExpDesc::Boolean(false),
+             Token::Integer(i) =&gt; ExpDesc::Integer(i),
+             Token::Float(f) =&gt; ExpDesc::Float(f),
+             Token::String(s) =&gt; ExpDesc::String(s),
+             Token::Name(var) =&gt; self. simple_name(var),
+             Token::CurlyL =&gt; self. table_constructor(),
+             t =&gt; panic!(&quot;invalid exp: {:?}&quot;, t),
+         }
+     }
+
+     fn simple_name(&amp;mut self, name: String) -&gt; ExpDesc {
+         // search reversely, so new variable covers old one with same name
+         if let Some(ilocal) = self.locals.iter().rposition(|v| v == &amp;name) {
+             ExpDesc::Local(ilocal)
+         } else {
+             ExpDesc::Global(self. add_const(name))
+         }
+     }</code></pre>
+<p>It is relatively simple, similar to the main structure of the previous <code>load_exp()</code> function, or even simpler, that is, several Token types supported by the expression statement are converted into the corresponding ExpDesc. Among them, Name and table construction need further processing. Name is to be distinguished from a local variable or a global variable by the <code>simple_name()</code> function. The processing of the table construction branch becomes a lot more reasonable, [before] (./ch04-02.table_constructor.md#other scenes) need to add an ugly <code>return</code> in this branch, now because this function does not generate bytes code, so this branch can also end naturally. However, although bytecode is no longer needed, ExpDesc is required, so the table constructor <code>table_constructor()</code> needs to return an ExpDesc. Because the newly created table is finally put on the stack, it returns <code>ExpDesc::Local(i)</code>. Note that the <code>ExpDesc::Local</code> type does not just represent &quot;local variables&quot;, but &quot;variables on the stack&quot;. The name &quot;Local&quot; is used to be consistent with the official Lua code.</p>
+<p>In addition to not generating bytecode, this function has another change compared with <code>load_exp()</code>, that is, there is no <code>dst</code> parameter. In most cases, it is fine, but there is a problem with the constructor of the table. Because the table construction process is to create a table on the stack first, the bytecode generated by the subsequent initialization statement needs to bring the index of the table on the stack as a parameter. For example <code>SetTable 3 4 5</code>, the first parameter is the index of the table on the stack. So the original <code>table_constructor()</code> function needs a <code>dst</code> parameter. Now there is no such parameter, what should I do? We can assume that all table constructions create new tables at the top of the stack. So it is necessary to maintain the current top position of the stack.</p>
+<h2 id="stack-top-sp"><a class="header" href="#stack-top-sp">Stack Top <code>sp</code></a></h2>
+<p>To maintain the current stack top position, first add <code>sp</code> indicating the current stack top in <code>ParseProto</code>. In the past, the current position of the top of the stack was calculated in real time wherever it was needed, but now it is changed to a global variable, and many places are suddenly coupled. Later, as the characteristics increase, this coupling will become larger and larger, and it will become more and more out of control. But it is too cumbersome to pass the top position of the stack through parameters. In comparison, it is more convenient to maintain a global stack top delegate, but be careful.</p>
+<p>The stack has three functions: function calls, local variables, and temporary variables. The first two have specific statements (function call statements and local variable definition statements) for specific processing. The last one, temporary variables, are used in many places, such as the table construction statement mentioned above, so they need to be carefully managed when they are used, and they cannot affect each other. In addition, because local variables also occupy the stack space, before parsing a statement each time, the value of sp on the top of the stack is initialized to the number of current local variables, which is where temporary variables are allowed to be used.</p>
+<p>Let's look at the use of the <code>sp</code> in the table constructor <code>table_constructor()</code>:</p>
+<pre><code class="language-rust  ignore">     fn table_constructor(&amp;mut self) -&gt; ExpDesc {
+         let table = self.sp; // Create a new table at the top of the stack
+         self.sp += 1; // update sp, if subsequent statements need temporary variables, use the stack position behind the table
+
+         // omit intermediate construction code
+
+         self.sp = table + 1; // Before returning, set the sp on the top of the stack, keep only the newly created table, and clean up other temporary variables that may be used during construction
+         ExpDesc::Local(table) // return the type of the table (temporary variable on the stack) and the position on the stack
+      }</code></pre>
+<p>Use the <code>sp</code> at the beginning of the function to replace the <code>dst</code> parameter passed in the previous version as the location of the new table. Before the function ends, reset the top position of the stack. In the following subsections, we will continue to introduce the use of the <code>sp</code> of the stack when this function actually builds the table.</p>
+<h2 id="discharge"><a class="header" href="#discharge">discharge()</a></h2>
+<p>The second step of transforming the <code>load_exp()</code> function is from ExpDesc to bytecode. In fact, it is more accurate to say that ExpDesc is loaded onto the stack. We use the function name discharge in the official Lua code to represent &quot;loading&quot;.</p>
+<pre><code class="language-rust  ignore">     // discharge @desc into @dst, and set self.sp=dst+1
+     fn discharge(&amp;mut self, dst: usize, desc: ExpDesc) {
+         let code = match desc {
+             ExpDesc::Nil =&gt; ByteCode::LoadNil(dst as u8),
+             ExpDesc::Boolean(b) =&gt; ByteCode::LoadBool(dst as u8, b),
+             ExpDesc::Integer(i) =&gt;
+                 if let Ok(i) = i16::try_from(i) {
+                     ByteCode::LoadInt(dst as u8, i)
+                 } else {
+                     self. load_const(dst, i)
+                 }
+             ExpDesc::Float(f) =&gt; self. load_const(dst, f),
+             ExpDesc::String(s) =&gt; self. load_const(dst, s),
+             ExpDesc::Local(src) =&gt;
+                 if dst != src {
+                     ByteCode::Move(dst as u8, src as u8)
+                 } else {
+                     return;
+                 }
+             ExpDesc::Global(iname) =&gt; ByteCode::GetGlobal(dst as u8, iname as u8),
+         };
+         self.byte_codes.push(code);
+         self.sp = dst + 1;
+     }</code></pre>
+<p>This function is also very simple. Generate the corresponding bytecode according to ExpDesc, and discharge the expression statement represented by ExpDesc onto the stack. Note that the last line of this function updates the top position of the stack to the next position of dst. In most cases, it is as expected. If it is not as expected, the caller needs to update the top position of the stack after the function returns.</p>
+<p>In addition to this most basic function, there are several helper functions. The <code>discharge()</code> function is to force the expression discharge to the dst position of the stack. But sometimes you just want to discharge the expression on the stack. If the expression is already on the stack, such as <code>ExpDesc::Local</code> type, then you don’t need to discharge it. A new function <code>discharge_if_need()</code> is introduced for this purpose. In most cases, it doesn't even care where it is loaded, so create a new function <code>discharge_top()</code>, using the top position of the stack. The two function codes are as follows:</p>
+<pre><code class="language-rust  ignore">    // discharge @desc into the top of stack, if need
+    fn discharge_top(&amp;mut self, desc: ExpDesc) -&gt; usize {
+        self.discharge_if_need(self.sp, desc)
+    }
+
+    // discharge @desc into @dst, if need
+    fn discharge_if_need(&amp;mut self, dst: usize, desc: ExpDesc) -&gt; usize {
+        if let ExpDesc::Local(i) = desc {
+            i // no need
+        } else {
+            self.discharge(dst, desc);
+            dst
+        }
+    }</code></pre>
+<p>In addition, the <code>discharge_const()</code> function is added, and several constant types are added to the constant table, and other types are discharged as needed. This function will be used in the construction and assignment statements of the following tables:</p>
+<pre><code class="language-rust  ignore">    // for constant types, add @desc to constants;
+    // otherwise, discharge @desc into the top of stack
+    fn discharge_const(&amp;mut self, desc: ExpDesc) -&gt; ConstStack {
+        match desc {
+            // add const
+            ExpDesc::Nil =&gt; ConstStack::Const(self.add_const(())),
+            ExpDesc::Boolean(b) =&gt; ConstStack::Const(self.add_const(b)),
+            ExpDesc::Integer(i) =&gt; ConstStack::Const(self.add_const(i)),
+            ExpDesc::Float(f) =&gt; ConstStack::Const(self.add_const(f)),
+            ExpDesc::String(s) =&gt; ConstStack::Const(self.add_const(s)),
+
+            // discharge to stack
+            _ =&gt; ConstStack::Stack(self.discharge_top(desc)),
+        }
+    }</code></pre>
+<p>After completing the <code>exp()</code> and <code>discharge()</code> functions, the previous <code>load_exp()</code> function can be combined with these two new functions:</p>
+<pre><code class="language-rust  ignore">     fn load_exp(&amp;mut self) {
+         let sp0 = self.sp;
+         let desc = self. exp();
+         self. discharge(sp0, desc);
+     }</code></pre>
+<p>At the end of this chapter, the parsing of expressions in the parsing process will directly call a series of functions of <code>exp()</code> and discharge, instead of calling the <code>load_exp()</code> function.</p>
+<h2 id="table_constructor"><a class="header" href="#table_constructor">table_constructor()</a></h2>
+<p>After splitting the <code>load_exp()</code> function into <code>exp()</code> and <code>discharge()</code>, the constructor of the table can be transformed. Or take general-purpose initialization as an example, in <a href="./ch04-02.table_constructor.html#syntax-analysis">previous version</a>, the key and value are directly loaded onto the stack, no matter what type. We can now call <code>exp()</code> to read the key and value, and then do different processing according to the type. The specific processing method can refer to the official implementation of Lua. There are three bytecodes <code>SETTABLE</code>, <code>SETFIELD</code> and <code>SETI</code>, corresponding to the three types of key variables on the stack, string constants, and small integer constants. In addition, these 3 bytecodes have 1 bit to mark whether the value is a variable or a constant on the stack. There are 3 key types and 2 value types, a total of 3*2=6 situation. Although we can also distinguish between variables and constants on the stack by reserving a bit in value, this will result in only 7bit address space. So we still distinguish variables and constants on the stack by adding bytecode types. It ends up as follows:</p>
+<pre><code>    value\key | variable      | string constant | small integer constant
+   -----------+---------------+-----------------+---------------
+    variable  | SetTable      | SetField        | SetInt
+   -----------+---------------+-----------------+---------------
+    constant  | SetTableConst | SetFieldConst   | SetIntConst
+</code></pre>
+<p>Another rule is that <code>nil</code> and <code>Nan</code> of floating-point numbers are not allowed to be used as keys. The parsing code for the key is as follows:</p>
+<pre><code class="language-rust  ignore">     let entry = match self. lex. peek() {
+         Token::SqurL =&gt; { // `[` exp `]` `=` exp
+             self. lex. next();
+
+             let key = self.exp(); // read key
+             self.lex.expect(Token::SqurR); // `]`
+             self.lex.expect(Token::Assign); // `=`
+
+             TableEntry::Map(match key {
+                 ExpDesc::Local(i) =&gt; // variables on the stack
+                     (ByteCode::SetTable, ByteCode::SetTableConst, i),
+                 ExpDesc::String(s) =&gt; // string constant
+                     (ByteCode::SetField, ByteCode::SetFieldConst, self. add_const(s)),
+                 ExpDesc::Integer(i) if u8::try_from(i).is_ok() =&gt; // small integer
+                     (ByteCode::SetInt, ByteCode::SetIntConst, i as usize),
+                 ExpDesc::Nil =&gt;
+                     panic!(&quot;nil can not be table key&quot;),
+                 ExpDesc::Float(f) if f.is_nan() =&gt;
+                     panic!(&quot;NaN can not be table key&quot;),
+                 _ =&gt; // For other types, discharge them onto the stack uniformly and turn them into variables on the stack
+                     (ByteCode::SetTable, ByteCode::SetTableConst, self.discharge_top(key)),
+             })
+         }</code></pre>
+<p>The above code handles three types of keys: local variables, string constants, and small integers. In addition, nil and floating-point numbers Nan are prohibited. For other types, they are uniformly discharged to the top of the stack and converted to variables on the stack.</p>
+<p>Then parse the value to distinguish between variables and constants on the stack. code show as below:</p>
+<pre><code class="language-rust  ignore">     match entry {
+         TableEntry::Map((op, opk, key)) =&gt; {
+             let value = self.exp(); // read value
+             let code = match self. discharge_const(value) {
+                 // value is a constant, use opk, such as `ByteCode::SetTableConst`
+                 ConstStack::Const(i) =&gt; opk(table as u8, key as u8, i as u8),
+
+                 // value is not a constant, then discharge to the stack, and use op, such as `ByteCode::SetTable`
+                 ConstStack::Stack(i) =&gt; op(table as u8, key as u8, i as u8),
+             };
+             self.byte_codes.push(code);
+
+             nmap += 1;
+             self.sp = sp0;
+         }</code></pre>
+<p>The logic of the above two pieces of code itself is very clear, but the parameter types associated with <code>TableEntry::Map</code> are somewhat special. The first piece of code deals with the type of the key, and determines the type of 2 bytecodes, or the tag of <code>ByteCode</code>. This tag is to be used as an associated parameter of <code>TableEntry::Map</code>. Then what type is that? It must not be <code>ByteCode</code>, because the enum type includes not only the tag, but also the associated value. If it is a <code>ByteCode</code> type, then it is not <code>ByteCode::SetTable</code> but a complete <code>ByteCode::SetTable(table,key,0)</code>, that is, first generate a complete bytecode, and then read Modify the bytecode when the value is reached. That would be too complicated.</p>
+<p><a href="https://doc.rust-lang.org/stable/book/ch19-05-advanced-functions-and-closures.html#function-pointers">《Rust Programming Language》</a> introduces these enums with <code>()</code> as initialization syntax, looks like a function call, they are indeed implemented as functions returning an instance constructed from parameters. That is to say <code>ByteCode::SetTable</code> can be regarded as a function, and its parameter type is <code>fn(u8,u8,u8)-&gt;ByteCode</code>. When I read this book for the first time, I was confused by the countless new concepts in it, so I had no impression of reading this sentence at all, and even if I saw it, I couldn’t understand it or remember it. When I wrote this project for more than half, I read this book completely again. This time, I understood most of the concepts in it very smoothly, and I can also notice the introduction of function pointers. And it just happened to work, what a find!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-03.expdesc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch04-05.table_rw_and_bnf.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-03.expdesc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch04-05.table_rw_and_bnf.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

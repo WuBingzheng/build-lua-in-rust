@@ -1,0 +1,513 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Table Read/Write and BNF - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html" class="active"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="table-readwrite-and-bnf"><a class="header" href="#table-readwrite-and-bnf">Table Read/Write and BNF</a></h1>
+<p>After introducing ExpDesc and modifying the existing syntax analysis in the previous two sections, this section implements table reading and writing.</p>
+<p>The index of the table in Lua supports two methods, examples are as follows: <code>t[&quot;k&quot;]</code> and <code>t.k</code>, where the latter is a special form of the former. All table read and write operations need to use the table index. Need to add the type of table index in ExpDesc.</p>
+<p>The read and write operations of the table itself are not complicated, but it will make other statements suddenly become complicated:</p>
+<ul>
+<li>
+<p>The read operation of the table may have multiple consecutive levels, such as <code>t.x.y</code>, so when parsing the expression, the end cannot be judged immediately, but the next Token needs to be peeked to judge.</p>
+</li>
+<li>
+<p>The write operation of the table, that is, the assignment statement. The current assignment statement only supports the assignment of &quot;variables&quot;, that is, the lvalue only supports one Token::Name. To add support for table indexes, the handling of lvalues needs to be reimplemented. It is not enough to parse only one Token, but to parse an lvalue. So how is it considered a complete lvalue? For example, not all expressions can be used as lvalues, such as function calls or table constructions.</p>
+</li>
+<li>
+<p>Previously, the assignment statement and function call statement were distinguished based on the second Token. If it is an equal sign <code>=</code>, it is an assignment statement. Now to support the write operation of the table, such as <code>t.k = 123</code>, then the second Token is a dot <code>.</code> instead of the equal sign <code>=</code>, but it is still an assignment statement. The previous judgment method is invalid. So is there any new way to distinguish between assignment statements and function call statements?</p>
+</li>
+</ul>
+<p>The first read operation problem is easy to solve. The next two questions related to write operations are very difficult. We cannot answer them accurately now, but can only guess the answers. This leads to a bigger problem, that is, the previous syntax analysis is based on guesswork! For example, the format of the definition statement of local variables, etc., are guessed based on the experience of using the Lua language, and cannot guarantee its accuracy and completeness. But it was relatively simple before, so you can make a guess. In addition, in order not to interrupt the rhythm of the entire project, I did not delve into this issue. Now to introduce the reading and writing of the table, the statement becomes complicated, and it is impossible to continue to mix it up by guessing. It is necessary to introduce a formal grammatical description.</p>
+<h2 id="bnf"><a class="header" href="#bnf">BNF</a></h2>
+<p>The last chapter of the Lua manual is called: <a href="https://www.lua.org/manual/5.4/manual.html#9">The Complete Syntax of Lua</a>, the content is mainly a set of BNF descriptions. We don't need to know the meaning of the term &quot;BNF&quot;, we just need to know that this is a formal grammar description method, where the Lua grammar can be described completely and accurately. The grammatical rules of BNF itself are also very simple, and most of them are clear at a glance. Here are only two:</p>
+<ul>
+<li><code>{A}</code> represents 0 or more A</li>
+<li><code>[A]</code> represents optional 1 A</li>
+</ul>
+<p>The code segment of Lua is called <code>chunk</code>, so the definition of <code>chunk</code> is used as the entry, and several descriptions are listed:</p>
+<pre><code>chunk ::= block
+
+block ::= {stat} [retstat]
+
+stat ::=  ‘;’ | 
+     varlist ‘=’ explist | 
+     functioncall | 
+     label | 
+     break | 
+     goto Name | 
+     do block end | 
+     while exp do block end | 
+     repeat block until exp | 
+     if exp then block {elseif exp then block} [else block] end | 
+     for Name ‘=’ exp ‘,’ exp [‘,’ exp] do block end | 
+     for namelist in explist do block end | 
+     function funcname funcbody | 
+     local function Name funcbody | 
+     local attnamelist [‘=’ explist] 
+</code></pre>
+<p>It can be obtained from these rules: a <code>chunk</code> contains a <code>block</code>. A <code>block</code> contains zero or more <code>stat</code>s and an optional <code>retstat</code>. A <code>stat</code> has many types of statements. Among them, we have implemented the two statements <code>functioncall</code> and <code>local</code>, and then implemented the remaining types one by one to complete the entire grammar of Lua (although it is still far from the complete Lua language).</p>
+<blockquote>
+<p>I don't quite understand what is the difference between <code>chunk</code> and <code>block</code> here? Why list two separately?</p>
+</blockquote>
+<p>That is to say, we will implement the interpreter according to this set of specifications in the future, and we no longer need to rely on guesswork! Pick a few and compare them with our previous ones, such as local variable definition statements, and you can find that it should support multiple variables and multiple initializations expression, even without an initialization expression. This shows that our previous statement analysis is very imperfect. Later in this section, we will improve the sentences we already support based on BNF. Now find out the rules related to the table index:</p>
+<pre><code>var ::= Name | prefixexp '[' exp ']' | prefixexp '.' Name
+
+exp ::= nil | false | true | Numeral | LiteralString | '...' | functiondef |
+prefixexp | tableconstructor | exp binop exp | unop exp
+
+prefixexp ::= var | functioncall | '(' exp ')'
+
+functioncall ::= prefixexp args | prefixexp ':' Name args
+</code></pre>
+<p>At first glance it looks a bit complicated. Take <code>var</code> as an example for analysis. Here <code>var</code> deduces three cases, the first <code>Name</code> is a simple variable, and the latter two are table indexes, which are grammar sugar for general methods and string indexes. It involves <code>prefixexp</code> and <code>exp</code>. Among them, <code>exp</code> is very similar to the <code>exp()</code> function we currently implement, but we still lack some situations, which also need to be added later. In addition, <code>Name</code> is directly in the <code>exp()</code> function, and now it has to be moved to <code>var</code>.</p>
+<h2 id="eliminate-left-recursion"><a class="header" href="#eliminate-left-recursion">Eliminate Left Recursion</a></h2>
+<p>There is a big problem here, the above 3 rules are recursively referenced. for example:</p>
+<ul>
+<li><code>var</code> refers to <code>prefixexp</code> which refers to <code>var</code>;</li>
+<li><code>exp</code> refers to <code>prefixexp</code> which refers to <code>exp</code>.</li>
+</ul>
+<p>But these two examples are fundamentally different.</p>
+<p>For the first example, after bringing in <code>var</code> and expanding it, it is</p>
+<pre><code>prefixexp ::= Name | prefixexp '[' exp ']' | prefixexp '.' Name | prefixexp args | prefixexp ':' Name args | '(' exp ')'
+</code></pre>
+<p>The problem is that the 2nd and 3rd items of the derivation rule start with <code>prefixexp</code> both. Then during syntax analysis, for example, if you read a Name, you can match item 1, or items 2 and 3, so it is impossible to judge which rule should be selected. This was a headache. I spent two days on this problem, and tried various solutions but couldn't solve it. Later, I searched the Internet and found the concept of &quot;eliminating left recursion&quot;, and I vaguely recalled that this was a compulsory topic in the course of compiling principles. And there is a standard method for elimination: For rules that contain left recursion, they can be expressed as follows:</p>
+<pre><code>A := Aα | β
+</code></pre>
+<p>Then it can be rewritten as follows:</p>
+<pre><code>A := βA'
+A’ := αA’ | ε
+</code></pre>
+<p>where <code>ε</code> is not matched. This eliminates left recursion. Take the above <code>prefixexp</code> as an example, first apply the above standard form, you can get:</p>
+<pre><code>α = '[' exp ']' | '.' Name | args | ':' Name args
+β = Name | '(' exp ')'
+</code></pre>
+<p>Then bring in the above rewritten formula to get:</p>
+<pre><code>prefixexp := ( Name | '(' exp ')' ) A'
+A' := ( '[' exp ']' | '.' Name | args | ':' Name args ) A' | ε
+</code></pre>
+<p>This way we get rules without left recursion.</p>
+<p>And the second example at the beginning of this section, about <code>exp</code>, although there are recursive references, but it is not &quot;left&quot; recursion, so there is no such problem.</p>
+<h2 id="read-table-and-prefixexp"><a class="header" href="#read-table-and-prefixexp">Read Table and <code>prefixexp</code></a></h2>
+<p>The advantage of using BNF rules is that you don't need to think about Lua's grammar, just follow the rules to implement.</p>
+<p>After obtaining the above BNF rules, the analysis of prefixexp can be completed:</p>
+<pre><code class="language-rust  ignore">    fn prefixexp(&amp;mut self, ahead: Token) -&gt; ExpDesc {
+        let sp0 = self.sp;
+
+        // beta
+        let mut desc = match ahead {
+            Token::Name(name) =&gt; self.simple_name(name),
+            Token::ParL =&gt; { // `(` exp `)`
+                let desc = self.exp();
+                self.lex.expect(Token::ParR);
+                desc
+            }
+            t =&gt; panic!(&quot;invalid prefixexp {t:?}&quot;),
+        };
+
+        // A' = alpha A'
+        loop {
+            match self.lex.peek() {
+                Token::SqurL =&gt; { // `[` exp `]`
+                    self.lex.next();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = match self.exp() {
+                        ExpDesc::String(s) =&gt; ExpDesc::IndexField(itable, self.add_const(s)),
+                        ExpDesc::Integer(i) if u8::try_from(i).is_ok() =&gt; ExpDesc::IndexInt(itable, u8::try_from(i).unwrap()),
+                        key =&gt; ExpDesc::Index(itable, self.discharge_top(key)),
+                    };
+
+                    self.lex.expect(Token::SqurR);
+                }
+                Token::Dot =&gt; { // .Name
+                    self.lex.next();
+                    let name = self.read_name();
+                    let itable = self.discharge_if_need(sp0, desc);
+                    desc = ExpDesc::IndexField(itable, self.add_const(name));
+                }
+                Token::Colon =&gt; todo!(&quot;args&quot;), // :Name args
+                Token::ParL | Token::CurlyL | Token::String(_) =&gt; { // args
+                    self.discharge(sp0, desc);
+                    desc = self.args();
+                }
+                _ =&gt; { // Epsilon
+                    return desc;
+                }
+            }
+        }
+    }</code></pre>
+<p>The first paragraph of code corresponds to <code>β</code> mentioned above, namely <code>Name | '(' exp ')'</code>.</p>
+<p>The loop in the second paragraph corresponds to the above <code>A' := αA' | ε</code>, if it matches the <code>α</code> part, it is <code>'[' exp ']' | '.' Name | args | ':' Name args</code>, then the loop continues after parsing; if there is no match, it corresponds to <code>ε</code>, and the loop exits. Here this loop supports many continuous operations, such as <code>t.f()</code>, which is a table index followed by a function call. Or more sequential operations like <code>t.t.t.k</code> and <code>f()()()</code>. If you follow the native method in the previous chapters and make a function as soon as you think of it, it will be difficult to support this kind of continuous operation, it is difficult to realize and it is difficult to think of it. But according to BNF, it can be realized correctly and completely.</p>
+<p>Corresponding to the three types of bytecodes in the construction of the table, that is, the key is a variable on the stack, a string constant and a small integer. There are also three types of ExpDesc here, namely <code>Index</code>, <code>IndexField</code> and <code>IndexInt</code> . When discharging, add 3 corresponding bytecodes, <code>GetTable</code>, <code>GetField</code> and <code>GetInt</code>. This naturally solves the first problem at the beginning of this section, that is, the reading operation of the table is realized, and it is implemented correctly and completely!</p>
+<p>Another feature of encoding according to the BNF rule is that you can only understand the processing logic inside each matching branch, but not the overall relationship between each branch. This is like solving a physics application problem. First, analyze the physical principles and list the equations, each of which has a corresponding physical meaning; but when solving the equations, the specific solution steps have been completely separated from the physical correspondence, which is a math tools.</p>
+<p>The <code>prefixexp()</code> function is listed above, and the implementation of the <code>exp()</code> function is similar, which is omitted here.</p>
+<h2 id="write-table-and-assignment-statement"><a class="header" href="#write-table-and-assignment-statement">Write Table and Assignment Statement</a></h2>
+<p>After implementing <code>prefixexp</code> and <code>exp</code> according to BNF, the problem about table write operation at the beginning of this section can be solved. The problem can be solved by reimplementing the assignment statement according to BNF. What we want to achieve this time is &quot;complete assignment statement&quot;, and finally there is no need to emphasize &quot;variable assignment statement&quot;.</p>
+<p>Although the assignment statement looks similar to the local variable definition statement, it is actually completely different and much more complicated. The assignment statement in BNF is defined as follows:</p>
+<pre><code>varlist '=' explist
+varlist ::= var {‘,’ var}
+var ::= Name | prefixexp '[' exp ']' | prefixexp '.' Name
+</code></pre>
+<p>The left side of the assignment operator <code>=</code> is the <code>var</code> list. <code>var</code> expands to 3 kinds. The first <code>Name</code> is a variable, currently supports local variables and global variables, and will support upvalue after the introduction of closures. The latter two are table indexes. It can be seen from this that only these types of assignment are supported, while other types such as function calls do not support assignment. Look at the right side of <code>=</code>, which is a list of expressions, which can be parsed directly using the completed <code>exp()</code> function.</p>
+<p>After reading the BNF grammatical rules of the assignment statement, there are three semantic rules.</p>
+<p>First, compare the number of variables on the left of <code>=</code> and the number of expressions on the right side:</p>
+<ul>
+<li>If equal, assign values one by one;</li>
+<li>If the number of variables is less than the number of expressions, the variable list and the corresponding expression list are assigned one by one, and the extra expressions are ignored;</li>
+<li>If the number of variables is greater than the number of expressions, the expression list and the corresponding variable list are assigned one by one, and the extra variables are assigned to <code>nil</code>.</li>
+</ul>
+<p>Second, if the last expression on the right side of <code>=</code> has multiple values (such as function calls and variable parameters), it will be expanded as much as possible. However, we don't support these two types yet, so ignore this case for now.</p>
+<p>Finally, all expressions to the right of <code>=</code> are evaluated <em>before</em> assignment. Instead of evaluating and assigning values simultaneously. For example, in the following Lua statement, the two expressions <code>b</code> and <code>a</code> on the right should be evaluated first to obtain <code>2</code> and <code>1</code>, and then assigned to <code>a</code> and <code>b</code> on the left respectively. This exchanges the two variables. But if we assign a value while evaluating, we first evaluate <code>b</code> on the right, get <code>2</code>, and assign it to <code>a</code>. Then evaluate <code>a</code> on the right to get the <code>2</code> that was just assigned, and then assign it to <code>b</code>. The end result is that both variables will be <code>2</code>.</p>
+<pre><code class="language-lua">local a, b = 1, 2
+a, b = b, a --swap 2 variables!!!
+</code></pre>
+<p>The diagram below depicts the execution process of <em>Error</em>:</p>
+<pre><code>            +-------+
+    /--(1)--|   a   |&lt;------\
+    |       +-------+       |
+    \------&gt;|   b   |--(2)--/
+            +-------+
+            |       |
+</code></pre>
+<p>Since all values must be evaluated first, the obtained value must be stored in one place first, which is naturally the top of the stack as a temporary variable. The diagram below describes the <em>correct</em> execution process:</p>
+<pre><code>             +-------+
+    /---(1)--|   a   |&lt;-------\
+    |        +-------+        |
+    |  /-(2)-|   b   |&lt;----\  |
+    |  |     +-------+     |  |
+    \-------&gt;|  tmp1 |-(3)-/  |
+       |     +-------+        |
+       \----&gt;|  tmp2 |--(4)---/
+             +-------+
+             |       |            
+</code></pre>
+<p>In the figure, (1) and (2) are to evaluate the expression and put it in the temporary position on the top of the stack; (3) and (4) are to assign the value of the temporary position on the top of the stack to the variable.</p>
+<p>The functionality of this approach is correct, but the performance is relatively poor. Because each assignment requires 2 operations, first evaluating and then assigning, it requires 2 bytecodes. But in most cases, only one operation is required. For example, assigning a local variable to another local variable requires only one <code>Move</code> bytecode. In particular, the most common assignment statement in a program is the assignment of a single variable. The order of a single variable does not matter, and there is no need to evaluate a temporary variable first. Therefore, the above method of first evaluating to the top of the stack and then assigning a value is <em>for the correctness of a few cases, while sacrificing the performance of most cases</em>. This situation is relatively common in programming. The general solution is to add a quick path to <em>most cases</em>. For example, the following logic can be used in our current situation:</p>
+<pre><code>if single variable then
+     var = exp // direct assignment, quick path
+else // multiple variables
+     tmp_vars = exp_list // evaluate all to temporary variables first
+     var_list = tmp_vars // assign values uniformly
+</code></pre>
+<p>There is a more elegant solution to this specific problem, though. The key here is that in the case of multiple assignments, the assignment of the last variable does not depend on the assignment of other variables, and it can be assigned directly without first evaluating to a temporary variable. So the new solution is: special treatment (direct assignment) is made to the last variable, and other variables are still evaluated first and then assigned. In this way, for the assignment statement of a single variable (the single variable is naturally the last variable), it degenerates into a direct assignment. In this way, the correctness of multiple variables is guaranteed, and the performance of most cases (single variable) is also guaranteed. Pretty!</p>
+<p>The following figure describes this scheme: for the previous variable <code>a</code>, first evaluate to the temporary variable on the top of the stack, and assign the last variable <code>b</code> directly, and then assign the temporary variable on the top of the stack to the corresponding variable in turn.</p>
+<pre><code>             +-------+
+    /---(1)--|   a   |&lt;------\
+    |        +-------+       |
+    |        |   b   |--(2)--/
+    |        +-------+ &lt;-------\
+    \-------&gt;|  tmp1 |--(3)----/
+             +-------+
+             |       |
+</code></pre>
+<p>Since we execute the last expression first, thenthe previous expressions are also assigned in reverse order. In this way, all expressions are assigned in reverse order.</p>
+<p>So far, the syntax and semantic rules of assignment statements have been introduced. The next step is to rewrite the <code>assignment()</code> function. The logic of the function body is as follows:</p>
+<ol>
+<li>Call <code>prefixexp()</code> to read the lvalue list and save it as ExpDesc;</li>
+<li>Call <code>exp()</code> to read the rvalue expression list, the last expression retains ExpDesc, and the remaining expressions are discharged to the top of the stack;</li>
+<li>Align the number of lvalues and rvalues;</li>
+<li>Assignment, first assign the last expression to the last lvalue, and then assign the temporary variable on the top of the stack to the corresponding lvalue in turn.</li>
+</ol>
+<p>The specific code is omitted here. Only step 4, assignment, will be described in detail below.</p>
+<h2 id="execute-the-assignment"><a class="header" href="#execute-the-assignment">Execute the Assignment</a></h2>
+<p>Assignment statements consist of lvalues and rvalues:</p>
+<ul>
+<li>
+<p>Each lvalue is read by the <code>prefixexp()</code> function, returning an ExpDesc type. However, it can be seen from BNF that the assignment statement only supports variables and table indexes. The variables include local variables and global variables, corresponding to the two ExpDesc types <code>Local</code> and <code>Global</code> respectively, and the table indexes include <code>Index</code>, <code>IndexField</code> and <code>IndexInt</code>. So there are up to a total of five types.</p>
+</li>
+<li>
+<p>Each rvalue is read by the <code>exp()</code> function, which also returns an ExpDesc type, and supports arbitrary ExpDesc types.</p>
+</li>
+</ul>
+<p>To sum up, there are 5 types on the left and N types on the right (N is the number of all types of ExpDesc), and there are a total of 5*N combinations. A bit much, need to sort out.</p>
+<p>First of all, for the case where the lvalue is a local variable, the assignment is equivalent to discharging the expression to the stack location of the local variable. Just call the <code>discharge()</code> function. This function already handles all N types of ExpDesc.</p>
+<p>The remaining four lvalue types are a bit more complicated, but these four cases are similar. The following uses the global variable <code>Global</code> type as an example to introduce.</p>
+<p>Several combinations of assignments were introduced in the previous <a href="./ch02-03.assignment.html#combination-of-assignments">Assignment</a> section. For the case where the lvalue is a global variable, the rvalue supports three types of expressions: constant, local variable, and global variable. At that time, for the sake of simplicity, the three expressions <code>SetGlobalConst</code>, <code>SetGlobal</code>, and <code>SetGlobalGlobal</code> were directly generated. Now it can be foreseen that there will be more types of expressions in the future, such as the reading of tables added in this section (such as <code>t.k</code>), and subsequent additions such as UpValue and operations (such as <code>a+b</code>). If a new bytecode is added for each new type, it will become very complicated.</p>
+<p>Moreover, expressions such as table indexing and operations require 2 parameters to represent, and the assignment bytecode of this series of global variables cannot be filled with 2 parameters to represent the source expression of the assignment (one bytecode supports up to 3 <code>u8</code> Type parameter, this series of bytecodes needs 1 parameter to represent the destination address, and it seems that 2 parameters can be used to represent the source expression. But through the output of luac, you can see Lua's official global variable assignment bytecode <code>SETTABUP</code> has 3 parameters. In addition to the 2 parameters representing the source and destination addresses, there is an additional parameter. Although it is not clear what the function of the extra parameter is, let’s assume that we will use it later That parameter, so our series of bytecodes leaves only one parameter position for the source expression). So how to deal with such complex expressions? The answer is to first evaluate these complex expressions to the top of the stack as temporary variables, which are of <code>Local</code> type, and then use <code>SetGlobal</code> to complete the assignment.</p>
+<p>Here are two extremes:</p>
+<ul>
+<li>The previous practice was to define a bytecode for each source expression type;</li>
+<li>The solution just discussed is to discharge all types on the stack first, and then only use one <code>SetGlobal</code> bytecode.</li>
+</ul>
+<p>Between these two extremes, we refer to the choice of Lua's official implementation, which is to define a bytecode for the constant type (ExpDesc's <code>String</code>, <code>Float</code>, etc.), while other types are first discharged to the stack and converted to <code>Local</code> type. Although the constant type is actually not a specific type (including multiple types such as <code>String</code>, <code>Float</code>), but the processing method is the same, through the <code>add_const()</code> function to add to the constant table, and use the constant table Index to represent, so when dealing with assignment statements, it can be seen as a type. Thus, our rvalue expressions are simplified to two types: constants and <code>Local</code> variables on the stack! In the official implementation of Lua, the <code>SETTABUP</code> bytecode of global variable assignment uses 1 bit to indicate whether the source expression is a constant or a variable on the stack. The generation of our bytecode is inconvenient to precisely manipulate bits, so a new bytecode <code>SetGlobalConst</code> is added to represent constants.</p>
+<p>Why does the official Lua implementation treat constants specially, but not optimize other types (such as global variables, UpValue, table indexes, etc.)? There are two reasons for my personal guess:</p>
+<ul>
+<li>
+<p>If a global variable or UpValue or table index is accessed so frequently that it is necessary to optimize, then you can simply create a local variable to optimize, such as <code>local print = print</code>. For constants, it is inappropriate to assign values to local variables in many cases. For example, changing an assignment statement <code>g = 100</code> to <code>local h = 100; g = a</code> seems awkward and unnecessary.</p>
+</li>
+<li>
+<p>Accessing global variables is based on the variable name table lookup, which is a relatively time-consuming operation, and the cost of adding a bytecode is not obvious in comparison. Access to other types is similar. The access constant is directly referenced through the index, and the cost of adding a bytecode is relatively high.</p>
+</li>
+</ul>
+<p>So far, the assignment of global variables has been introduced, and the assignment of table indexes (that is, the write operation of the table) is similar. For the three types <code>Index</code>, <code>IndexField</code> and <code>IndexInt</code>, we define <code>SetTable</code>, <code>SetField</code>, <code>SetInt</code>, <code>SetTableConst</code>, <code>SetFieldConst</code>, <code>SetIntConst</code> 6 bytecodes.</p>
+<p>Finally, the code for assignment is as follows:</p>
+<pre><code class="language-rust  ignore">    // process assignment: var = value
+    fn assign_var(&amp;mut self, var: ExpDesc, value: ExpDesc) {
+        if let ExpDesc::Local(i) = var {
+            // self.sp will be set to i+1 in self.discharge(), which is
+            // NOT expected, but it's ok because self.sp will not be used
+            // before next statement.
+            self.discharge(i, value);
+        } else {
+            match self.discharge_const(value) {
+                ConstStack::Const(i) =&gt; self.assign_from_const(var, i),
+                ConstStack::Stack(i) =&gt; self.assign_from_stack(var, i),
+            }
+        }
+    }
+
+    fn assign_from_stack(&amp;mut self, var: ExpDesc, value: usize) {
+        let code = match var {
+            ExpDesc::Local(i) =&gt; ByteCode::Move(i as u8, value as u8),
+            ExpDesc::Global(name) =&gt; ByteCode::SetGlobal(name as u8, value as u8),
+            ExpDesc::Index(t, key) =&gt; ByteCode::SetTable(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) =&gt; ByteCode::SetField(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) =&gt; ByteCode::SetInt(t as u8, key, value as u8),
+            _ =&gt; panic!(&quot;assign from stack&quot;),
+        };
+        self.byte_codes.push(code);
+    }
+
+    fn assign_from_const(&amp;mut self, var: ExpDesc, value: usize) {
+        let code = match var {
+            ExpDesc::Global(name) =&gt; ByteCode::SetGlobalConst(name as u8, value as u8),
+            ExpDesc::Index(t, key) =&gt; ByteCode::SetTableConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexField(t, key) =&gt; ByteCode::SetFieldConst(t as u8, key as u8, value as u8),
+            ExpDesc::IndexInt(t, key) =&gt; ByteCode::SetIntConst(t as u8, key, value as u8),
+            _ =&gt; panic!(&quot;assign from const&quot;),
+        };
+        self.byte_codes.push(code);
+    }</code></pre>
+<p>So far, according to the BNF re-assignment statement, it naturally supports the read and write operations of the table.</p>
+<h2 id="assignment-and-function-call-statement"><a class="header" href="#assignment-and-function-call-statement">Assignment and Function Call statement</a></h2>
+<p>Now look back at the last of the three questions raised at the beginning of this section, that is, how to distinguish between assignment statements and function call statements during syntax analysis.</p>
+<p>Let’s start with the BNF representation of the assignment statement:</p>
+<pre><code>varlist '=' explist
+varlist ::= var {‘,’ var}
+var ::= Name | prefixexp '[' exp ']' | prefixexp '.' Name
+</code></pre>
+<p>The beginning of the statement is <code>varlist</code>, after expansion is the variable <code>var</code>, and then it is <code>Name</code> and <code>prefixexp</code>. <code>Name</code> corresponds to <code>Token::Name</code>, but <code>prefixexp</code> still needs to be expanded. Here is its definition:</p>
+<pre><code>prefixexp ::= var | functioncall | '(' exp ')'
+functioncall ::= prefixexp args | prefixexp ':' Name args
+</code></pre>
+<p>Among them, the first <code>var</code> returns to the beginning of the assignment statement just now, and the circular reference is ignored. The last one starts with <code>(</code>, which is also very simple. After the <code>functioncall</code> in the middle is expanded, it also starts with <code>prefixexp</code>, which is also a circular reference, but this time it cannot be ignored, because <code>functioncall</code> itself is also a complete statement, that is, if a A statement starts with <code>prefixexp</code>, which may be an assignment statement or a function call statement. How to distinguish between these two statements? As explained in the previous section, the left value of an assignment statement can only be a variable or a table index. types, and function calls cannot be used as lvalues. This is the key to the distinction!</p>
+<p>In summary, the final parsing logic is: if it starts with <code>Name</code> or <code>(</code>, parse it according to <code>prefixexp</code>, and judge the parsing result:</p>
+<ul>
+<li>If it is a function call, it is considered a complete <code>functioncall</code> statement;</li>
+<li>Otherwise, it is considered as an assignment statement, and the result of this parsing is only the first <code>var</code> of the assignment statement.</li>
+</ul>
+<p>To do this, add a function call type <code>Call</code> in ExpDesc and let the function call statement <code>args()</code> return. In the <code>load()</code> function, this part of the code is as follows:</p>
+<pre><code class="language-rust  ignore">            match self.lex.next() {
+                Token::SemiColon =&gt; (),
+                t@Token::Name(_) | t@Token::ParL =&gt; {
+                    // functioncall and var-assignment both begin with
+                    // `prefixexp` which begins with `Name` or `(`.
+                    let desc = self.prefixexp(t);
+                    if desc == ExpDesc::Call {
+                        // prefixexp() matches the whole functioncall
+                        // statement, so nothing more to do
+                    } else {
+                        // prefixexp() matches only the first variable, so we
+                        // continue the statement
+                        self.assignment(desc);
+                    }
+                }</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>In this section, the parsing of the assignment statement is re-analyzed through BNF, and finally the read and write operations of the table are realized. In addition, the statement of local variable definition also needs to be rewritten according to BNF, which is relatively simple, and the introduction is omitted here.</p>
+<p>So far, this chapter has completed the basic operations of table definition, construction, reading and writing; and introduce the very important ExpDesc concept and BNF rules.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-04.expdesc_rewrite.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch05-00.arithmetic_ops.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-04.expdesc_rewrite.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch05-00.arithmetic_ops.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Upvalue - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html" class="active"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="upvalue"><a class="header" href="#upvalue">Upvalue</a></h1>
+<p>Before introducing closures, this section first introduces an important part of closures: upvalue.</p>
+<p>This section mainly introduces the concept of upvalue, and introduces the changes needed to support upvalue in the syntax analysis and virtual machine execution stages. It is very complicated to realize the complete features of upvalue, so in order to focus on the change of the overall structure and process, this section only supports the most basic upvalue features, and leave it to the next section to introduce the difficult part: escape.</p>
+<p>The sample code below shows the most basic scenario of upvalue:</p>
+<pre><code class="language-lua">local a = 1
+local function foo()
+     print(a) -- What type of variable is `a`? Local variable, or global variable?
+end
+</code></pre>
+<p>The entire code can be seen as a top-level function, which defines two local variables: <code>a</code> and the function <code>foo</code>. The reference <code>a</code> in <code>print(a)</code> inside the <code>foo()</code> function refers to a local variable defined outside the function, so what kind of variable is the <code>a</code> inside the function? First, it is not defined inside the <code>foo()</code> function, so it is not a local variable; second, it is a local variable defined in the outer function, so it is not a global variable. Local variables that refer to outer functions like this are called <em>upvalue</em> in Lua. There is also the concept of closure in the Rust language, and local variables in the outer function can also be referenced, which is called &quot;capture environment&quot;, which should be the same concept with upvalue.</p>
+<p>upvalues are very common in Lua. In addition to the above-mentioned obvious cases, there is also the fact that calling local functions at the same level is also an upvalue, such as the following code:</p>
+<pre><code class="language-lua">local function foo()
+     print &quot;hello, world&quot;
+end
+local function bar()
+     foo() -- upvalue
+end
+</code></pre>
+<p>The <code>foo()</code> function called in the <code>bar()</code> function is upvalue. In addition, recursive calls to local functions are also upvalue.</p>
+<p>After introducing the concept of upvalue, the syntax analysis process of upvalue is as follows.</p>
+<h2 id="variable-resolution-process"><a class="header" href="#variable-resolution-process">Variable Resolution Process</a></h2>
+<p>The previous interpreter only supports two variable types: local variables and global variables. The variable parsing process is as follows:</p>
+<ol>
+<li>Match in the local variable list of the current function, if found, it is a local variable;</li>
+<li>Otherwise, it is a global variable.</li>
+</ol>
+<p>Now to add support for the upvalue type, the parsing process of the variable needs to be added one step, which is changed to:</p>
+<ol>
+<li>Match in the local variable list of the current function, if found, it is a local variable;</li>
+<li>Match in the local variables list of upper layer functions, if found, it will be upvalue; (NEW STEP)</li>
+<li>Otherwise it is a global variable.</li>
+</ol>
+<p>The newly added step 2 looks simple, but the specific implementation is very complicated, and the description here is not accurate, which will be described in detail in the next section. This section focuses on the overall process, that is, how to deal with it after parsing the upvalue.</p>
+<p>Similar to local variables and global variables, a new type of ExpDesc is also added for upvalue:</p>
+<pre><code class="language-rust  ignore">enum ExpDesc {
+     Local(usize), // local variables or temporary variables on the stack
+     upvalue(usize), // upvalue
+     Global(usize), // global variable</code></pre>
+<p>To review, the associated parameter of the local variable <code>ExpDesc::Local</code> represents the index on the stack, and the associated parameter of the global variable <code>ExpDesc::Global</code> represents the index of the variable name in the constant table. What parameters do upvalue need to be associated with? Take the following sample code that contains multiple upvalues as an example:</p>
+<pre><code class="language-lua">local a, b, c = 100, 200, 300
+local function foo()
+     print (c, b)
+end
+</code></pre>
+<p>In the above code, there are two upvalues in the <code>foo()</code> function, <code>c</code> and <code>b</code>, which correspond to the index 2 and 1 of the local variable in the upper function respectively (the index starts counting from 0), so naturally, they can be represented by <code>ExpDesc::upvalue(2)</code> and <code>ExpDesc::upvalue(1)</code>. In this way, when the virtual machine is executing, it can also conveniently index to the local variables on the stack of the upper layer function. Simple and natural. But when the escape of upvalue is introduced in the next section, this solution cannot meet the requirements. But for the sake of simplicity, this section will be used for the time being.</p>
+<h2 id="parsing-context"><a class="header" href="#parsing-context">Parsing Context</a></h2>
+<p>The new step 2 in the above variable resolution process requires access to local variables of the outer functions. In the last chapter <a href="./ch08-01.define_and_call.html#transform-parseproto">Analysis Function</a>, recursion is used to support multi-layer function definition. This is not only simple to implement, but also provides a certain degree of encapsulation, that is, only the information of the current function can be accessed. This is originally an advantage, but now in order to support upvalue, we need to access the local variables of the outer function, so this encapsulation becomes a disadvantage that needs to be overcome. Programs are becoming more and more complex and confusing in such ever-increasing demands.</p>
+<p>When recursively parsing multi-layer functions before, there is one member throughout, that is, <code>lex: Lex&lt;R&gt;</code> in <code>ParseProto</code>, which needs to be accessed when parsing all functions. Now in order to be able to access the local variables of the outer function, a similar member is needed throughout to store the local variables of each function. To do this, we create a new data structure containing the original <code>lex</code> and the new list of local variables:</p>
+<pre><code class="language-rust  ignore">struct ParseContext&lt;R: Read&gt; {
+     all_locals: Vec&lt;Vec&lt;String&gt;&gt;, // Local variables of each layer function
+     lex: Lex&lt;R&gt;,
+}</code></pre>
+<p>The <code>all_locals</code> member represents the local variable list of each layer function. Each time a function of a new layer is parsed, a new member is pushed into it; after parsing is complete, it is popped. So the last member in the list is the list of local variables for the current function.</p>
+<p>Then in <code>ParseProto</code>, replace the original <code>lex</code> with <code>ctx</code>, and delete the original locals:</p>
+<pre><code class="language-rust  ignore">struct ParseProto&lt;'a, R: Read&gt; {
+     // delete: locals: Vec&lt;String&gt;,
+     ctx: &amp;'a mut ParseContext&lt;R&gt;, // add ctx to replace the original lex
+     ...</code></pre>
+<p>And all places where the locals field is used in the syntax analysis code must also be modified to the last member of ctx.all_locals, which is the local variable list of the current function. The specific code is omitted here.</p>
+<p>So far, there are three data structures related to syntax analysis:</p>
+<ul>
+<li><code>FuncProto</code>, which defines the function prototype, is the output of the syntax analysis stage and the input of the virtual machine execution stage, so all fields are <code>pub</code>;</li>
+<li><code>ParseProto</code>, used internally in the parsing phase, and only in the current function;</li>
+<li><code>ParseContext</code>, the global state used internally by the parsing phase and accessible at all function levels.</li>
+</ul>
+<p>After the transformation of <code>ParseProto</code>, with the ability to access the outer function, the upvalue can be parsed. But here is just saying that it has the ability to analyze, and the specific analysis process will be introduced in the next section.</p>
+<h2 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h2>
+<p>After parsing the upvalue, for its processing, you can refer to the previous <a href="./ch04-05.table_rw_and_bnf.html#execute-the-assignment">discussion of global variables</a>, the conclusion is as follows:</p>
+<ul>
+<li>read, first loaded on the stack, converted to a temporary variable;</li>
+<li>Assignment, only supports assignment from local/temporary variables and constants. For other types of expressions, it is first loaded into a temporary variable on the stack and then assigned.</li>
+</ul>
+<p>To this end, compared with global variables, add 3 upvalue-related bytecodes:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     // global variable
+     GetGlobal(u8, u8),
+     SetGlobal(u8, u8),
+     SetGlobalConst(u8, u8),
+
+     //upvalue
+     Getupvalue(u8, u8), // Load upvalue onto the stack
+     Setupvalue(u8, u8), // Assign value from the stack
+     SetupvalueConst(u8, u8), // assign value from constant</code></pre>
+<p>The generation of these three new bytecodes can also be completed by referring to global variables. The specific code is omitted here.</p>
+<h2 id="virtual-machine-execution"><a class="header" href="#virtual-machine-execution">Virtual Machine Execution</a></h2>
+<p>The analysis process of upvalue is introduced above, and the corresponding bytecode has completed the syntax analysis stage. The rest is the virtual machine execution phase.</p>
+<p>According to the above processing scheme for upvalue, that is, the associated parameter of <code>ExpDesc::upvalue</code> represents the local variable index of the upper-level function. When the virtual machine is executed, it will also encounter the same problem as the syntax analysis: the current function needs to access the upper-level functions' local variables. Therefore, in order to complete the virtual machine execution phase, big changes must be made to the current code structure.</p>
+<p>However, the above-mentioned upvalue processing scheme is only a temporary scheme in this section. In the next section, in order to support the escape of upvalue, there will be a completely different scheme and a completely different virtual machine execution process. Therefore, in order to avoid useless work, the execution of the virtual machine under this scheme will not be implemented for the time being. Interested friends can try to change it.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch09-00.closure.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch09-02.escape_and_closure.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch09-00.closure.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch09-02.escape_and_closure.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

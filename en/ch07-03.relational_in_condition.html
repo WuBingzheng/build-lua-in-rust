@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Relational Operations in Conditional Judgment - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html" class="active"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="relational-operations-in-conditional-judgment"><a class="header" href="#relational-operations-in-conditional-judgment">Relational Operations in Conditional Judgment</a></h1>
+<p>The previous two sections describe logical operations, and the next two describe relational operations.</p>
+<p>Relational operations, that is, compares, have 6 operators: equal, not equal, greater than, less than, greater than or equal to, less than or equal to. When introducing logical operations in the previous two sections, it was said that logical operations cannot use the analysis process of binary numerical operations in Chapter 5 because of the short-circuit feature. The relational operations did not use the parsing process in Chapter 5, for a different reason: for performance.</p>
+<p>If performance is not considered, relational operations can use the parsing process in Chapter 5. For example, for the equal operation, the following bytecode can be generated: <code>EQ $r $a $b</code>, that is, compare <code>a</code> and <code>b</code>, and assign the Boolean result to <code>r</code>. If performance is to be considered, it depends on the application scenarios of relational operations. This part is almost the same as the logical operations introduced in the previous two sections, and there are also two application scenarios:</p>
+<ol>
+<li>As a judgment condition, such as the judgment condition statement in the if, while and other statements in the previous chapter, such as <code>if a == b then ...</code>;</li>
+<li>Evaluation, such as <code>print(a == b)</code>.</li>
+</ol>
+<p>Like logical operations, the first scenario can be regarded as a simplified version of the second scenario. It does not require specific evaluation, but only needs to judge whether it is true or false. For example, the example of the if statement above can also be interpreted according to the second scenario. It is considered that <code>a == b</code> is first evaluated to a temporary variable, and then it is judged whether the temporary variable is true to decide whether to jump. Temporary variables can be omitted here! Since most applications of relational computing are in the first scenario, it is worthwhile to separate this scenario from the second general scenario for special optimization, by omitting temporary variables and directly judging whether to jump based on the evaluation result.</p>
+<p>As the title of this section indicates, this section only introduces the first scenario; the next section will introduce the second scenario.</p>
+<h2 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h2>
+<p>Still using the <code>if</code> statement and the equal operation as an example, in the <code>if a == b then ... end</code> scenario, the first bytecode sequence that comes to mind is as follows:</p>
+<pre><code>EQ $tmp $a $b    # Compare whether a and b are equal, and the result is stored in a temporary variable
+TEST $tmp $jmp   # Determine whether to jump according to the temporary variable
+</code></pre>
+<p>Now save the temporary variable $tmp and merge the two bytecodes, as follows:</p>
+<pre><code>EQ $a $b $jmp   # Compare whether a and b are equal to decide whether to jump
+</code></pre>
+<p>But the problem is that this requires 3 parameters, leaving only 1 byte of space for the last jump parameter, indicating that the range is too small. For this reason, it can be split into 2 bytecodes:</p>
+<pre><code>EQ $a $b      # Determine whether a and b are equal, if they are equal, skip the next statement, ie pc++
+JUMP $jmp     # unconditional jump
+</code></pre>
+<p>In this way, 2 bytes can be used to represent the jump parameter. However, since 2 bytecodes are still needed, what is the difference from the original &quot;EQ+TEST&quot; scheme? Why make it so complicated?</p>
+<ul>
+<li>
+<p>When the virtual machine is executing, if it is judged that <code>a</code> and <code>b</code> are equal and the following JUMP bytecode is skipped, then only 1 bytecode is executed; while the original &quot;EQ+TEST&quot; scheme always executes 2 bytes code. I don’t know the probability that the if statement is true, but the probability of the while statement is true is still very high, so this is equivalent to saving the execution of 1 bytecode with a high probability;</p>
+</li>
+<li>
+<p>Even if the judgment is false and the following JUMP bytecode needs to be executed, then the next bytecode can be read directly when the EQ bytecode is executed, without having to go through another instruction distribution. The JUMP bytecode here is equivalent to an extended parameter of the EQ bytecode, rather than an independently executed bytecode. This is what Lua's official implementation does. This is also because the type of bytecode can be ignored in C language, and the parameters in the bytecode can be directly read through bit operations. But in the Rust language, if unsafe is not used, the enum tag cannot be ignored and the parameters can be read directly, so this optimization cannot be implemented in our interpreter.</p>
+</li>
+<li>
+<p>We can directly decide whether to jump or not according to the judgment result. In the original &quot;EQ+TEST&quot; scheme, it is necessary to write the judgment result into a temporary variable on the stack first, then read the temporary variable when the TEST bytecode is executed, and then judge true or false again, thus adding a temporary variable Reading and writing, but also a true or false judgment.</p>
+</li>
+</ul>
+<p>The advantage is such an advantage. Yes, but not much. Especially compared with the implementation complexity it brings, it is even less. The original &quot;EQ+TEST&quot; scheme only needs to add a few operators to the <a href="./ch05-02.binary_ops.html">Binary Numerical Operation</a> introduced earlier; but the new scheme needs to be described earlier logical operation coordination. However, we still choose to follow the official implementation of Lua, and trade the complexity of the implementation for some execution efficiency optimization.</p>
+<p>In addition, regarding the types of the two operands in the bytecode, according to the previous description of <a href="./ch04-05.table_rw_and_bnf.html#execute-the-assignment">Bytecode Parameter Type</a>, it is similar to the bytecode of the binary value operation, each relational operator also corresponds to 3 bytecodes, for example, for equality operators: <code>Equal</code>, <code>EqualInt</code> and <code>EqualConst</code>, a total of 3 bytecodes. A total of 6 relational operators are 18 bytecodes.</p>
+<h2 id="combined-with-logical-operations"><a class="header" href="#combined-with-logical-operations">Combined with Logical Operations</a></h2>
+<p>Combining relational and logical operations is very common. Take the <code>a&gt;b and b&lt;c</code> statement as an example. According to the introduction in the previous two sections, this is a logical operation statement. The two operands are <code>a&gt;b</code> and <code>b&lt;c</code> respectively. The operand discharges to a temporary variable on the stack in order to judge true or false. In order to avoid the use of temporary variables here, it is necessary to make relational operations and logical operations cooperate with each other.</p>
+<p>For relational operation statements, the ExpDesc type needs to be added: <code>Compare</code>. Let's see what parameters need to be associated with this type if it is to be combined with logical operations, that is, for logical operation statements that use relational operations as operands.</p>
+<p>First of all, if it is not converted to the <code>ExpDesc::Test</code> type, then the <code>Compare</code> type needs to maintain two jump lists of True and False;</p>
+<p>Secondly, for the two jumps of True and False, the previous logical operations are distinguished by 2 bytecodes, <code>TestAndJump</code> and <code>TestOrJump</code>. The same can be done for relational operations, such as <code>EqualTrue</code> and <code>EqualFalse</code> bytecodes for equal operations. However, the relational operators have a total of 18 bytecodes. If each bytecode needs to distinguish between True and False jumps, then 36 bytecodes are required. That's too many! Fortunately, there is another method. The <code>EQ</code> bytecode introduced above only has 2 parameters, and a Boolean parameter can be added to indicate whether to jump True or False.</p>
+<p>Finally, for the two jumps of True and False, it needs to be determined according to the logical operator behind it. For example, in the above example of <code>a&gt;b and b&lt;c</code>, it cannot be determined when it is parsed to <code>a&gt;b</code>, but it can only be determined when it is parsed to <code>and</code>. Therefore, the complete bytecode cannot be generated when parsing the relational operation statement, so the relevant information can only be stored in the <code>Compare</code> type first, and then the bytecode is generated after the jump type is determined.</p>
+<p>In summary, the new types of relational operations are defined as follows:</p>
+<pre><code class="language-rust  ignore">enum ExpDesc {
+     Compare(fn(u8,u8,bool)-&gt;ByteCode, usize, usize, Vec&lt;usize&gt;, Vec&lt;usize&gt;),</code></pre>
+<p>The first 3 parameters are bytecode type and the first 2 parameters are used to generate bytecode after determining the jump type; the latter 2 parameters are True and False jump lists. The whole type is equivalent to the combination of <code>BinaryOp</code> and <code>Test</code> types.</p>
+<p>Here is the same problem as the logical operation introduced earlier. When the bytecode is generated, the destination address of the jump cannot be determined, and the complete bytecode cannot be generated immediately. It needs to be processed after determining the destination address. . However, this is different from the previous logical operation solution. The previous logical operation method is: first generate a bytecode placeholder, and only leave the parameters of the jump destination address blank; after determining the destination address, fix the corresponding parameters in the bytecode (<code>fix_test_list()</code> function ). The method of relational operation here is to store all the information in <code>ExpDesc::Compare</code> (causing the definition of this type to be very long), and then directly generate the complete bytecode after the destination address is determined later.</p>
+<p>In fact, for the processing of relational operations, theoretically, logical operations can also be used to generate bytecodes and then repair them. However, there are 18 bytecodes corresponding to relational operations, which is too many. If you still follow <code>fix_test_list()</code> the method of function matching first and then generating bytecode, the code is too complicated. If it is in the C language, the parameters in the bytecode can be directly corrected by bit operations, regardless of the bytecode type; while directly modifying the associated parameters in the enum in Rust requires unsafe.</p>
+<p>Another difference is that when parsing logical operations, bytecodes must be generated immediately to take place. The <code>Compare</code> type operand of the relational operation will determine the jump type in the <code>test_or_jump()</code> function immediately after, and then the bytecode can be generated, so there is no need to occupy a place, and there is no need to generate a word first. section code then fixed it again.</p>
+<h2 id="syntax-analysis"><a class="header" href="#syntax-analysis">Syntax Analysis</a></h2>
+<p>The syntax analysis of relational operations is divided into two parts:</p>
+<ul>
+<li>
+<p>The parsing operation itself generates the corresponding <code>ExpDesc::Compare</code> according to the operator. This part is similar to <a href="./ch05-02.binary_ops.html">Binary Numerical Operation</a>, which is skipped here.</p>
+</li>
+<li>
+<p>The combination of relational operations and logical operations, that is, the combination of <code>ExpDesc::Compare</code> and <code>ExpDesc::Test</code>. In the previous analysis of logical operations, the processing of <code>ExpDesc::Compare</code> has been added.</p>
+</li>
+</ul>
+<p>For example, when the left operand is logically operated, bytecode is generated and two jump lists are processed:</p>
+<pre><code class="language-rust  ignore">     fn test_or_jump(&amp;mut self, condition: ExpDesc) -&gt; Vec&lt;usize&gt; {
+         let (code, true_list, mut false_list) = match condition {
+             ExpDesc::Boolean(true) | ExpDesc::Integer(_) | ExpDesc::Float(_) | ExpDesc::String(_) =&gt; {
+                 return Vec::new();
+             }
+             // Add a Compare type.
+             // Generate 2 bytecodes.
+             // The two jump lists are handled in the same way as `ExpDesc::Test` below.
+             ExpDesc::Compare(op, left, right, true_list, false_list) =&gt; {
+                 // If it is determined to be a True jump, that is, the associated
+                 // third parameter, the complete bytecode can be generated.
+                 self.byte_codes.push(op(left as u8, right as u8, true));
+
+                 // Generate Jump bytecode, but the jump destination address is not
+                 // yet known, and subsequent repairs are required. to this end,
+                 // Add processing of Jump bytecode in fix_test_list().
+                 (ByteCode::Jump(0), Some(true_list), false_list)
+             }
+             ExpDesc::Test(condition, true_list, false_list) =&gt; {
+                 let icondition = self.discharge_any(*condition);
+                 (ByteCode::TestOrJump(icondition as u8, 0), Some(true_list), false_list)
+             }
+             _ =&gt; {
+                 let icondition = self.discharge_any(condition);
+                 (ByteCode::TestOrJump(icondition as u8, 0), None, Vec::new())
+             }
+         };</code></pre>
+<p>now dealing with the right operand:</p>
+<pre><code class="language-rust  ignore">     fn process_binop(&amp;mut self, binop: Token, left: ExpDesc, right: ExpDesc) -&gt; ExpDesc {
+         match binop {
+             Token::And | Token::Or =&gt; {
+                 if let ExpDesc::Test(_, mut left_true_list, mut left_false_list) = left {
+                     match right {
+                         // Add a Compare type.
+                         // The processing method is similar to the `ExpDesc::Test` type below.
+                         ExpDesc::Compare(op, l, r, mut right_true_list, mut right_false_list) =&gt; {
+                             left_true_list.append(&amp;mut right_true_list);
+                             left_false_list.append(&amp;mut right_false_list);
+                             ExpDesc::Compare(op, l, r, left_true_list, left_false_list)
+                         }
+                         ExpDesc::Test(condition, mut right_true_list, mut right_false_list) =&gt; {
+                             left_true_list.append(&amp;mut right_true_list);
+                             left_false_list.append(&amp;mut right_false_list);
+                             ExpDesc::Test(condition, left_true_list, left_false_list)
+                         }
+                         _ =&gt; ExpDesc::Test(Box::new(right), left_true_list, left_false_list),
+                     }
+                 } else {
+                     panic!(&quot;impossible&quot;);
+                 }
+             }</code></pre>
+<h2 id="virtual-machine-execution"><a class="header" href="#virtual-machine-execution">Virtual Machine Execution</a></h2>
+<p>There are 6 relational operators in total. Since we have previously implemented the <code>Eq</code> trait for <code>Value</code>, the equal and not equal operations can use <code>==</code> and <code>!=</code> to directly compare the Value operands. But for the other 4 operators, you need to implement a new trait for <code>Value</code>, which is <code>PartialOrd</code>. The reason why it is not <code>Ord</code> is because different types of Value cannot be compared in size. There is no need to use <code>PartialEq</code> because different types of Value can be compared for equality, and the return result is False. For example, the following two statements:</p>
+<pre><code class="language-lua">print (123 == 'hello') -- prints false
+print (123 &gt; 'hello') -- throw exception
+</code></pre>
+<p>Lua's comparison operators only support numeric and string types. So the <code>PartialOrd</code> implementation of <code>Value</code> is as follows:</p>
+<pre><code class="language-rust  ignore">impl PartialOrd for Value {
+    fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;std::cmp::Ordering&gt; {
+        match (self, other) {
+            // numbers
+            (Value::Integer(i1), Value::Integer(i2)) =&gt; Some(i1.cmp(i2)),
+            (Value::Integer(i), Value::Float(f)) =&gt; (*i as f64).partial_cmp(f),
+            (Value::Float(f), Value::Integer(i)) =&gt; f.partial_cmp(&amp;(*i as f64)),
+            (Value::Float(f1), Value::Float(f2)) =&gt; f1.partial_cmp(f2),
+
+            // strings
+            (Value::ShortStr(len1, s1), Value::ShortStr(len2, s2)) =&gt; Some(s1[..*len1 as usize].cmp(&amp;s2[..*len2 as usize])),
+            (Value::MidStr(s1), Value::MidStr(s2)) =&gt; Some(s1.1[..s1.0 as usize].cmp(&amp;s2.1[..s2.0 as usize])),
+            (Value::LongStr(s1), Value::LongStr(s2)) =&gt; Some(s1.cmp(s2)),
+
+            // strings of different types
+            (Value::ShortStr(len1, s1), Value::MidStr(s2)) =&gt; Some(s1[..*len1 as usize].cmp(&amp;s2.1[..s2.0 as usize])),
+            (Value::ShortStr(len1, s1), Value::LongStr(s2)) =&gt; Some(s1[..*len1 as usize].cmp(s2)),
+            (Value::MidStr(s1), Value::ShortStr(len2, s2)) =&gt; Some(s1.1[..s1.0 as usize].cmp(&amp;s2[..*len2 as usize])),
+            (Value::MidStr(s1), Value::LongStr(s2)) =&gt; Some(s1.1[..s1.0 as usize].cmp(s2)),
+            (Value::LongStr(s1), Value::ShortStr(len2, s2)) =&gt; Some(s1.as_ref().as_slice().cmp(&amp;s2[..*len2 as usize])),
+            (Value::LongStr(s1), Value::MidStr(s2)) =&gt; Some(s1.as_ref().as_slice().cmp(&amp;s2.1[..s2.0 as usize])),
+
+            (_, _) =&gt; None,
+        }
+    }
+}</code></pre>
+<p>For floating-point numbers, the <code>partial_cmp()</code> method needs to be called because the <code>Nan</code> of floating-point numbers cannot be compared.</p>
+<p>Types that implement the <code>PartialOrd</code> trait can directly use several relatively large symbols such as <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, and <code>&lt;=</code>. But <code>PartialOrd</code> actually has 3 return results for comparison: true, false, and not comparable. Corresponding to the Lua language, they are true, false, and throw an exception. However, the above-mentioned 4 comparison symbols can only give 2 results, and return false if they cannot be compared. So in order to be able to judge the situation that cannot be compared, we cannot use these 4 symbols directly, but use the original <code>partial_cmp()</code> function. The following is the execution code of <code>LesEq</code> and <code>Less</code> two bytecodes:</p>
+<pre><code class="language-rust  ignore">     ByteCode::LesEq(a, b, r) =&gt; {
+         let cmp = &amp;self.stack[a as usize].partial_cmp(&amp;self.stack[b as usize]).unwrap();
+         if !matches!(cmp, Ordering::Greater) == r {
+             pc += 1;
+         }
+     }
+     ByteCode::Less(a, b, r) =&gt; {
+         let cmp = &amp;self.stack[a as usize].partial_cmp(&amp;self.stack[b as usize]).unwrap();
+         if matches!(cmp, Ordering::Less) == r {
+             pc += 1;
+         }
+     }</code></pre>
+<p>Here <code>unwarp()</code> is used to throw an exception. In the follow-up, when standardizing error handling, improvements need to be made here.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch07-02.logical_in_evalue.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch07-04.relational_in_evalue.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch07-02.logical_in_evalue.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch07-04.relational_in_evalue.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

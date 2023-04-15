@@ -1,0 +1,408 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Table Construction - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html" class="active"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="table-construction"><a class="header" href="#table-construction">Table Construction</a></h1>
+<p>This section describes the construction of tables. The construction supports 3 types: list type, record type, and general type. See the following sample codes respectively:</p>
+<pre><code class="language-lua">local key = &quot;kkk&quot;
+print { 100, 200, 300; -- list style
+        x=&quot;hello&quot;, y=&quot;world&quot;; -- record style
+        [key]=&quot;vvv&quot;; -- general style
+}
+</code></pre>
+<p>Let's first look at how the official implementation of Lua handles the construction of tables. The output of luac is as follows:</p>
+<pre><code class="language-shell">$ luac -l test_lua/table.lua
+
+main &lt;test_lua/table.lua:0,0&gt; (14 instructions at 0x600001820080)
+0+ params, 6 slots, 1 upvalue, 1 local, 7 constants, 0 functions
+    1	[1]	VARARGPREP	0
+    2	[1]	LOADK    	0 0	; &quot;kkk&quot;
+    3	[2]	GETTABUP 	1 0 1	; _ENV &quot;print&quot;
+    4	[2]	NEWTABLE 	2 3 3	; 3
+    5	[2]	EXTRAARG 	0
+    6	[2]	LOADI    	3 100
+    7	[2]	LOADI    	4 200
+    8	[2]	LOADI    	5 300
+    9	[3]	SETFIELD 	2 2 3k	; &quot;x&quot; &quot;hello&quot;
+    10	[3]	SETFIELD 	2 4 5k	; &quot;y&quot; &quot;world&quot;
+    11	[4]	SETTABLE 	2 0 6k	; &quot;vvv&quot;
+    12	[5]	SETLIST  	2 3 0
+    13	[2]	CALL     	1 2 1	; 1 in 0 out
+    14	[5]	RETURN   	1 1 1	; 0 out
+</code></pre>
+<p>The bytecodes related to the construction of the table are lines 4 to 12:</p>
+<ul>
+<li>Line 4, NEWTABLE, is used to create a table. There are 3 parameters in total, which are the position of the new table on the stack, the length of the array part, and the part length of the hash table.</li>
+<li>Line 5, I don't understand it, ignore it for now.</li>
+<li>Lines 6, 7, and 8, three LOADIs, respectively load the values 100, 200, and 300 of the array part to the stack for later use.</li>
+<li>Lines 9 and 10, bytecode SETFIELD, insert <code>x</code> and <code>y</code> into the hash table part respectively.</li>
+<li>Line 11, bytecode SETTABLE, inserts the key into the hash table.</li>
+<li>Line 12, SETLIST, loads the data loaded on the stack in lines 6-8 above, and inserts it into the array at one time.</li>
+</ul>
+<p>The stack situation corresponding to the execution of each bytecode is as follows:</p>
+<pre><code>           |       |        /&lt;--- 9.SETFILED
+           +-------+        |&lt;---10.SETFILED
+4.NEWTABLE |  { }  |&lt;----+--+&lt;---11.SETTABLE
+           +-------+     |
+   6.LOADI |  100  |----&gt;|
+           +-------+     |12.SETLIST
+   7.LOADI |  200  |----&gt;|
+           +-------+     |
+   8.LOADI |  300  |----&gt;/
+           +-------+
+           |       |
+</code></pre>
+<p>First of all, it can be seen that the table is constructed in real time by inserting members one by one during the execution of the virtual machine. This is a bit beyond my expectation (although I didn't think about the process before). I have previously written code similar to the following:</p>
+<pre><code class="language-lua">local function day_of_week(day)
+     local days = {
+         &quot;Sunday&quot;=0, &quot;Monday&quot;=1, &quot;Tuesday&quot;=2,
+         &quot;Wednesday&quot;=3, &quot;Thursday&quot;=4, &quot;Friday&quot;=5,
+         &quot;Saturday&quot;=6,
+     }
+     return days[day]
+end
+</code></pre>
+<p>It is natural to put <code>days</code> inside the <code>day_of_week()</code> function, because this variable is only used inside this function. However, according to the realization of the above table structure, every time this function is called, the table will be constructed in real time, that is, the 7 dates will be inserted into the table. This cost is a bit high (8 string hashes and 1 string are required In comparison, at least 9 bytecodes are required, and there is more than one memory allocation brought about by creating a table). It feels not even as fast as comparing week by week names (an average of 4 string comparisons are required, and 2 bytecodes are compared for a total of 8). A better way is to put the <code>days</code> variable outside the function (that is <a href="./ch09-01.upvalue.html">UpValue</a> introduced later), and there is no need to construct a table every time you enter the function, but in this way it is not a good programming practice to put variables inside a function outside. Another approach (not supported by Lua's official implementation) is to construct a table composed of all constants in the parsing stage, and then just quote it later, but this will bring some complexity. No energy to finish by now.</p>
+<p>Back to the construction of the table, the processing methods for the array part and the hash table part are different:</p>
+<ul>
+<li>The array part is to first load the values onto the stack in sequence, and finally insert them into the array at one time;</li>
+<li>The hash table part is directly inserted into the hash table each time.</li>
+</ul>
+<p>One is batch and one is sequential. The reasons for the different methods are speculated as follows:</p>
+<ul>
+<li>
+<p>If the array part is also inserted one by one, then inserting certain types of expressions requires 2 bytecodes. For example, for global variables, you need to use <code>GetGlobal</code> bytecode to load it on the stack first, and then use a bytecode similar to <code>AppendTable</code> to insert into the array, then inserting N values requires at most 2N bytecodes . If you insert in batches, only N+1 bytecodes are needed for N values. So bulk insert is better for the array part.</p>
+</li>
+<li>
+<p>As for the hash table part, each piece of data has two values of key and value. If the batch method is also used, 2 bytecodes are required to load both values onto the stack. And if it is inserted one by one, only one bytecode is needed in many cases. For example, the last three items in the above sample code only correspond to one bytecode. In this way, the batch method requires more bytecodes, so inserting one by one is more suitable for the hash table part.</p>
+</li>
+</ul>
+<p>In this section, according to the official Lua implementation method, the following 4 bytecodes are correspondingly added:</p>
+<pre><code class="language-rust  ignore">pub enum ByteCode {
+     NewTable(u8, u8, u8),
+     SetTable(u8, u8, u8), // key is on the stack
+     SetField(u8, u8, u8), // key is a string constant
+     SetList(u8, u8),</code></pre>
+<p>However, the two bytecodes in the middle do not support the case where the value is a constant, only the index on the stack is supported. We'll add optimizations to constants in a later section.</p>
+<h2 id="syntax-analysis"><a class="header" href="#syntax-analysis">Syntax Analysis</a></h2>
+<p>After introducing the principle of table construction, let's look at the specific implementation. Look at the syntax analysis section first. The code is very long, but it is just according to the above introduction, the logic is very simple. The code is posted here for reference only, readers who are not interested can skip here.</p>
+<pre><code class="language-rust  ignore">fn table_constructor(&amp;mut self, dst: usize) {
+     let table = dst as u8;
+     let inew = self.byte_codes.len();
+     self.byte_codes.push(ByteCode::NewTable(table, 0, 0)); // Create a new table
+
+     let mut narray = 0;
+     let mut nmap = 0;
+     let mut sp = dst + 1;
+     loop {
+         match self. lex. peek() {
+             Token::CurlyR =&gt; { // `}`
+                 self. lex. next();
+                 break;
+             }
+             Token::SqurL =&gt; { // `[` exp `]` `=` exp, general formula
+                 nmap += 1;
+                 self. lex. next();
+
+                 self.load_exp(sp); // key
+                 self.lex.expect(Token::SqurR); // `]`
+                 self.lex.expect(Token::Assign); // `=`
+                 self. load_exp(sp + 1); // value
+
+                 self.byte_codes.push(ByteCode::SetTable(table, sp as u8, sp as u8 + 1));
+             },
+             Token::Name(_) =&gt; { // Name `=` exp | Name
+                 nmap += 1;
+                 let key = if let Token::Name(key) = self. lex. next() {
+                     self. add_const(key)
+                 };
+                 if self.lex.peek() == &amp;Token::Assign { // Name `=` exp, recorded
+                     self. lex. next();
+                     self. load_exp(sp); // value
+                     self.byte_codes.push(ByteCode::SetField(table, key as u8, sp as u8));
+                 } else {
+                     narray += 1;
+                     self.load_exp_with_ahead(sp, Token::Name(key)); // exp, list
+
+                     sp += 1;
+                     if sp - (dst + 1) &gt; 50 { // too many, reset it
+                         self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+                         sp = dst + 1;
+                     }
+                 }
+             },
+             _ =&gt; { // exp, list
+                 narray += 1;
+                 self. load_exp(sp);
+
+                 sp += 1;
+                 if sp - (dst + 1) &gt; 50 { // too many, reset it
+                     self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+                     sp = dst + 1;
+                 }
+             },
+         }
+
+         match self. lex. next() {Token::SemiColon | Token::Comma =&gt; (),
+             Token::CurlyR =&gt; break,
+             t =&gt; panic!(&quot;invalid table {t:?}&quot;),
+         }
+     }
+
+     if sp &gt; dst + 1 {
+         self.byte_codes.push(ByteCode::SetList(table, (sp - (dst + 1)) as u8));
+     }
+
+     // reset narray and nmap
+     self.byte_codes[inew] = ByteCode::NewTable(table, narray, nmap);
+}</code></pre>
+<p>The <code>NewTable</code> bytecode is generated at the beginning of the function, but since the number of members of the array and the hash table is not yet known, the latter two parameters are temporarily filled with 0. And write down the position of this bytecode, and modify the parameters at the end of the function.</p>
+<p>The intermediate loop is to traverse all members of the table. There are 3 syntax types in total:</p>
+<ul>
+<li>
+<p>General type, <code>[ exp ] = exp</code>, key and value are both expressions, respectively loaded to the sp and sp+1 positions of the stack through the <code>load_exp()</code> function, and then generate <code>SetTable</code> bytecode;</p>
+</li>
+<li>
+<p>Record type, <code>Name = exp</code>, key is Name, which is a string constant, added to the constant table, value is an expression, and finally generates <code>SetField</code> bytecode. There is a place here that is related to Rust's ownership mechanism, that is, the <code>key</code> obtained by matching the pattern branch <code>Token::Name(key)</code> of <code>match self.lex.peek()</code> cannot be directly passed through <code>add_const(* key)</code> added to the constant table. This is because <code>peek()</code> returns not <code>Token</code> itself, but a reference to <code>Token</code>, which is returned by <code>self.lex.peek()</code>, so the associated <code>self.lex</code> and <code>self </code> are also in the referenced state; calling <code>self.add_const()</code> is also a mut reference to <code>self</code>, which violates the reference rules. The correct way is to abandon the return value of <code>peek()</code>, but call <code>self.lex.next()</code> to return Token and re-match. At this time, Rust's inspection is too strict, because the Token reference returned by <code>self.lex.peek()</code> does not affect <code>self.add_const()</code>. It should be that Rust has no ability to determine that there is no influence between the two.</p>
+</li>
+<li>
+<p>List type, <code>exp</code>, is loaded to the <code>sp</code> position of the stack, and <code>sp</code> is updated, waiting for the last <code>SetList</code> to perform insertion. But you can't load data on the stack infinitely, because this will cause the stack to reallocate memory all the time, so if the current data on the stack exceeds 50, generate a <code>SetList</code> bytecode to clean up the stack.</p>
+</li>
+</ul>
+<p>What needs to be explained here is that when the <code>Name</code> is parsed, it may be either a record type or a list type. We need to peek the next Token to distinguish between the two: if the next Token is <code>=</code>, it is a record type , otherwise it is tabular. The problem here is that <code>Name</code> is already peeked, and the lexical analysis only supports peek one Token because of [using <code>Peekable</code>](./ch03-03.read_input.md#use peekable), so it can only Modify the expression parsing function <code>load_exp()</code> to support a Token read in advance, and add <code>load_exp_with_ahead()</code> function for this purpose. In the entire Lua grammar, there is only one place that needs to look forward to two Tokens.</p>
+<blockquote>
+<p>This kind of behavior that needs to look forward to two Tokens to determine the expression, I wonder if it is called <a href="https://en.wikipedia.org/wiki/LL_parser">LL(2)</a>?</p>
+</blockquote>
+<h2 id="virtual-machine-execution"><a class="header" href="#virtual-machine-execution">Virtual Machine Execution</a></h2>
+<p>The following is the virtual machine execution code of the newly added 4 bytecodes, which is also very simple and can be skipped:</p>
+<pre><code class="language-rust  ignore">     ByteCode::NewTable(dst, narray, nmap) =&gt; {
+         let table = Table::new(narray as usize, nmap as usize);
+         self.set_stack(dst, Value::Table(Rc::new(RefCell::new(table))));
+     }
+     ByteCode::SetTable(table, key, value) =&gt; {
+         let key = self.stack[key as usize].clone();
+         let value = self.stack[value as usize].clone();
+         if let Value::Table(table) = &amp;self. stack[table as usize] {
+             table.borrow_mut().map.insert(key, value);
+         } else {
+             panic!(&quot;not table&quot;);
+         }
+     }
+     ByteCode::SetField(table, key, value) =&gt; {
+         let key = proto.constants[key as usize].clone();
+         let value = self.stack[value as usize].clone();
+         if let Value::Table(table) = &amp;self. stack[table as usize] {
+             table.borrow_mut().map.insert(key, value);
+         } else {
+             panic!(&quot;not table&quot;);
+         }
+     }
+     ByteCode::SetList(table, n) =&gt; {
+         let ivalue = table as usize + 1;
+         if let Value::Table(table) = self.stack[table as usize].clone() {
+             let values = self. stack. drain(ivalue .. ivalue + n as usize);
+             table.borrow_mut().array.extend(values);
+         } else {
+             panic!(&quot;not table&quot;);
+         }
+     }</code></pre>
+<p>The first bytecode <code>NewTable</code> is very simple and will not be introduced. The latter two bytecodes <code>SetTable</code> and <code>SetField</code> are similar, and both need to get the mut reference of the table through <code>borrow_mut()</code>. The final bytecode <code>SetList</code> encounters Rust’s ownership problem again, and needs to explicitly call the <code>clone()</code> function on the list on the stack to create a pointer to an independent list. If <code>clone()</code> is not called, then the <code>table</code> variable obtained by the first line <code>if let</code> statement matching is a reference to the member on the stack, that is, a reference to the stack, and this reference needs to continue until the third line, so it cannot be released in advance; the second line calling <code>stack.drain()</code> needs to obtain the variable reference of the stack, which conflicts with the reference obtained by the <code>table</code> variable in the first line. Therefore, <code>clone()</code> needs to generate a pointer to an independent table, so that the <code>table</code> variable matched in the first line is only a reference to the table, and is separated from the reference to the stack, thereby avoiding conflicts.</p>
+<p>The mandatory <code>clone()</code> here increases performance consumption, but also avoids potential bugs. For example, the stack location where the table is located may be included in the subsequent <code>stack.drain()</code>, so the address becomes invalid, and then the operation of inserting data into the table in the third subsequent line will be abnormal. Of course, in the scenario of <code>SetList</code>, the syntax analysis will ensure that the stack location cleaned by <code>stack.drain()</code> does not include the table, but the Rust compiler does not know, and there is no guarantee that it will not be included in the future. So <code>clone()</code> here completely eliminates this hidden danger, and it is worthwhile.</p>
+<p>So far, we have completed the construction of the table, and the following sections will introduce the reading and writing of the table.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-01.table_definition.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch04-03.expdesc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-01.table_definition.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch04-03.expdesc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

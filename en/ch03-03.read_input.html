@@ -1,0 +1,343 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Input Type - Build a Lua Interpreter in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="PREFACE.html">Preface</a></li><li class="chapter-item expanded "><a href="ch01-00.hello_world.html"><strong aria-hidden="true">1.</strong> hello, world!</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01.principles.html"><strong aria-hidden="true">1.1.</strong> Basic Compilation Principles</a></li><li class="chapter-item expanded "><a href="ch01-02.byte_codes.html"><strong aria-hidden="true">1.2.</strong> Bytecode</a></li><li class="chapter-item expanded "><a href="ch01-03.value_and_type.html"><strong aria-hidden="true">1.3.</strong> Value and Type</a></li><li class="chapter-item expanded "><a href="ch01-04.lets_do_it.html"><strong aria-hidden="true">1.4.</strong> Let's Do It!</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00.variables.html"><strong aria-hidden="true">2.</strong> Variables and Assignments</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch02-01.more_types.html"><strong aria-hidden="true">2.1.</strong> More Types</a></li><li class="chapter-item expanded "><a href="ch02-02.local.html"><strong aria-hidden="true">2.2.</strong> Local Variables</a></li><li class="chapter-item expanded "><a href="ch02-03.assignment.html"><strong aria-hidden="true">2.3.</strong> Variable Assignment</a></li></ol></li><li class="chapter-item expanded "><a href="ch03-00.optimize_string.html"><strong aria-hidden="true">3.</strong> String Optimization</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01.string_type.html"><strong aria-hidden="true">3.1.</strong> String Definition</a></li><li class="chapter-item expanded "><a href="ch03-02.from_trait.html"><strong aria-hidden="true">3.2.</strong> Type Conversion</a></li><li class="chapter-item expanded "><a href="ch03-03.read_input.html" class="active"><strong aria-hidden="true">3.3.</strong> Input Type</a></li><li class="chapter-item expanded "><a href="ch03-04.unicode_utf8.html"><strong aria-hidden="true">3.4.</strong> Unicode and UTF-8</a></li><li class="chapter-item expanded "><a href="ch03-05.gc_vs_rc.html"><strong aria-hidden="true">3.5.</strong> Garbage Collection and Rc</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00.table.html"><strong aria-hidden="true">4.</strong> Table and ExpDesc</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch04-01.table_definition.html"><strong aria-hidden="true">4.1.</strong> Table Definition</a></li><li class="chapter-item expanded "><a href="ch04-02.table_constructor.html"><strong aria-hidden="true">4.2.</strong> Table Construction</a></li><li class="chapter-item expanded "><a href="ch04-03.expdesc.html"><strong aria-hidden="true">4.3.</strong> ExpDesc Concept</a></li><li class="chapter-item expanded "><a href="ch04-04.expdesc_rewrite.html"><strong aria-hidden="true">4.4.</strong> ExpDesc Rewrite</a></li><li class="chapter-item expanded "><a href="ch04-05.table_rw_and_bnf.html"><strong aria-hidden="true">4.5.</strong> Table Read/Write and BNF</a></li></ol></li><li class="chapter-item expanded "><a href="ch05-00.arithmetic_ops.html"><strong aria-hidden="true">5.</strong> Numerical Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch05-01.unary_ops.html"><strong aria-hidden="true">5.1.</strong> Unary Operations</a></li><li class="chapter-item expanded "><a href="ch05-02.binary_ops.html"><strong aria-hidden="true">5.2.</strong> Binary Operations</a></li><li class="chapter-item expanded "><a href="ch05-03.int_and_float.html"><strong aria-hidden="true">5.3.</strong> Integer and Float</a></li></ol></li><li class="chapter-item expanded "><a href="ch06-00.control_structures.html"><strong aria-hidden="true">6.</strong> Control Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch06-01.if.html"><strong aria-hidden="true">6.1.</strong> if Statement</a></li><li class="chapter-item expanded "><a href="ch06-02.elseif_else.html"><strong aria-hidden="true">6.2.</strong> elseif and else Branches</a></li><li class="chapter-item expanded "><a href="ch06-03.while_break.html"><strong aria-hidden="true">6.3.</strong> while and break Statements</a></li><li class="chapter-item expanded "><a href="ch06-04.repeat_continue.html"><strong aria-hidden="true">6.4.</strong> repeat and continue Statements</a></li><li class="chapter-item expanded "><a href="ch06-05.numerical-for.html"><strong aria-hidden="true">6.5.</strong> numerical-for Statement</a></li><li class="chapter-item expanded "><a href="ch06-06.goto.html"><strong aria-hidden="true">6.6.</strong> goto Statement</a></li></ol></li><li class="chapter-item expanded "><a href="ch07-00.logical_relational.html"><strong aria-hidden="true">7.</strong> Logical and Relational Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch07-01.logical_in_condition.html"><strong aria-hidden="true">7.1.</strong> Logical Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-02.logical_in_evalue.html"><strong aria-hidden="true">7.2.</strong> Logical Operations in Evalue</a></li><li class="chapter-item expanded "><a href="ch07-03.relational_in_condition.html"><strong aria-hidden="true">7.3.</strong> Relational Operations in Conditional Judgment</a></li><li class="chapter-item expanded "><a href="ch07-04.relational_in_evalue.html"><strong aria-hidden="true">7.4.</strong> Relational Operations in Evalue</a></li></ol></li><li class="chapter-item expanded "><a href="ch08-00.function.html"><strong aria-hidden="true">8.</strong> Function</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01.define_and_call.html"><strong aria-hidden="true">8.1.</strong> Definition and Call</a></li><li class="chapter-item expanded "><a href="ch08-02.arguments.html"><strong aria-hidden="true">8.2.</strong> Arguments</a></li><li class="chapter-item expanded "><a href="ch08-03.results.html"><strong aria-hidden="true">8.3.</strong> Return Value</a></li><li class="chapter-item expanded "><a href="ch08-04.rust_functions_and_api.html"><strong aria-hidden="true">8.4.</strong> Rust Functions and API</a></li><li class="chapter-item expanded "><a href="ch08-05.tail_call.html"><strong aria-hidden="true">8.5.</strong> Tail Call</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00.closure.html"><strong aria-hidden="true">9.</strong> Closure</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch09-01.upvalue.html"><strong aria-hidden="true">9.1.</strong> Upvalue</a></li><li class="chapter-item expanded "><a href="ch09-02.escape_and_closure.html"><strong aria-hidden="true">9.2.</strong> Upvalue Escape and Closure</a></li><li class="chapter-item expanded "><a href="ch09-03.escape_from_block_and_goto.html"><strong aria-hidden="true">9.3.</strong> Escape from Block and goto</a></li><li class="chapter-item expanded "><a href="ch09-04.rust_closure.html"><strong aria-hidden="true">9.4.</strong> Rust Closures</a></li><li class="chapter-item expanded "><a href="ch09-05.generic_for.html"><strong aria-hidden="true">9.5.</strong> generic-for Statement</a></li><li class="chapter-item expanded "><a href="ch09-06.environment.html"><strong aria-hidden="true">9.6.</strong> Environment _ENV</a></li></ol></li><li class="chapter-item expanded "><a href="TO_BE_CONTINUED.html">To Be Continued</a></li><li class="chapter-item expanded affix "><a href="REFERENCES.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build a Lua Interpreter in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/WuBingzheng/build-lua-in-rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="input-type"><a class="header" href="#input-type">Input Type</a></h1>
+<p>In the previous section we defined a function with generics. In fact, we &quot;use&quot; more generic types than &quot;define&quot;. This chapter discusses another &quot;use&quot; example, which is the input type of the entire interpreter, that is, the lexical analysis module reads the source code.</p>
+<p>Currently only reading source code from files is supported, and Rust's file type <code>std::fs::File</code> does not even include standard input. The lexical analysis data structure Lex is defined as follows:</p>
+<pre><code class="language-rust  ignore">pub struct Lex {
+     input: File,
+     // omit other members</code></pre>
+<p>The method <code>read_char()</code> for reading characters is defined as follows:</p>
+<pre><code class="language-rust  ignore">impl Lex {
+     fn read_char(&amp;mut self) -&gt; char {
+         let mut buf: [u8; 1] = [0];
+         self.input.read(&amp;mut buf).unwrap();
+         buf[0] as char
+     }</code></pre>
+<p>Here we only focus on the <code>self.input.read()</code> call.</p>
+<h2 id="use-read"><a class="header" href="#use-read">Use <code>Read</code></a></h2>
+<p>The official implementation of Lua supports two types of input files (including standard input) and strings as source code. According to the idea of Rust generics, the input we want to support may not be limited to <em>some specific types</em>, but <em>a type that supports certain features (ie traits)</em>. In other words, as long as it is a character stream, you can read characters one by one. This feature is so common that the <a href="https://doc.rust-lang.org/std/io/trait.Read.html"><code>std::io::Read</code> trait</a> is provided in the Rust standard library. So modify the definition of Lex as follows:</p>
+<pre><code class="language-rust  ignore">pub struct Lex&lt;R&gt; {
+     input: R,</code></pre>
+<p>There are two changes here:</p>
+<ul>
+<li>Changed the original <code>Lex</code> to <code>Lex&lt;R&gt;</code>, indicating that Lex is based on the generic type <code>R</code>,</li>
+<li>Change the original field input type <code>File</code> to <code>R</code>.</li>
+</ul>
+<p>Correspondingly, the implementation part should also be changed:</p>
+<pre><code class="language-rust  ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {</code></pre>
+<p>Added <code>&lt;R: Read&gt;</code>, indicating that the constraint of <code>&lt;R&gt;</code> is <code>Read</code>, that is, the type R must support the <code>Read</code> trait. This is because the <code>input.read()</code> function is used in the <code>read_char()</code> method.</p>
+<p>The <code>read_char()</code> method itself does not need to be modified, and the <code>input.read()</code> function can still be used normally, but its meaning has changed slightly:</p>
+<ul>
+<li>When the input used the <code>File</code> type before, the <code>read()</code> function called was a method of the <code>File</code> type that implemented the <code>Read</code> trait;</li>
+<li>The <code>read()</code> function is now called on all types that implement the <code>Read</code> trait.</li>
+</ul>
+<p>The statement here is rather convoluted, so you can ignore it if you don’t understand it.</p>
+<p>In addition, generic definitions must be added to other places where Lex is used. For example, the definition of ParseProto is modified as follows:</p>
+<pre><code class="language-rust  ignore">pub struct ParseProto&lt;R&gt; {
+     lex: Lex&lt;R&gt;,</code></pre>
+<p>The parameter of its <code>load()</code> method is also changed from <code>File</code> to <code>R</code>:</p>
+<pre><code class="language-rust  ignore">     pub fn load(input: R) -&gt; Self {</code></pre>
+<p><code>load()</code> supports <code>R</code> just to create <code>Lex&lt;R&gt;</code>, and <code>ParseProto</code> does not use <code>R</code> directly. But <code>&lt;R&gt;</code> still needs to be added to the definition of <code>ParseProto</code>, which is a bit long-winded. What's more verbose is that if there are other types that need to include <code>ParseProto</code>, then <code>&lt;R&gt;</code> should also be added. This is called generic type propagate. This problem can be circumvented by defining <code>dyn</code>, which will also bring some additional performance overhead. However, here <code>ParseProto</code> is an internal type and will not be exposed to other types, so <code>&lt;R&gt;</code> in <code>Lex</code> is equivalent to only spreading one layer, which is acceptable, and <code>dyn</code> will not be adopted.</p>
+<p>Now that <code>Read</code> is supported, types other than files can be used. Next look at using stdin like and string types.</p>
+<h2 id="use-standard-input"><a class="header" href="#use-standard-input">Use Standard Input</a></h2>
+<p>The standard input <a href="https://doc.rust-lang.org/std/io/struct.Stdin.html"><code>std::io::Stdin</code> type</a> implements the <code>Read</code> trait, so it can be used directly. Modify the <code>main()</code> function to use standard input:</p>
+<pre><code class="language-rust  ignore">fn main() {
+     let input = std::io::stdin(); // standard input
+     let proto = parse::ParseProto::load(input);
+     vm::ExeState::new().execute(&amp;proto);
+}</code></pre>
+<p>Test source code from standard input:</p>
+<pre><code class="language-bash">echo 'print &quot;i am from stdin!&quot;' | cargo r
+</code></pre>
+<h2 id="use-string"><a class="header" href="#use-string">Use String</a></h2>
+<p>The string type does not directly support the <code>Read</code> trait, because the string type itself does not have the function of recording the read position. <code>Read</code> can be realized by encapsulating <a href="https://doc.rust-lang.org/std/io/struct.Cursor.html"><code>std::io::Cursor</code> type</a>, which is used to   encapsulates <code>AsRef&lt;[u8]&gt;</code> to support recording position. Its <a href="https://doc.rust-lang.org/src/std/io/cursor.rs.html#74-77">definition</a> is clear:</p>
+<pre><code class="language-rust  ignore">pub struct Cursor&lt;T&gt; {
+     inner: T,
+     pos: u64,
+}</code></pre>
+<p>This type naturally implements the <code>Read</code> trait. Modify the <code>main()</code> function to use strings as source code input:</p>
+<pre><code class="language-rust  ignore">fn main() {
+     let input = std::io::Cursor::new(&quot;print \&quot;i am from string!\&quot;&quot;); // string+Cursor
+     let proto = parse::ParseProto::load(input);
+     vm::ExeState::new().execute(&amp;proto);
+}</code></pre>
+<h2 id="use-bufreader"><a class="header" href="#use-bufreader">Use BufReader</a></h2>
+<p>Reading and writing files directly is a performance-intensive operation. The above implementation only reads one byte at a time, which is very inefficient for file types. This frequent and small amount of file reading operation requires a layer of cache outside. The <a href="https://doc.rust-lang.org/std/io/struct.BufReader.html"><code>std::io::BufReader</code> type</a> in the Rust standard library provides this functionality. This type naturally also implements the <code>Read</code> trait, and also implements the <code>BufRead</code> trait using the cache, providing more methods.</p>
+<p>I originally defined Lex's input field as <code>BufReader&lt;R&gt;</code> type, instead of <code>R</code> type above. But later it was found to be wrong, because when <code>BufReader</code> reads data, it first reads from the source to the internal cache, and then returns. Although it is very practical for file types, while the internal cache is unnecessary for string types, and there is one more unnecessary memory copy. And also found that the standard input <code>std::io::Stdin</code> also has its own cache already, so no need to add another layer. Therefore, <code>BufReader</code> is not used inside Lex, but let the caller add it according to the needs (for example, for <code>File</code> type).</p>
+<p>Let’s modify the <code>main()</code> function to encapsulate <code>BufReader</code> outside the original <code>File</code> type:</p>
+<pre><code class="language-rust  ignore">fn main() {
+     // omit parameter handling
+     let file = File::open(&amp;args[1]).unwrap();
+
+     let input = BufReader::new(file); // encapsulate BufReader
+     let proto = parse::ParseProto::load(input);
+     vm::ExeState::new().execute(&amp;proto);
+}</code></pre>
+<h2 id="give-up-seek"><a class="header" href="#give-up-seek">Give Up <code>Seek</code></a></h2>
+<p>At the beginning of this section, we only require that the input type supports character-by-character reading. In fact, it is not true, we also require that the read position can be modified, that is, the <code>Seek</code> trait. This is what the original <code>putback_char()</code> method requires, using the <code>input.seek()</code> method:</p>
+<pre><code class="language-rust  ignore">     fn putback_char(&amp;mut self) {
+         self.input.seek(SeekFrom::Current(-1)).unwrap();
+     }</code></pre>
+<p>The application scenario of this function is that in lexical analysis, sometimes it is necessary to judge the type of the current character according to the next character. For example, after reading the character <code>-</code>, if the next character is still <code>-</code>, it is a comment; otherwise it is Subtraction, at this time the next character will be put back into the input source as the next Token. <a href="./ch02-03.assignment.html">Previously</a> introduced that the same is true for reading Token in syntax analysis, and the current statement type must be judged according to the next Token. At that time, the <code>peek()</code> function was added to Lex, which could &quot;peek&quot; at the next Token without consuming it. The <code>peek()</code> here and the <code>putback_char()</code> above are two ways to deal with this situation. The pseudo codes are as follows:</p>
+<pre><code>// Method 1: peek()
+if input.peek() == xxx then
+     input.next() // Consume the peek just now
+     handle(xxx)
+end
+
+// Method 2: put_back()
+if input.next() == xxx then
+     handle(xxx)
+else
+     input.put_back() // plug it back and read it next time
+end
+</code></pre>
+<p>When using the <code>File</code> type before, because the <code>seek()</code> function is supported, it is easy to support the <code>put_back</code> function later, so the second method is adopted. But now the input has been changed to <code>Read</code> type, if <code>input.seek()</code> is still used, then the input is also required to have <code>std::io::Seek</code> trait constraints. Among the three types we have tested above, the cached file <code>BufReader&lt;File&gt;</code> and the string <code>Cursor&lt;String&gt;</code> both support <code>Seek</code>, but the standard input <code>std::io::Stdin</code> does not support it, and there may be other input types that support <code>Read</code> but not <code>Seek</code> (such as <code>std::net::TcpStream</code>). If we add <code>Seek</code> constraints here, the road will be narrowed.</p>
+<p>Since <code>Seek</code> cannot be used, there is no need to use the second method. You can also consider the first method, which is at least consistent with Token's <code>peek()</code> function.</p>
+<p>The more straightforward approach is to add an <code>ahead_char: char</code> field in Lex to save the character peeked to, similar to the <code>peek()</code> function and the corresponding <code>ahead: Token</code> field. It's simpler to do this, but there's a more general way of doing it in the Rust standard library, using <code>Peekable</code>. Before introducing Peekable, let's look at the <code>Bytes</code> type it depends on.</p>
+<h2 id="use-bytes"><a class="header" href="#use-bytes">Use Bytes</a></h2>
+<p>The implementation of the <code>read_char()</code> function listed at the beginning of this section is a bit complicated relative to its purpose (reading a character). I later discovered a more abstract method, the <code>bytes()</code> method of the <code>Read</code> triat, which returns an iterator <code>Bytes</code>, and each call to <code>next()</code> returns a byte. Modify the Lex definition as follows:</p>
+<pre><code class="language-rust  ignore">pub struct Lex&lt;R&gt; {
+     input: Bytes::&lt;R&gt;,</code></pre>
+<p>Modify the constructor and <code>read_char()</code> function accordingly.</p>
+<pre><code class="language-rust  ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {
+     pub fn new(input: R) -&gt; Self {Lex {
+             input: input.bytes(), // generate iterator Bytes
+             ahead: Token::Eos,
+         }
+     }
+     fn read_char(&amp;mut self) -&gt; char {
+         match self.input.next() { // just call next(), simpler
+             Some(Ok(ch)) =&gt; ch as char,
+             Some(_) =&gt; panic!(&quot;lex read error&quot;),
+             None =&gt; '\0',
+         }
+     }</code></pre>
+<p>The code for <code>read_char()</code> does not seem to be reduced here. But its main body is just <code>input.next()</code> call, and the rest is the processing of the return value. After the error handling is added later, these judgment processing will be more useful.</p>
+<h2 id="use-peekable"><a class="header" href="#use-peekable">Use <code>Peekable</code></a></h2>
+<p>The <code>peekable()</code> method in the <code>Bytes</code> document, which returns the <code>Peekable</code> type, is exactly what we need. It based on the iterator, and we can &quot;peek&quot; a piece of data forward. Its <a href="https://doc.rust-lang.org/src/core/iter/adapters/peekable.rs.html#15-19">definition</a> is clear:</p>
+<pre><code class="language-rust  ignore">pub struct Peekable&lt;I: Iterator&gt; {
+     iter: I,
+     /// Remember a peeked value, even if it was None.
+     peeked: Option&lt;Option&lt;I::Item&gt;&gt;,
+}</code></pre>
+<p>To this end, modify the definition of Lex as follows:</p>
+<pre><code class="language-rust  ignore">pub struct Lex&lt;R&gt; {
+     input: Peekable::&lt;Bytes::&lt;R&gt;&gt;,</code></pre>
+<p>Modify the constructor accordingly, and add the <code>peek_char()</code> function:</p>
+<pre><code class="language-rust  ignore">impl&lt;R: Read&gt; Lex&lt;R&gt; {
+     pub fn new(input: R) -&gt; Self {
+         Lex {
+             input: input.bytes().peekable(), // generate iterator Bytes
+             ahead: Token::Eos,
+         }
+     }
+     fn peek_char(&amp;mut self) -&gt; char {
+         match self. input. peek() {
+             Some(Ok(ch)) =&gt; *ch as char,
+             Some(_) =&gt; panic!(&quot;lex peek error&quot;),
+             None =&gt; '\0',
+         }
+     }</code></pre>
+<p>Here <code>input.peek()</code> is basically the same as <code>input.next()</code> above, the difference is that the return type is a reference. This is the same as the reason why the <code>Lex::peek()</code> function returns <code>&amp;Token</code>, because the owner of the returned value is still input, and it does not move out, but just &quot;peek&quot;. But here we are of <code>char</code> type, which is Copy, so directly dereference <code>*ch</code>, and finally return char type.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>So far, we have completed the optimization of the input type. From the beginning, only the <code>File</code> type is supported, and finally the <code>Read</code> trait is supported. There is not much content to sort out, but in the process of realization and exploration at the beginning, it took a lot of effort to bump into things. In this process, I also thoroughly figured out some basic types in the standard library, such as <code>Read</code>, <code>BufRead</code>, <code>BufReader</code>, also discovered and learned the <code>Cursor</code> and <code>Peekable</code> types, and also learned more about the official website documents way of organization. Learning the Rust language by doing is the ultimate goal of this project.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-02.from_trait.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="ch03-04.unicode_utf8.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-02.from_trait.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="ch03-04.unicode_utf8.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
