@@ -421,11 +421,11 @@ print(f1 == f2)  -- true or false？
     pub upindexes: Vec&lt;usize&gt;,
     pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,
 </code></pre>
-<p>其中<code>inner_funcs</code>是函数内部定义的内层函数的原型列表。<code>upindexes</code>是当前函数引用上层函数的局部变量的索引，这个成员后续需要改造。需要说明的是，<code>inner_funcs</code>是当前函数作为外层函数的角色时使用的，而<code>upindexes</code>是当前函数作为内存函数的角色时使用的。</p>
+<p>其中<code>inner_funcs</code>是函数内部定义的内层函数的原型列表。<code>upindexes</code>是当前函数引用上层函数的局部变量的索引，这个成员后续需要改造。需要说明的是，<code>inner_funcs</code>是当前函数作为外层函数的角色时使用的，而<code>upindexes</code>是当前函数作为内层函数的角色时使用的。</p>
 <p>我们在后面介绍完Upvalue完整的特性后，再来介绍对Upvalue索引<code>upindexes</code>的解析。</p>
 <p>在介绍完闭包的定义和语法分析后，接着看Upvalue的其他场景。</p>
 <h2 id="改进对upvalue的引用"><a class="header" href="#改进对upvalue的引用">改进：对Upvalue的引用</a></h2>
-<p>之前介绍的Upvalue都是对上层函数的局部变量的引用，现在来看对上层函数的Upvalue的引用。对本节最开头的计数闭包示例做下改造，把递增的代码<code>i = i + 1</code>再放到一层函数中：</p>
+<p>之前介绍的Upvalue都是对上层函数的<strong>局部变量</strong>的引用，现在来看对上层函数的<strong>Upvalue</strong>的引用。对本节最开头的计数闭包示例做下改造，把递增的代码<code>i = i + 1</code>再放到一层函数中：</p>
 <pre><code class="language-lua">local function newCounter()
     local i = 0
     return function ()
