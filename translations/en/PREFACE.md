@@ -10,7 +10,7 @@ The Rust language has a distinctive personality and is also [widely popular](htt
 
 This series of articles documents the learning and exploration process during this project. Similar to other from scratch [Build your own X](https://build-your-own-x.vercel.app/) projects, this project also has a clear big goal, an unknown exploration process and a continuous sense of accomplishment, but with some differences:
 
-- Most of the authors of other projects have been immersed in related fields for many years, but my job is not in the direction of programming language or compilation principles. I don't have complete theoretical knowledge for implementing an interpreter, and I just cross the river by feeling the stones. But think of the good in everything, which also provides a real beginner's perspective.
+- Most of the authors of other projects have been immersed in related fields for many years, but my job is not in the direction of programming language or compilation principles. I don't have complete theoretical knowledge for implementing an interpreter, and I just cross the river by feeling the stones. But think of the good in everything, which also [provides a real beginner's perspective](https://en.wikipedia.org/wiki/Curse_of_knowledge).
 
 - Most of the other projects are for the purpose of learning or teaching, simplifying the complexity and realizing a prototype with only the most basic functions. But my goal is to implement a production-level Lua interpreter, pursuing stability, completeness, and performance.
 
