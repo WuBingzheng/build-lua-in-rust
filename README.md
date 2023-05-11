@@ -1,3 +1,6 @@
-从零开始，[用 Rust 实现一个 Lua 解释器](https://wubingzheng.github.io/build-lua-in-rust/zh/)。
+Let's build a Lua Interpreter in Rust from scratch! This is also a good way to learn Rust.
 
-[Build a Lua Interpreter in Rust](https://wubingzheng.github.io/build-lua-in-rust/en/) from scratch.
+The online book:
+
+- [中文版本](https://wubingzheng.github.io/build-lua-in-rust/zh/)
+- [English version](https://wubingzheng.github.io/build-lua-in-rust/en/)
