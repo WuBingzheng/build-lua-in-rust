@@ -296,7 +296,8 @@ impl fmt::Debug for Value {
 <p>Since only the function call statment is currently supported, the function is fixed at the <code>0</code> position of the stack during execution, and the parameter is fixed at the <code>1</code> position. The target addresses of the above bytecodes are also fixedly filled with <code>1</code>.</p>
 <p>The main code has been introduced. The definition of the function <code>load_const()</code> used to generate <code>LoadConst</code> bytecode is listed below:</p>
 <pre><code class="language-rust  ignore">fn add_const(constants: &amp;mut Vec&lt;Value&gt;, c: Value) -&gt; usize {
-     constants. push(c)
+     constants. push(c);
+     constants. len() - 1
 }
 
 fn load_const(constants: &amp;mut Vec&lt;Value&gt;, dst: usize, c: Value) -&gt; ByteCode {

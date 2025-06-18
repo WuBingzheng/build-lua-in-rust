@@ -175,10 +175,12 @@
 <p>这里说法比较绕，不理解的话可以忽略。</p>
 <p>另外，其他使用到了Lex的地方都要添加泛型的定义，比如ParseProto定义修改如下：</p>
 <pre><code class="language-rust ignore">pub struct ParseProto&lt;R&gt; {
+    lex: Lex&lt;R&gt;,
 </code></pre>
 <p>其<code>load()</code>方法的参数也从<code>File</code>修改为<code>R</code>：</p>
 <pre><code class="language-rust ignore">    pub fn load(input: R) -&gt; Self {
 </code></pre>
+<p><code>load()</code>支持<code>R</code>也只是为了创建<code>Lex&lt;R&gt;</code>，除此之外<code>ParseProto</code>并不直接使用<code>R</code>。但是<code>ParseProto</code>的定义中仍然要增加<code>&lt;R&gt;</code>，有点啰嗦。而更啰嗦的是，如果有其他类型要包含<code>ParseProto</code>，那也要增加<code>&lt;R&gt;</code>。这称之为泛型的type propagate。可以通过定义<code>dyn</code>来规避这个问题，当然这样也会带来些额外的性能开销。不过我们这里<code>ParseProto</code>是个内部类型，不会暴露出去给其他类型使用，所以<code>Lex</code>里的<code>&lt;R&gt;</code>相当于只传播了一层，可以接受，就不改<code>dyn</code>了。</p>
 <p>支持了<code>Read</code>后，就可以使用文件以外的类型了。接下来看看使用标准输入类似和字符串类型。</p>
 <h2 id="使用标准输入类型"><a class="header" href="#使用标准输入类型">使用标准输入类型</a></h2>
 <p>标准输入<a href="https://doc.rust-lang.org/std/io/struct.Stdin.html"><code>std::io::Stdin</code>类型</a>是实现了<code>Read</code> trait，所以可以直接使用。修改<code>main()</code>函数，使用标准输入：</p>
@@ -321,22 +323,6 @@ end
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

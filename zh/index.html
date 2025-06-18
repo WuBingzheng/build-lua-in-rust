@@ -1,16 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="zh-cn" class="sidebar-visible no-js light">
     <head>
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y9T2DX324X"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-Y9T2DX324X');
-        </script>
-
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>前言 - 用Rust实现Lua解释器</title>
@@ -169,7 +159,7 @@
 <p>每个功能都是按需设计，而不是先知般的一步到位。比如关于条件跳转指令，最开始为了支持<a href="./ch06-01.if.html"><code>if</code>语句</a>，添加<code>Test(u8, u16)</code>字节码，其语义是如果第1个关联参数的值为<strong>false</strong>则<strong>向前</strong>跳转第2个关联参数代表的距离；然后为了支持<a href="./ch06-03.while_break.html"><code>while</code>语句</a>，需要<strong>向后</strong>跳转，则把第2个关联参数从<code>u16</code>改成<code>i16</code>类型，用负数代表向后跳转；再然后为了支持<a href="./ch07-01.logical_in_condition.html">逻辑运算</a>，判断条件为<strong>true</strong>或<strong>false</strong>都可能需要跳转，则用<code>TestAndJump</code>和<code>TestOrJump</code>两个字节码代替<code>Test</code>字节码。由此，按照我们自己的学习和发展路径，也产生了一套跟Lua官方实现版本略微不同的字节码。</p>
 <p>每一章都从Lua功能特性出发，先讨论如何设计，再介绍具体实现。不仅要讲清楚“怎么做”，更重要的是讲清楚“为什么这么做”，尽量避免写成代码阅读笔记。不过为了实现完整的Lua特性，肯定会有部分文章很无聊，尤其是前面几章。读者可以先浏览相对有趣的<a href="./ch03-01.string_type.html">字符串类型的定义</a>和<a href="./ch09-02.escape_and_closure.html">Upvalue的逃逸</a>这两节，以判断本系列文章是否符合口味。</p>
 <p>每一章都有完整的<a href="https://github.com/WuBingzheng/build-lua-in-rust/tree/main/listing">可运行代码</a>，并且每一章的代码都是基于前一章的最终代码，保证整个项目是连续的。每个小节对应的代码改动都集中在两三个commit中，可以通过git来查看变更历史。开头的章节在介绍完设计原理后，基本还会逐行解释代码；到后面只会解释关键部分的代码；最后两章基本上就不讲代码了。</p>
-<p>目前这些章节只是完成了Lua解释器最核心的部分。<a href="./TO_BE_CONTINUED.html">未完待续</a>一节罗列了部分未完成的功能列表。</p>
+<p>目前这些章节只是完成了Lua解释器最核心的部分，而距离一个完整的解释器还差很多。<a href="./TO_BE_CONTINUED.html">未完待续</a>一节罗列了部分未完成的功能列表。</p>
 <p>文章中并不会介绍Lua和Rust的基本语法，我们预期读者对这两门语言都有基本的了解。其中对Lua语言自然是越熟悉越好。对Rust语言则无高要求，只要读过《Rust程序设计语言》，了解基本语法即可，毕竟这个项目的初衷就是为了学习Rust。另外，一提到实现一门语言的解释器就会让人想起艰深的编译原理，但实际上由于Lua语言很简单，并且有Lua官方实现的解释器代码作为参考，这个项目不需要太多理论知识，主要是工程实践为主。</p>
 <p>由于我在编译原理、Lua语言、Rust语言等各方面技术能力所限，项目和文章中必定会有很多错误；另外我的语言表达能力很差，文章中也会有很多词不达意或语句不通之处，都欢迎读者来项目的<a href="https://github.com/WuBingzheng/build-lua-in-rust">github主页</a>提issue反馈。</p>
 
@@ -193,22 +183,6 @@
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

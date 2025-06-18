@@ -144,7 +144,7 @@
 <ul>
 <li>程序入口：<code>main.rs</code>；</li>
 <li>三个组件：词法分析 <code>lex.rs</code>、语法分析 <code>parse.rs</code>、和虚拟机 <code>vm.rs</code>；</li>
-<li>两个概念：字节码 <code>byte_code.rs</code>、值<code>value.rs</code>。</li>
+<li>两个概念：字节码 <code>bytecode.rs</code>、值<code>value.rs</code>。</li>
 </ul>
 <p>后面的两个概念和其代码之前已经介绍了。下面介绍其他4个文件。先从程序入口开始。</p>
 <h2 id="程序入口"><a class="header" href="#程序入口">程序入口</a></h2>
@@ -353,6 +353,7 @@ fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
     ),
     Call(
         0,
+        1,
     ),
 ]
 hello, world!
@@ -393,22 +394,6 @@ print &quot;hello, again...&quot;
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

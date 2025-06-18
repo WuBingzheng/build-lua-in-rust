@@ -150,7 +150,7 @@
                     <main>
                         <h1 id="preface"><a class="header" href="#preface">Preface</a></h1>
 <blockquote>
-<p>This series was <a href="https://wubingzheng.github.io/build-lua-in-rust/zh/">written in Chinese</a> originally. This Engine version is mainly translated by <a href="https://translate.google.com/">Google Translate</a>. So please forgive me for the terrible writing.</p>
+<p>This series was <a href="https://wubingzheng.github.io/build-lua-in-rust/zh/">written in Chinese</a> originally. This English version is mainly translated by <a href="https://translate.google.com/">Google Translate</a>. So please forgive me for the terrible writing.</p>
 </blockquote>
 <p>This series of articles introduces the implementation of a Lua interpreter from scratch in the Rust language.</p>
 <p>The Rust language has a distinctive personality and is also <a href="https://survey.stackoverflow.co/2022/?utm_source=so-owned&amp;utm_medium=announcement-banner&amp;utm_campaign=dev-survey-2022&amp;utm_content=results#section-most-loved-dreaded-and-wanted-programming-scripting-and-markup-languages">widely popular</a>, however the learning curve is steep. After I finished reading <a href="https://doc.rust-lang.org/stable/book/title-page.html">&quot;Rust Programming Language&quot;</a> and wrote some practice codes, I deeply felt that I had to go through a larger project practice to understand and master.</p>
@@ -158,7 +158,7 @@
 <p>This series of articles documents the learning and exploration process during this project. Similar to other from scratch <a href="https://build-your-own-x.vercel.app/">Build your own X</a> projects, this project also has a clear big goal, an unknown exploration process and a continuous sense of accomplishment, but with some differences:</p>
 <ul>
 <li>
-<p>Most of the authors of other projects have been immersed in related fields for many years, but my job is not in the direction of programming language or compilation principles. I don't have complete theoretical knowledge for implementing an interpreter, and I just cross the river by feeling the stones. But think of the good in everything, which also provides a real beginner's perspective.</p>
+<p>Most of the authors of other projects have been immersed in related fields for many years, but my job is not in the direction of programming language or compilation principles. I don't have complete theoretical knowledge for implementing an interpreter, and I just cross the river by feeling the stones. But think of the good in everything, which also <a href="https://en.wikipedia.org/wiki/Curse_of_knowledge">provides a real beginner's perspective</a>.</p>
 </li>
 <li>
 <p>Most of the other projects are for the purpose of learning or teaching, simplifying the complexity and realizing a prototype with only the most basic functions. But my goal is to implement a production-level Lua interpreter, pursuing stability, completeness, and performance.</p>
@@ -266,7 +266,7 @@ main &lt;hello_world.lua:0,0&gt; (5 instructions at 0x600000d78080)
 	4	[1]	CALL     	0 2 1	; 1 in 0 out
 	5	[1]	RETURN   	0 1 1	; 0 out
 </code></pre>
-<p>The first 2 lines of the output are incomprehensible, so ignore them now. The following should be the bytecode, and there are comments, which is great. But still do not understand. Check out Lua's <a href="https://www.lua.org/manual/5.4/">official manual</a>, but I can't find any explanation about bytecode. It turns out that the Lua language standard only defines the characteristics of the language, while the bytecode belongs to the &quot;concrete implementation&quot; part, just like the variable naming in the interpreter code, which does not belong to the definition scope of the Lua standard. In fact, the Luajit project, that is fully compatible with Lua 5.1, uses a <a href="http://wiki.luajit.org/Bytecode-2.0">completely different bytecode</a>. We can even implement an interpreter without bytecode. Since the manual does not explain it, we can only check the <a href="https://github.com/lua/lua/blob/v5.4.0/lopcodes.h#L196">the comment in source code</a>. Here we only introduce the 5 bytecodes that appear above:</p>
+<p>The first 2 lines of the output are incomprehensible, so ignore them now. The following should be the bytecode, and there are comments, which is great. But still do not understand. Check out Lua's <a href="https://www.lua.org/manual/5.4/">official manual</a>, but I can't find any explanation about bytecode. It turns out that the Lua language standard only defines the characteristics of the language, while the bytecode belongs to the &quot;concrete implementation&quot; part, just like the variable naming in the interpreter code, which does not belong to the definition scope of the Lua standard. In fact, the Luajit project, that is fully compatible with Lua 5.1, uses a <a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_bc.h">completely different bytecode</a>. We can even implement an interpreter without bytecode. Since the manual does not explain it, we can only check the <a href="https://github.com/lua/lua/blob/v5.4.0/lopcodes.h#L196">the comment in source code</a>. Here we only introduce the 5 bytecodes that appear above:</p>
 <ol>
 <li>VARARGPREP, temporarily unused, ignored.</li>
 <li>GETTABUP, this is a bit complicated, it can be temporarily understood as: loading global variables onto the stack. The three parameters are the stack index (0) as the target address, (ignore the second one,) and the index (0) of the global variable name in the constant table. The global variable name listed in the comments later is &quot;print&quot;.</li>
@@ -768,7 +768,8 @@ impl fmt::Debug for Value {
 <p>Since only the function call statment is currently supported, the function is fixed at the <code>0</code> position of the stack during execution, and the parameter is fixed at the <code>1</code> position. The target addresses of the above bytecodes are also fixedly filled with <code>1</code>.</p>
 <p>The main code has been introduced. The definition of the function <code>load_const()</code> used to generate <code>LoadConst</code> bytecode is listed below:</p>
 <pre><code class="language-rust  ignore">fn add_const(constants: &amp;mut Vec&lt;Value&gt;, c: Value) -&gt; usize {
-     constants. push(c)
+     constants. push(c);
+     constants. len() - 1
 }
 
 fn load_const(constants: &amp;mut Vec&lt;Value&gt;, dst: usize, c: Value) -&gt; ByteCode {
@@ -1177,6 +1178,10 @@ Name = exp # add new
          }
      }</code></pre>
 <p>For the case where the lvalue is a local variable, call <code>load_exp()</code> to handle it. For the case of global variables, according to the type of the expression on the right, generate <code>SetGlobalConst</code>, <code>SetGlobal</code> and <code>SetGlobalGlobal</code> bytecodes respectively.</p>
+<p>Finally, the <code>get_local()</code> definition:</p>
+<pre><code class="language-rust  ignore">    fn get_local(&amp;self, name: &amp;str) -&gt; Option&lt;usize&gt; {
+        self.locals.iter().rposition(|v| v == name)
+    }</code></pre>
 <h2 id="test-3"><a class="header" href="#test-3">Test</a></h2>
 <p>Use the following code to test the above six variable assignments:</p>
 <pre><code class="language-lua">local a = 456
@@ -1945,7 +1950,7 @@ print &quot;null: \0.&quot; -- '\0'
 <p>Implement complex. Although it may be relatively simple to implement a simple GC solution, it is very difficult to pursue performance. Many languages (such as Python, Go, Lua) also continuously improve their GC during versions. It's hard to get there in one step.</p>
 </li>
 <li>
-<p>More complex in Rust. Originally, the biggest feature of the Rust language is automatic memory management. The manual memory management function of the GC scheme is contrary to this feature of Rust, <a href="https://zackoverflow.dev/writing/unsafe-rust-vs-zig/">will make it more complicated</a>. There are many discussions and projects on the Internet about implementing GC with Rust (such as <a href="https://manishearth.github.io/blog/2015/09/01/designing-a-gc-in-rust/">1</a>, <a href="https://crates.io/crates/gc">2</a>, [3](https://manishearth.github.io/blog/2021/04/05/a-tour-of-safe-tracing-gc- designs-in-rust/), [4] (https://coredumped.dev/2022/04/11/implementing-a-safe-garbage-collector-in-rust/), etc.), obviously beyond Rust beginners range of capabilities.</p>
+<p>More complex in Rust. Originally, the biggest feature of the Rust language is automatic memory management. The manual memory management function of the GC scheme is contrary to this feature of Rust, <a href="https://zackoverflow.dev/writing/unsafe-rust-vs-zig/">will make it more complicated</a>. There are many discussions and projects on the Internet about implementing GC with Rust (such as <a href="https://manishearth.github.io/blog/2015/09/01/designing-a-gc-in-rust/">1</a>, <a href="https://crates.io/crates/gc">2</a>, <a href="https://manishearth.github.io/blog/2021/04/05/a-tour-of-safe-tracing-gc-designs-in-rust/">3</a>, <a href="https://coredumped.dev/2022/04/11/implementing-a-safe-garbage-collector-in-rust/">4</a>, etc.), obviously beyond Rust beginners range of capabilities.</p>
 </li>
 </ul>
 <p>In contrast, if you adopt the RC scheme, you only need to use <code>Rc</code> in Rust, and no additional memory management is required. That is, the garbage collection part can be avoided entirely.</p>

@@ -237,7 +237,7 @@ impl fmt::Debug for Value {
 <p>在<a href="http://www.lua.org/versions.html#5.3">Lua 5.3</a>之前，Lua只有一种数字类型，默认是浮点型。我理解这是因为Lua最初的目的是用于配置文件，面向的是用户而非程序员。对普通用户而言，是不区分整数和浮点数概念的，配置<code>10秒</code>和<code>10.0秒</code>是没有区别的；另外对于一些计算，比如<code>7/2</code>的结果显而易见是<code>3.5</code>而不是<code>3</code>。但随着Lua使用范围的扩大，比如作为很多大型程序间的粘合语言，对整数的需求日益强烈，于是在语言层面区分了整数和浮点数。</p>
 </blockquote>
 <h2 id="语法分析"><a class="header" href="#语法分析">语法分析</a></h2>
-<p>然后在语法分析中增加这些类型的支持。由于目前只支持函数调用这一种语句，即<code>函数 参数</code>的格式；而其中“函数”只支持全局变量，所以这次只需要“参数”部分支持这些新类型。Lua语音中的函数调用，参数如果是字符串常量或者表构造，那么就可以省略括号<code>()</code>，如上一章的&quot;hello, world!&quot;例子。但对于其他情况，比如这次添加的几个新类型，就必须要求有括号<code>()</code>了。于是对参数部分的修改如下：</p>
+<p>然后在语法分析中增加这些类型的支持。由于目前只支持函数调用这一种语句，即<code>函数 参数</code>的格式；而其中“函数”只支持全局变量，所以这次只需要“参数”部分支持这些新类型。Lua语言中的函数调用，参数如果是字符串常量或者表构造，那么就可以省略括号<code>()</code>，如上一章的&quot;hello, world!&quot;例子。但对于其他情况，比如这次添加的几个新类型，就必须要求有括号<code>()</code>了。于是对参数部分的修改如下：</p>
 <pre><code class="language-rust ignore">Token::Name(name) =&gt; {
     // function, global variable only
     let ic = add_const(&amp;mut constants, Value::String(name));
@@ -289,7 +289,8 @@ impl fmt::Debug for Value {
 <p>由于目前还是只支持函数调用语言，所以执行时函数固定在栈的<code>0</code>位置，参数固定在<code>1</code>位置。上述的字节码的目标地址也都固定填的<code>1</code>。</p>
 <p>主要代码介绍完毕。下面再列下用于生成<code>LoadConst</code>字节码的函数<code>load_const()</code>定义：</p>
 <pre><code class="language-rust  ignore">fn add_const(constants: &amp;mut Vec&lt;Value&gt;, c: Value) -&gt; usize {
-    constants.push(c)
+    constants.push(c);
+    constants.len() - 1
 }
 
 fn load_const(constants: &amp;mut Vec&lt;Value&gt;, dst: usize, c: Value) -&gt; ByteCode {
@@ -409,22 +410,6 @@ false
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

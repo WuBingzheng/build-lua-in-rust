@@ -145,7 +145,7 @@
 <p>这个系列的文章记录了在这个项目中的学习和探索过程。与其他从零开始<a href="https://build-your-own-x.vercel.app/">Build your own X</a>的项目类似，这个项目也有明确的大目标、未知的探索过程以及持续的成就感，但也有一些不同之处：</p>
 <ul>
 <li>
-<p>其他项目的作者大都在相关领域浸淫多年，而我的工作并不是编程语言或编译原理方向，对于实现一个解释器而言并没有完整的理论知识，纯粹摸着石头过河。不过凡事要往好处想，这也提供了一个真正的初学者视角。</p>
+<p>其他项目的作者大都在相关领域浸淫多年，而我的工作并不是编程语言或编译原理方向，对于实现一个解释器而言并没有完整的理论知识，纯粹摸着石头过河。不过凡事要往好处想，这也提供了一个<a href="https://zh.wikipedia.org/wiki/%E7%9F%A5%E8%AD%98%E7%9A%84%E8%A9%9B%E5%92%92">真正的初学者视角</a>。</p>
 </li>
 <li>
 <p>其他项目大都是以学习或教学为目的，去繁从简，实现一个只具备最基本功能的原型。而我的目标是实现一个生产级别的Lua解释器，追求稳定、完整、和性能。</p>
@@ -157,6 +157,7 @@
 <p>第2章介绍编程语言中最基本的类型和变量的概念。第3章以完善字符串类型为目标，介绍Rust语言的几个特性。第4章实现Lua中的表结构，并引入语法分析中关键的ExpDesc概念。第5章是繁琐的数值计算。</p>
 <p>第6章控制结构，事情开始变得有趣起来，根据判断条件在字节码间跳来跳去。第7章介绍逻辑运算和关系运算，通过特定的优化跟上一章的控制结构结合起来。</p>
 <p>第8章介绍函数，函数的基本概念和实现是比较简单的，但可变参数和多返回值要求对栈做精细管理。第9章介绍的闭包是Lua语言中的一个强大特性，这其中的关键是Upvalue及其逃逸。</p>
+<p>每个功能都是按需设计，而不是先知般的一步到位。比如关于条件跳转指令，最开始为了支持<a href="./ch06-01.if.html"><code>if</code>语句</a>，添加<code>Test(u8, u16)</code>字节码，其语义是如果第1个关联参数的值为<strong>false</strong>则<strong>向前</strong>跳转第2个关联参数代表的距离；然后为了支持<a href="./ch06-03.while_break.html"><code>while</code>语句</a>，需要<strong>向后</strong>跳转，则把第2个关联参数从<code>u16</code>改成<code>i16</code>类型，用负数代表向后跳转；再然后为了支持<a href="./ch07-01.logical_in_condition.html">逻辑运算</a>，判断条件为<strong>true</strong>或<strong>false</strong>都可能需要跳转，则用<code>TestAndJump</code>和<code>TestOrJump</code>两个字节码代替<code>Test</code>字节码。由此，按照我们自己的学习和发展路径，也产生了一套跟Lua官方实现版本略微不同的字节码。</p>
 <p>每一章都从Lua功能特性出发，先讨论如何设计，再介绍具体实现。不仅要讲清楚“怎么做”，更重要的是讲清楚“为什么这么做”，尽量避免写成代码阅读笔记。不过为了实现完整的Lua特性，肯定会有部分文章很无聊，尤其是前面几章。读者可以先浏览相对有趣的<a href="./ch03-01.string_type.html">字符串类型的定义</a>和<a href="./ch09-02.escape_and_closure.html">Upvalue的逃逸</a>这两节，以判断本系列文章是否符合口味。</p>
 <p>每一章都有完整的<a href="https://github.com/WuBingzheng/build-lua-in-rust/tree/main/listing">可运行代码</a>，并且每一章的代码都是基于前一章的最终代码，保证整个项目是连续的。每个小节对应的代码改动都集中在两三个commit中，可以通过git来查看变更历史。开头的章节在介绍完设计原理后，基本还会逐行解释代码；到后面只会解释关键部分的代码；最后两章基本上就不讲代码了。</p>
 <p>目前这些章节只是完成了Lua解释器最核心的部分，而距离一个完整的解释器还差很多。<a href="./TO_BE_CONTINUED.html">未完待续</a>一节罗列了部分未完成的功能列表。</p>
@@ -247,7 +248,7 @@ main &lt;hello_world.lua:0,0&gt; (5 instructions at 0x600000d78080)
 	4	[1]	CALL     	0 2 1	; 1 in 0 out
 	5	[1]	RETURN   	0 1 1	; 0 out
 </code></pre>
-<p>输出的前面2行看不懂，先忽略。后面应该就是字节码了，还有注释，太棒了。不过还是看不懂。查看Lua的<a href="https://www.lua.org/manual/5.4/">官方手册</a>，但是发现找不到任何关于字节码的说明。原来Lua的语言标准只是定义了语言的特性，而字节码属于“具体实现”的部分，就像解释器代码里的变量命名一样，并不属于Lua标准的定义范围。事实上完全兼容Lua 5.1的Luajit项目就用了一套<a href="http://wiki.luajit.org/Bytecode-2.0">完全不一样的字节码</a>。我们甚至可以不用字节码来实现解释器，呃，扯远了。既然手册没有说明，那就只能查看Lua官方实现的<a href="https://github.com/lua/lua/blob/v5.4.0/lopcodes.h#L196">代码注释</a>。这里只介绍上面出现的5个字节码：</p>
+<p>输出的前面2行看不懂，先忽略。后面应该就是字节码了，还有注释，太棒了。不过还是看不懂。查看Lua的<a href="https://www.lua.org/manual/5.4/">官方手册</a>，但是发现找不到任何关于字节码的说明。原来Lua的语言标准只是定义了语言的特性，而字节码属于“具体实现”的部分，就像解释器代码里的变量命名一样，并不属于Lua标准的定义范围。事实上完全兼容Lua 5.1的Luajit项目就用了一套<a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_bc.h">完全不一样的字节码</a>。我们甚至可以不用字节码来实现解释器，呃，扯远了。既然手册没有说明，那就只能查看Lua官方实现的<a href="https://github.com/lua/lua/blob/v5.4.0/lopcodes.h#L196">代码注释</a>。这里只介绍上面出现的5个字节码：</p>
 <ol>
 <li>VARARGPREP，暂时用不到，忽略。</li>
 <li>GETTABUP，这个有些复杂，可以暂时理解为：加载全局变量到栈上。3个参数分别是作为目标地址的栈索引（0）、忽略、全局变量名在常量表里的索引（0）。后面注释里列出了全局变量名是&quot;print&quot;。</li>
@@ -388,7 +389,7 @@ impl fmt::Debug for Value {
 <ul>
 <li>程序入口：<code>main.rs</code>；</li>
 <li>三个组件：词法分析 <code>lex.rs</code>、语法分析 <code>parse.rs</code>、和虚拟机 <code>vm.rs</code>；</li>
-<li>两个概念：字节码 <code>byte_code.rs</code>、值<code>value.rs</code>。</li>
+<li>两个概念：字节码 <code>bytecode.rs</code>、值<code>value.rs</code>。</li>
 </ul>
 <p>后面的两个概念和其代码之前已经介绍了。下面介绍其他4个文件。先从程序入口开始。</p>
 <h2 id="程序入口"><a class="header" href="#程序入口">程序入口</a></h2>
@@ -597,6 +598,7 @@ fn lib_print(state: &amp;mut ExeState) -&gt; i32 {
     ),
     Call(
         0,
+        1,
     ),
 ]
 hello, world!
@@ -713,7 +715,7 @@ impl fmt::Debug for Value {
 <p>在<a href="http://www.lua.org/versions.html#5.3">Lua 5.3</a>之前，Lua只有一种数字类型，默认是浮点型。我理解这是因为Lua最初的目的是用于配置文件，面向的是用户而非程序员。对普通用户而言，是不区分整数和浮点数概念的，配置<code>10秒</code>和<code>10.0秒</code>是没有区别的；另外对于一些计算，比如<code>7/2</code>的结果显而易见是<code>3.5</code>而不是<code>3</code>。但随着Lua使用范围的扩大，比如作为很多大型程序间的粘合语言，对整数的需求日益强烈，于是在语言层面区分了整数和浮点数。</p>
 </blockquote>
 <h2 id="语法分析-1"><a class="header" href="#语法分析-1">语法分析</a></h2>
-<p>然后在语法分析中增加这些类型的支持。由于目前只支持函数调用这一种语句，即<code>函数 参数</code>的格式；而其中“函数”只支持全局变量，所以这次只需要“参数”部分支持这些新类型。Lua语音中的函数调用，参数如果是字符串常量或者表构造，那么就可以省略括号<code>()</code>，如上一章的&quot;hello, world!&quot;例子。但对于其他情况，比如这次添加的几个新类型，就必须要求有括号<code>()</code>了。于是对参数部分的修改如下：</p>
+<p>然后在语法分析中增加这些类型的支持。由于目前只支持函数调用这一种语句，即<code>函数 参数</code>的格式；而其中“函数”只支持全局变量，所以这次只需要“参数”部分支持这些新类型。Lua语言中的函数调用，参数如果是字符串常量或者表构造，那么就可以省略括号<code>()</code>，如上一章的&quot;hello, world!&quot;例子。但对于其他情况，比如这次添加的几个新类型，就必须要求有括号<code>()</code>了。于是对参数部分的修改如下：</p>
 <pre><code class="language-rust ignore">Token::Name(name) =&gt; {
     // function, global variable only
     let ic = add_const(&amp;mut constants, Value::String(name));
@@ -765,7 +767,8 @@ impl fmt::Debug for Value {
 <p>由于目前还是只支持函数调用语言，所以执行时函数固定在栈的<code>0</code>位置，参数固定在<code>1</code>位置。上述的字节码的目标地址也都固定填的<code>1</code>。</p>
 <p>主要代码介绍完毕。下面再列下用于生成<code>LoadConst</code>字节码的函数<code>load_const()</code>定义：</p>
 <pre><code class="language-rust  ignore">fn add_const(constants: &amp;mut Vec&lt;Value&gt;, c: Value) -&gt; usize {
-    constants.push(c)
+    constants.push(c);
+    constants.len() - 1
 }
 
 fn load_const(constants: &amp;mut Vec&lt;Value&gt;, dst: usize, c: Value) -&gt; ByteCode {
@@ -1086,7 +1089,7 @@ self.byte_codes.push(code);
 <p><code>local = local</code>，复制栈上值，对应字节码<code>Move</code>。</p>
 </li>
 <li>
-<p><code>local = global</code>，把栈上值赋值给全局变量，对应字节码<code>GetGlobal</code>。</p>
+<p><code>local = global</code>，把全局变量复制到栈上指定位置，对应字节码<code>GetGlobal</code>。</p>
 </li>
 <li>
 <p><code>global = const</code>，把<em>常量</em>赋值给全局变量，需要首先把常量加到常量表中，然后通过字节码<code>SetGlobalConst</code>完成赋值。</p>
@@ -1620,10 +1623,12 @@ impl From&lt;&amp;Value&gt; for String {
 <p>这里说法比较绕，不理解的话可以忽略。</p>
 <p>另外，其他使用到了Lex的地方都要添加泛型的定义，比如ParseProto定义修改如下：</p>
 <pre><code class="language-rust ignore">pub struct ParseProto&lt;R&gt; {
+    lex: Lex&lt;R&gt;,
 </code></pre>
 <p>其<code>load()</code>方法的参数也从<code>File</code>修改为<code>R</code>：</p>
 <pre><code class="language-rust ignore">    pub fn load(input: R) -&gt; Self {
 </code></pre>
+<p><code>load()</code>支持<code>R</code>也只是为了创建<code>Lex&lt;R&gt;</code>，除此之外<code>ParseProto</code>并不直接使用<code>R</code>。但是<code>ParseProto</code>的定义中仍然要增加<code>&lt;R&gt;</code>，有点啰嗦。而更啰嗦的是，如果有其他类型要包含<code>ParseProto</code>，那也要增加<code>&lt;R&gt;</code>。这称之为泛型的type propagate。可以通过定义<code>dyn</code>来规避这个问题，当然这样也会带来些额外的性能开销。不过我们这里<code>ParseProto</code>是个内部类型，不会暴露出去给其他类型使用，所以<code>Lex</code>里的<code>&lt;R&gt;</code>相当于只传播了一层，可以接受，就不改<code>dyn</code>了。</p>
 <p>支持了<code>Read</code>后，就可以使用文件以外的类型了。接下来看看使用标准输入类似和字符串类型。</p>
 <h2 id="使用标准输入类型"><a class="header" href="#使用标准输入类型">使用标准输入类型</a></h2>
 <p>标准输入<a href="https://doc.rust-lang.org/std/io/struct.Stdin.html"><code>std::io::Stdin</code>类型</a>是实现了<code>Read</code> trait，所以可以直接使用。修改<code>main()</code>函数，使用标准输入：</p>
@@ -5200,6 +5205,7 @@ end
 </code></pre>
 <p>至此，完成了固定参数的部分，还是比较简单的；下面介绍可变参数部分，开始变得复杂起来。</p>
 <h2 id="可变参数"><a class="header" href="#可变参数">可变参数</a></h2>
+<p>在Lua中，可变形参和可变实参都用<code>...</code>来表示。当在函数定义的形参列表中出现时，代表可变形参；而在其他地方出现都代表可变实参。</p>
 <p>在上面<a href="ch08-02.arguments.html#%E5%BD%A2%E5%8F%82%E7%9A%84%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90">形参的语法分析</a>中已经提到了可变参数，其功能比较简单，代表这个函数支持可变参数。本节接下来主要介绍可变参数作为实参的处理，也就是执行函数调用时实际传入的参数。</p>
 <p>本节最开始就介绍函数的参数就是局部变量，并画了栈的布局图。不过这个说法只适合固定的实参，而对于可变实参就不适合了。在之前的<code>foo()</code>函数中加上可变参数作为示例，代码如下：</p>
 <pre><code class="language-lua">local function foo(a, b, ...)
@@ -6777,11 +6783,11 @@ print(f1 == f2)  -- true or false？
     pub upindexes: Vec&lt;usize&gt;,
     pub inner_funcs: Vec&lt;Rc&lt;FuncProto&gt;&gt;,
 </code></pre>
-<p>其中<code>inner_funcs</code>是函数内部定义的内层函数的原型列表。<code>upindexes</code>是当前函数引用上层函数的局部变量的索引，这个成员后续需要改造。需要说明的是，<code>inner_funcs</code>是当前函数作为外层函数的角色时使用的，而<code>upindexes</code>是当前函数作为内存函数的角色时使用的。</p>
+<p>其中<code>inner_funcs</code>是函数内部定义的内层函数的原型列表。<code>upindexes</code>是当前函数引用上层函数的局部变量的索引，这个成员后续需要改造。需要说明的是，<code>inner_funcs</code>是当前函数作为外层函数的角色时使用的，而<code>upindexes</code>是当前函数作为内层函数的角色时使用的。</p>
 <p>我们在后面介绍完Upvalue完整的特性后，再来介绍对Upvalue索引<code>upindexes</code>的解析。</p>
 <p>在介绍完闭包的定义和语法分析后，接着看Upvalue的其他场景。</p>
 <h2 id="改进对upvalue的引用"><a class="header" href="#改进对upvalue的引用">改进：对Upvalue的引用</a></h2>
-<p>之前介绍的Upvalue都是对上层函数的局部变量的引用，现在来看对上层函数的Upvalue的引用。对本节最开头的计数闭包示例做下改造，把递增的代码<code>i = i + 1</code>再放到一层函数中：</p>
+<p>之前介绍的Upvalue都是对上层函数的<strong>局部变量</strong>的引用，现在来看对上层函数的<strong>Upvalue</strong>的引用。对本节最开头的计数闭包示例做下改造，把递增的代码<code>i = i + 1</code>再放到一层函数中：</p>
 <pre><code class="language-lua">local function newCounter()
     local i = 0
     return function ()
@@ -7395,6 +7401,9 @@ GetField ($dst, $tmp_table, $key) # 然后才能索引
 <p>Rust API。Lua语言更多的使用场景是胶水语言，所以对外的API是非常重要的。我们这个解释器主要是给Rust语言编写的程序使用的，所以对外提供的应该是一套符合Rust调用方式的API。这就跟Lua官方实现提供的C API不一致。我们目前已经实现了些基本的API，比如读取栈上的值等，就使用了泛型，简化了API和调用方式，也就跟C API不一致。<a href="https://www.boringcactus.com/2020/09/16/survey-of-rust-embeddable-scripting-languages.html">这里</a>有份对Rust实现的脚本语言的调用方式的对比调研，很有参考价值。</p>
 </li>
 <li>
+<p>库。当前解释器是个独立的程序，但Lua最常见的使用场景是一个库，被其他程序调用。所以需要把我们的项目改造为一个库。</p>
+</li>
+<li>
 <p>支持整个代码段的传参和返回值。</p>
 </li>
 <li>
@@ -7432,7 +7441,7 @@ GetField ($dst, $tmp_table, $key) # 然后才能索引
 <p>《自己动手实现Lua》，跟本系列文章很像，也是从零实现一个Lua解释器。但是这本书是以Lua官方实现里的字节码定义为出发点，先实现虚拟机去执行字节码，然后再实现编译器去生成字节码。而我们这系列文章是以Lua语言手册为出发点，设计并实现编译过程、虚拟机、字节码定义等。</p>
 </li>
 <li>
-<p><a href="https://www.luafaq.org/#T1.26">Why is there no continue statement?</a>，对Lua中为什么没有continue语句的解释。但并不完整。</p>
+<p><a href="https://www.luafaq.org/#T1.26">Why is there no continue statement?</a>，对Lua中为什么没有continue语句的解释。</p>
 </li>
 <li>
 <p><a href="https://kaisery.github.io/trpl-zh-cn/">《Rust程序设计语言》</a>，Rust官方教程。</p>
@@ -7468,7 +7477,7 @@ GetField ($dst, $tmp_table, $key) # 然后才能索引
 <p><a href="https://www.boringcactus.com/2020/09/16/survey-of-rust-embeddable-scripting-languages.html">A Survey of Rust Embeddable Scripting Languages</a>，对几个可以在Rust中使用的脚本语言（包括Lua）在使用方式上的对比。</p>
 </li>
 <li>
-<p><a href="https://github.com/rust-lang/rust/pull/47857">Implement TryFrom for float to integer types</a>，</p>
+<p><a href="https://github.com/rust-lang/rust/pull/47857">Implement TryFrom for float to integer types</a>。</p>
 </li>
 <li>
 <p><a href="https://gist.github.com/CrockAgile/09065649ae5a52629599ebc5645922d6">Floating Point Arcade</a>，把整型随机数转换为浮点数的介绍。</p>
@@ -7492,22 +7501,6 @@ GetField ($dst, $tmp_table, $key) # 然后才能索引
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

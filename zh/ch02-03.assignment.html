@@ -153,7 +153,7 @@
 <p><code>local = local</code>，复制栈上值，对应字节码<code>Move</code>。</p>
 </li>
 <li>
-<p><code>local = global</code>，把栈上值赋值给全局变量，对应字节码<code>GetGlobal</code>。</p>
+<p><code>local = global</code>，把全局变量复制到栈上指定位置，对应字节码<code>GetGlobal</code>。</p>
 </li>
 <li>
 <p><code>global = const</code>，把<em>常量</em>赋值给全局变量，需要首先把常量加到常量表中，然后通过字节码<code>SetGlobalConst</code>完成赋值。</p>
@@ -306,22 +306,6 @@ print(g)
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

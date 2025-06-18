@@ -152,7 +152,7 @@
 <p>《自己动手实现Lua》，跟本系列文章很像，也是从零实现一个Lua解释器。但是这本书是以Lua官方实现里的字节码定义为出发点，先实现虚拟机去执行字节码，然后再实现编译器去生成字节码。而我们这系列文章是以Lua语言手册为出发点，设计并实现编译过程、虚拟机、字节码定义等。</p>
 </li>
 <li>
-<p><a href="https://www.luafaq.org/#T1.26">Why is there no continue statement?</a>，对Lua中为什么没有continue语句的解释。但并不完整。</p>
+<p><a href="https://www.luafaq.org/#T1.26">Why is there no continue statement?</a>，对Lua中为什么没有continue语句的解释。</p>
 </li>
 <li>
 <p><a href="https://kaisery.github.io/trpl-zh-cn/">《Rust程序设计语言》</a>，Rust官方教程。</p>
@@ -218,22 +218,6 @@
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

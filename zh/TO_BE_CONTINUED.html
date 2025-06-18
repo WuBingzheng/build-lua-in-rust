@@ -163,6 +163,9 @@
 <p>Rust API。Lua语言更多的使用场景是胶水语言，所以对外的API是非常重要的。我们这个解释器主要是给Rust语言编写的程序使用的，所以对外提供的应该是一套符合Rust调用方式的API。这就跟Lua官方实现提供的C API不一致。我们目前已经实现了些基本的API，比如读取栈上的值等，就使用了泛型，简化了API和调用方式，也就跟C API不一致。<a href="https://www.boringcactus.com/2020/09/16/survey-of-rust-embeddable-scripting-languages.html">这里</a>有份对Rust实现的脚本语言的调用方式的对比调研，很有参考价值。</p>
 </li>
 <li>
+<p>库。当前解释器是个独立的程序，但Lua最常见的使用场景是一个库，被其他程序调用。所以需要把我们的项目改造为一个库。</p>
+</li>
+<li>
 <p>支持整个代码段的传参和返回值。</p>
 </li>
 <li>
@@ -212,22 +215,6 @@
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>

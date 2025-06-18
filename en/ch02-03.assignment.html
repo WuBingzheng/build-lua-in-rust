@@ -264,6 +264,10 @@ Name = exp # add new
          }
      }</code></pre>
 <p>For the case where the lvalue is a local variable, call <code>load_exp()</code> to handle it. For the case of global variables, according to the type of the expression on the right, generate <code>SetGlobalConst</code>, <code>SetGlobal</code> and <code>SetGlobalGlobal</code> bytecodes respectively.</p>
+<p>Finally, the <code>get_local()</code> definition:</p>
+<pre><code class="language-rust  ignore">    fn get_local(&amp;self, name: &amp;str) -&gt; Option&lt;usize&gt; {
+        self.locals.iter().rposition(|v| v == name)
+    }</code></pre>
 <h2 id="test"><a class="header" href="#test">Test</a></h2>
 <p>Use the following code to test the above six variable assignments:</p>
 <pre><code class="language-lua">local a = 456
