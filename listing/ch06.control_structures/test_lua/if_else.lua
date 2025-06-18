@@ -16,5 +16,5 @@ else
 end
 
 if b then
-  print "yes, here"
+  print "not here"
 end
